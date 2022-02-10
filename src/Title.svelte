@@ -27,6 +27,11 @@
       dispatch('focusFlow');
     }
   }
+
+  function addChild() {
+    console.log('yo');
+  }
+  function addSibling() {}
 </script>
 
 <div class="top">
@@ -42,9 +47,9 @@
   </div>
   <div class="buttons-wrapper">
     <div class="buttons">
-      <Button name="arrowRight" />
-      <Button name="arrowUp" />
-      <Button name="arrowDown" />
+      <Button name="arrowRight" on:click={addChild} />
+      <Button name="arrowUp" on:click={() => addSibling(0)} />
+      <Button name="arrowDown" on:click={() => addSibling(1)} />
     </div>
   </div>
 </div>
@@ -57,7 +62,7 @@
     flex-direction: row;
   }
   .content {
-    width: 50%;
+    width: 100%;
   }
   .buttons-wrapper {
     display: flex;

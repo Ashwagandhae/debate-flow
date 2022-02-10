@@ -3,7 +3,7 @@
   export let name;
 </script>
 
-<button class="top">
+<button class="top" on:click>
   <Icon {name} size="20px" />
 </button>
 

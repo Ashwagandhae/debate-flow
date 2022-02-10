@@ -1,7 +1,6 @@
 <script>
   import { afterUpdate } from 'svelte';
   import { createEventDispatcher } from 'svelte';
-  const dispatch = createEventDispatcher();
 
   export let value;
   export let placeholder = '';
@@ -34,6 +33,7 @@
   on:load={autoHeight}
   on:input={autoHeight}
   on:keydown
+  on:focus
   on:blur
   spellcheck="false"
   {placeholder}

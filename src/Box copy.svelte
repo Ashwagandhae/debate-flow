@@ -25,15 +25,12 @@
     }
   });
   function handleFocus() {
-    if (!data.focus) {
-      data.focus = true;
-      data = data;
-    }
+    data.focus = true;
   }
 
   function handleBlur() {
     if (data.focus) {
-      data.focus = false;
+      delete data.focus;
       data = data;
     }
   }
@@ -42,27 +39,20 @@
     if (e.key == 'Enter') {
       e.preventDefault();
       if (e.shiftKey) {
-        data.focus = false;
         addChild(0);
       } else {
-        data.focus = false;
         dispatch('addSibling', data.index + 1);
       }
-    } else if (e.key == 'Backspace') {
-      data.focus = false;
+    } else if (e.key == 'Backspace' && data.content.length <= 0) {
+      e.preventDefault();
       dispatch('deleteSelf', data.index);
     } else if (e.key == 'ArrowDown') {
-      data.focus = false;
       dispatch('focusSibling', data.index + 1);
     } else if (e.key == 'ArrowUp') {
-      data.focus = false;
       dispatch('focusSibling', data.index - 1);
     } else if (e.key == 'ArrowLeft') {
-      data.focus = false;
       dispatch('focusParent');
     } else if (e.key == 'ArrowRight') {
-      data.focus = false;
-
       if (data.children.length > 0) {
         data.children[0].focus = true;
       } else {
@@ -71,40 +61,39 @@
     }
   }
   function addChild(index) {
-    let children = [...data.children];
-    children.splice(index, 0, {
+    if (data.level >= columnCount) {
+      return;
+    }
+
+    data.children.splice(index, 0, {
       content: '',
       children: [],
       index: index,
       level: data.level + 1,
       focus: true,
     });
-    for (let i = index; i < children.length; i++) {
-      children[i].index = i;
+    for (let i = 0; i < data.children.length; i++) {
+      data.children[i].index = i;
     }
-    data.children = children;
+    data = data;
   }
   function deleteChild(index) {
     if (data.children.length > 1 || data.level >= 1) {
-      let children = [...data.children];
-      children.splice(index, 1);
-      for (let i = index; i < children.length; i++) {
-        children[i].index = i;
-      }
-      if (children[index - 1]) {
-        children[index - 1].focus = true;
-      }
-      data.children = children;
+      data.children.splice(index, 1);
 
+      for (let i = 0; i < data.children.length; i++) {
+        data.children[i].index = i;
+      }
+      if (data.children[index - 1]) {
+        data.children[index - 1].focus = true;
+      }
       if (data.children.length == 0) {
         data.focus = true;
-        data = data;
       }
-    } else {
-      data.children[index].focus = true;
+      data = data;
     }
   }
-  function focusChild(index) {
+  function focusSibling(index) {
     if (index < 0) {
       data.focus = true;
       return;
@@ -118,8 +107,13 @@
     data.children[index].focus = true;
     data = data;
   }
-  function focusSelf() {
+  function focusParent() {
     data.focus = true;
+  }
+  function focusChild() {
+    if (data.children.length > 0) {
+      data.children[0].focus = true;
+    }
   }
 </script>
 
@@ -148,13 +142,13 @@
   </div>
 
   <ul class="children">
-    {#each data.children as child}
+    {#each data.children as child (child.index)}
       <svelte:self
         bind:data={child}
         on:addSibling={(e) => addChild(e.detail)}
         on:deleteSelf={(e) => deleteChild(e.detail)}
-        on:focusSibling={(e) => focusChild(e.detail)}
-        on:focusParent={focusSelf}
+        on:focusSibling={(e) => focusSibling(e.detail)}
+        on:focusParent={focusParent}
         on:saveFocus
       />
     {/each}
@@ -235,7 +229,7 @@
     box-sizing: border-box;
     height: calc(1em + var(--padding) * 2 + var(--br-height) * 1);
   }
-  .focus > .content > .add,
+  .focus .add,
   .add:hover {
     opacity: 1;
   }
