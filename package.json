@@ -2,11 +2,13 @@
   "name": "svelte-app",
   "version": "1.0.0",
   "private": true,
+  "homepage": "https://Ashwagandhae.github.io/debate-flow",
   "scripts": {
     "build": "rollup -c",
     "dev": "rollup -c -w",
     "start": "sirv public --no-clear",
-    "deploy": "node ./gh-pages.js"
+    "deploy": "node ./gh-pages.js",
+    "predeploy": "npm run build"
   },
   "devDependencies": {
     "@rollup/plugin-commonjs": "^17.0.0",
