@@ -4,7 +4,7 @@
   import Tab from './Tab.svelte';
   import AddTab from './AddTab.svelte';
 
-  let dark = 0;
+  let dark = 1;
   if (dark) {
     window.document.body.classList.toggle('dark');
   }
