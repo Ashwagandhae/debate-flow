@@ -12,7 +12,6 @@
     border: none;
     background: none;
     display: block;
-    width: 100%;
     text-align: left;
     border-radius: var(--border-radius);
     color: var(--color);

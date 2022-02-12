@@ -1,5 +1,6 @@
 <script>
   import Text from './Text.svelte';
+  import Icon from './Icon.svelte';
   import { getContext } from 'svelte';
   import { onMount } from 'svelte';
   import { afterUpdate } from 'svelte';
@@ -20,10 +21,17 @@
   let textarea;
   afterUpdate(function () {
     if (data.focus) {
+      console.log('bruh');
       textarea.focus();
-      dispatch('saveFocus', data);
+      dispatch('saveChildFocus', data.index);
     }
   });
+  function preventBlur(e) {
+    e.preventDefault();
+  }
+  function saveFocus(index) {
+    dispatch('saveFocus', { parent: data, index: index });
+  }
   function handleFocus() {
     if (!data.focus) {
       data.focus = true;
@@ -49,8 +57,10 @@
         dispatch('addSibling', data.index + 1);
       }
     } else if (e.key == 'Backspace') {
-      data.focus = false;
-      dispatch('deleteSelf', data.index);
+      if (data.content.length == 0) {
+        data.focus = false;
+        dispatch('deleteSelf', data.index);
+      }
     } else if (e.key == 'ArrowDown') {
       data.focus = false;
       dispatch('focusSibling', data.index + 1);
@@ -131,7 +141,11 @@
 >
   <div class="content" class:root>
     <div class="barcontainer">
-      <br />
+      <br
+        class="above"
+        class:left={data.children.length > 0}
+        class:right={data.index == 0 && data.level > 1}
+      />
       <Text
         on:keydown={handleKeydown}
         on:blur={handleBlur}
@@ -140,10 +154,16 @@
         bind:this={textarea}
         placeholder="type content here"
       />
-      <br class="bottom" />
+      <br class="below" />
     </div>
     {#if data.children.length == 0 && data.level < columnCount}
-      <button class="add" on:click={() => addChild(0)}>+</button>
+      <button
+        class="add"
+        on:click={() => addChild(0)}
+        on:mousedown={preventBlur}
+      >
+        <Icon name="arrowRight" />
+      </button>
     {/if}
   </div>
 
@@ -154,8 +174,9 @@
         on:addSibling={(e) => addChild(e.detail)}
         on:deleteSelf={(e) => deleteChild(e.detail)}
         on:focusSibling={(e) => focusChild(e.detail)}
-        on:focusParent={focusSelf}
+        on:saveChildFocus={(e) => saveFocus(e.detail)}
         on:saveFocus
+        on:focusParent={focusSelf}
       />
     {/each}
   </ul>
@@ -180,18 +201,27 @@
   }
 
   .top {
-    display: flex;
-    flex-direction: row;
+    display: grid;
+    grid-template-areas: 'a b';
+    grid-template-rows: min-content;
     width: max-content;
-    justify-content: space-around;
     height: auto;
+    align-items: start;
     color: var(--color);
   }
   .content {
     width: var(--column-width);
+    height: min-content;
     flex-direction: row;
     display: flex;
     position: relative;
+    grid-area: a;
+  }
+  .empty .content {
+    width: max-content;
+  }
+  .root.content {
+    display: none;
   }
   br {
     content: '';
@@ -202,22 +232,31 @@
     width: calc(var(--column-width) - 20px);
     border-radius: 3px;
   }
-  br.bottom {
+  br.left {
+    width: calc(var(--column-width) - 10px);
+    border-radius: 3px 0 0 3px;
+  }
+  br.right {
+    width: calc(var(--column-width) - 10px);
+    margin-left: 0;
+    border-radius: 0 3px 3px 0;
+  }
+  br.left.right {
+    width: calc(var(--column-width));
+    border-radius: 0;
+    margin-left: 0;
+  }
+  br.below {
     display: none;
   }
   .barcontainer {
     width: var(--column-width);
   }
-  .top:last-child > .content > .barcontainer > br.bottom {
+  .top:last-child > .content > .barcontainer > br.below {
     display: block;
   }
-  .empty .content {
-    width: max-content;
-  }
-  .root.content {
-    display: none;
-  }
   .children {
+    grid-area: b;
     width: max-content;
     padding: 0;
     margin: 0;
@@ -226,7 +265,7 @@
     opacity: 0;
     border: none;
     border-radius: var(--border-radius);
-    color: var(--color-weak);
+    --color: var(--color-weak);
     padding: var(--padding);
     margin: 0 var(--padding);
     width: calc(var(--column-width) - var(--padding) * 2);
@@ -241,7 +280,7 @@
   }
   .add:hover {
     background-color: var(--this-outside-indent);
-    color: var(--color);
+    --color: inherit;
   }
   .add:active {
     background-color: var(--this-outside-active);

@@ -1,9 +1,13 @@
 <script>
   import Icon from './Icon.svelte';
   export let name;
+  export let disabled = false;
+  function preventBlur(e) {
+    e.preventDefault();
+  }
 </script>
 
-<button class="top" on:click>
+<button class="top" class:disabled on:click on:mousedown={preventBlur}>
   <Icon {name} size="20px" />
 </button>
 
@@ -20,6 +24,9 @@
     text-align: left;
     border-radius: var(--border-radius);
     color: var(--color);
+  }
+  .disabled {
+    --color: var(--color-weak);
   }
   .top:hover {
     background-color: var(--background-indent);

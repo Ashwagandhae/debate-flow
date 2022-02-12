@@ -16,8 +16,14 @@
   }
   let flows = [];
   function focusFlow() {
-    if (flows[selected]?.lastFocus != flows[selected]) {
-      flows[selected].lastFocus.focus = true;
+    if (flows[selected]?.lastFocus != undefined) {
+      let { parent, index } = flows[selected].lastFocus;
+      if (parent.children[index]) {
+        parent.children[index].focus = true;
+        flows = flows;
+      } else {
+        flows[selected].children[0].focus = true;
+      }
     } else {
       flows[selected].children[0].focus = true;
     }
@@ -49,6 +55,7 @@
     selected = flows.length - 1;
     flows = flows;
   }
+  addFlow(false);
 </script>
 
 <main class:dark>
@@ -93,7 +100,7 @@
     grid-template-areas:
       'a b'
       'a c';
-    grid-template-columns: max(200px, 15%) auto;
+    grid-template-columns: max(150px, 15%) auto;
     padding: 5vh;
     width: 100%;
     height: 100%;
@@ -118,8 +125,10 @@
   }
 
   .add-tab {
-    display: flex;
-    flex-direction: row;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    align-items: stretch;
+    grid-gap: var(--padding);
   }
   .title {
     background: var(--background);
@@ -150,6 +159,7 @@
   :global(body) {
     background: var(--background-back);
     color: var(--color);
+    font-family: var(--font-family);
   }
   :global(:root) {
     --column-width: 150px;
@@ -158,9 +168,9 @@
     --gap: 16px;
     --view-height: calc(90vh - var(--title-height) - var(--gap));
     --font-size: 0.9em;
-    --font-family: Avenira, Arial, sans-serif;
+    --font-family: Avenir, sans-serif;
     --border-radius: 15px;
-    --br-height: 5px;
+    --br-height: 3px;
   }
   :global(body) {
     --background-back: hsl(0 0% 90%);

@@ -9,9 +9,14 @@
   export let flow;
 
   let textarea;
+  let validFocus = false;
   afterUpdate(function () {
     if (flow.focus) {
       textarea.focus();
+    }
+    if (flow.lastFocus) {
+      let { parent, index } = flow.lastFocus;
+      validFocus = parent.children[index].focus;
     }
   });
   function handleBlur() {
@@ -27,11 +32,61 @@
       dispatch('focusFlow');
     }
   }
+  function deleteChild() {
+    let { parent, index } = flow.lastFocus;
+    if (!(parent.children[index].level == 1 && parent.children.length == 1)) {
+      parent.children.splice(index, 1);
+      for (let i = index; i < parent.children.length; i++) {
+        parent.children[i].index = i;
+      }
+      let newIndex = index;
+      if (index != 0) {
+        newIndex = index - 1;
+      }
+      if (parent.children[newIndex]) {
+        parent.children[newIndex].focus = true;
+      } else {
+        parent.focus = true;
+      }
+    } else {
+      parent.children[index].focus = true;
+    }
+    flow = flow;
+  }
 
   function addChild() {
-    console.log('yo');
+    let { parent, index } = flow.lastFocus;
+    let children = parent.children[index].children;
+    children.splice(0, 0, {
+      content: '',
+      children: [],
+      index: index,
+      level: parent.level + 1,
+      focus: false,
+    });
+    for (let i = index; i < children.length; i++) {
+      children[i].index = i;
+    }
+    parent.children[index].children = children;
+    flow = flow;
   }
-  function addSibling() {}
+  function addSibling(direction) {
+    let { parent, index } = flow.lastFocus;
+    let children = parent.children;
+    index = index + direction;
+    children.splice(index, 0, {
+      content: '',
+      children: [],
+      index: index,
+      level: parent.level + 1,
+      focus: false,
+    });
+    for (let i = index; i < children.length; i++) {
+      children[i].index = i;
+    }
+    parent.children = children;
+    flow = flow;
+  }
 </script>
 
 <div class="top">
@@ -47,9 +102,18 @@
   </div>
   <div class="buttons-wrapper">
     <div class="buttons">
-      <Button name="arrowRight" on:click={addChild} />
-      <Button name="arrowUp" on:click={() => addSibling(0)} />
-      <Button name="arrowDown" on:click={() => addSibling(1)} />
+      <Button name="arrowRight" on:click={addChild} disabled={!validFocus} />
+      <Button
+        name="arrowUp"
+        on:click={() => addSibling(0)}
+        disabled={!validFocus}
+      />
+      <Button
+        name="arrowDown"
+        on:click={() => addSibling(1)}
+        disabled={!validFocus}
+      />
+      <Button name="delete" on:click={deleteChild} disabled={!validFocus} />
     </div>
   </div>
 </div>
@@ -60,6 +124,8 @@
     font-size: 2em;
     display: flex;
     flex-direction: row;
+    box-sizing: border-box;
+    height: var(--title-height);
   }
   .content {
     width: 100%;

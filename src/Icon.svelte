@@ -22,6 +22,12 @@
       name: 'arrowDown',
       svg: `<path d="M93.5 26.5L50.5 73.5L7.5 26.5" stroke-width="10" stroke-linecap="round" stroke-linejoin="round"/>`,
     },
+    {
+      box: 100,
+      name: 'delete',
+      svg: `<path d="M85.7107 15L15 85.7107" stroke-width="10" stroke-linecap="round"/>
+<path d="M15 15L85.7107 85.7107" stroke-width="10" stroke-linecap="round"/>`,
+    },
   ];
   let displayIcon = icons.find((e) => e.name === name);
 </script>
