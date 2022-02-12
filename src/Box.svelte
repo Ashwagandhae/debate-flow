@@ -12,6 +12,12 @@
 
   export let data;
 
+  export let addSibling = () => {};
+  export let deleteSelf = () => {};
+  export let focusSibling = () => {};
+  export let focusParent = () => {};
+  export let saveFocus = () => {};
+
   const { getNeg } = getContext('neg');
   let neg = getNeg();
 
@@ -22,14 +28,14 @@
   afterUpdate(function () {
     if (data.focus) {
       textarea.focus();
-      dispatch('saveChildFocus', data.index);
+      saveFocus(data.index);
     }
   });
   function preventBlur(e) {
     e.preventDefault();
   }
-  function saveFocus(index) {
-    dispatch('saveFocus', { parent: data, index: index });
+  function saveChildFocus(index) {
+    dispatch('saveChildFocus', data.index);
   }
   function handleFocus() {
     if (!data.focus) {
@@ -53,28 +59,28 @@
         addChild(0);
       } else {
         data.focus = false;
-        dispatch('addSibling', data.index + 1);
+        addSibling(data.index + 1);
       }
     } else if (e.key == 'Backspace') {
       if (data.content.length == 0) {
         data.focus = false;
-        dispatch('deleteSelf', data.index);
+        deleteSelf(data.index);
       }
     } else if (e.key == 'ArrowDown') {
       e.preventDefault();
 
       data.focus = false;
-      dispatch('focusSibling', data.index + 1);
+      focusSibling(data.index + 1);
     } else if (e.key == 'ArrowUp') {
       e.preventDefault();
 
       data.focus = false;
-      dispatch('focusSibling', data.index - 1);
+      focusSibling(data.index - 1);
     } else if (e.key == 'ArrowLeft') {
       data.focus = false;
       e.preventDefault();
 
-      dispatch('focusParent');
+      focusParent();
     } else if (e.key == 'ArrowRight') {
       e.preventDefault();
 
@@ -83,7 +89,7 @@
       if (data.children.length > 0) {
         data.children[0].focus = true;
       } else {
-        dispatch('focusSibling', data.index + 1);
+        focusSibling(data.index + 1);
       }
     }
   }
@@ -181,12 +187,12 @@
     {#each data.children as child}
       <svelte:self
         bind:data={child}
-        on:addSibling={(e) => addChild(e.detail)}
-        on:deleteSelf={(e) => deleteChild(e.detail)}
-        on:focusSibling={(e) => focusChild(e.detail)}
-        on:saveChildFocus={(e) => saveFocus(e.detail)}
+        addSibling={addChild}
+        deleteSelf={deleteChild}
+        focusSibling={focusChild}
+        focusParent={focusSelf}
+        saveFocus={saveChildFocus}
         on:saveFocus
-        on:focusParent={focusSelf}
       />
     {/each}
   </ul>

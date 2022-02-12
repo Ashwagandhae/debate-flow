@@ -859,13 +859,13 @@ var app = (function () {
 
     function get_each_context$2(ctx, list, i) {
     	const child_ctx = ctx.slice();
-    	child_ctx[25] = list[i];
-    	child_ctx[26] = list;
-    	child_ctx[27] = i;
+    	child_ctx[26] = list[i];
+    	child_ctx[27] = list;
+    	child_ctx[28] = i;
     	return child_ctx;
     }
 
-    // (169:4) {#if data.children.length == 0 && data.level < columnCount}
+    // (175:4) {#if data.children.length == 0 && data.level < columnCount}
     function create_if_block$2(ctx) {
     	let button;
     	let icon;
@@ -883,7 +883,7 @@ var app = (function () {
     			button = element("button");
     			create_component(icon.$$.fragment);
     			attr_dev(button, "class", "add svelte-17w8vem");
-    			add_location(button, file$7, 169, 6, 4176);
+    			add_location(button, file$7, 175, 6, 4262);
     		},
     		m: function mount(target, anchor) {
     			insert_dev(target, button, anchor);
@@ -892,7 +892,7 @@ var app = (function () {
 
     			if (!mounted) {
     				dispose = [
-    					listen_dev(button, "click", /*click_handler*/ ctx[15], false, false, false),
+    					listen_dev(button, "click", /*click_handler*/ ctx[20], false, false, false),
     					listen_dev(button, "mousedown", preventBlur$1, false, false, false)
     				];
 
@@ -921,37 +921,38 @@ var app = (function () {
     		block,
     		id: create_if_block$2.name,
     		type: "if",
-    		source: "(169:4) {#if data.children.length == 0 && data.level < columnCount}",
+    		source: "(175:4) {#if data.children.length == 0 && data.level < columnCount}",
     		ctx
     	});
 
     	return block;
     }
 
-    // (181:4) {#each data.children as child}
+    // (187:4) {#each data.children as child}
     function create_each_block$2(ctx) {
     	let box;
     	let updating_data;
     	let current;
 
     	function box_data_binding(value) {
-    		/*box_data_binding*/ ctx[16](value, /*child*/ ctx[25], /*each_value*/ ctx[26], /*child_index*/ ctx[27]);
+    		/*box_data_binding*/ ctx[21](value, /*child*/ ctx[26], /*each_value*/ ctx[27], /*child_index*/ ctx[28]);
     	}
 
-    	let box_props = {};
+    	let box_props = {
+    		addSibling: /*addChild*/ ctx[9],
+    		deleteSelf: /*deleteChild*/ ctx[10],
+    		focusSibling: /*focusChild*/ ctx[11],
+    		focusParent: /*focusSelf*/ ctx[12],
+    		saveFocus: /*saveChildFocus*/ ctx[5]
+    	};
 
-    	if (/*child*/ ctx[25] !== void 0) {
-    		box_props.data = /*child*/ ctx[25];
+    	if (/*child*/ ctx[26] !== void 0) {
+    		box_props.data = /*child*/ ctx[26];
     	}
 
     	box = new Box({ props: box_props, $$inline: true });
     	binding_callbacks.push(() => bind(box, 'data', box_data_binding));
-    	box.$on("addSibling", /*addSibling_handler*/ ctx[17]);
-    	box.$on("deleteSelf", /*deleteSelf_handler*/ ctx[18]);
-    	box.$on("focusSibling", /*focusSibling_handler*/ ctx[19]);
-    	box.$on("saveChildFocus", /*saveChildFocus_handler*/ ctx[20]);
-    	box.$on("saveFocus", /*saveFocus_handler*/ ctx[21]);
-    	box.$on("focusParent", /*focusSelf*/ ctx[12]);
+    	box.$on("saveFocus", /*saveFocus_handler*/ ctx[22]);
 
     	const block = {
     		c: function create() {
@@ -967,7 +968,7 @@ var app = (function () {
 
     			if (!updating_data && dirty & /*data*/ 1) {
     				updating_data = true;
-    				box_changes.data = /*child*/ ctx[25];
+    				box_changes.data = /*child*/ ctx[26];
     				add_flush_callback(() => updating_data = false);
     			}
 
@@ -991,7 +992,7 @@ var app = (function () {
     		block,
     		id: create_each_block$2.name,
     		type: "each",
-    		source: "(181:4) {#each data.children as child}",
+    		source: "(187:4) {#each data.children as child}",
     		ctx
     	});
 
@@ -1014,7 +1015,7 @@ var app = (function () {
     	let current;
 
     	function text_1_value_binding(value) {
-    		/*text_1_value_binding*/ ctx[13](value);
+    		/*text_1_value_binding*/ ctx[18](value);
     	}
 
     	let text_1_props = { placeholder: "type content here" };
@@ -1025,7 +1026,7 @@ var app = (function () {
 
     	text_1 = new Text({ props: text_1_props, $$inline: true });
     	binding_callbacks.push(() => bind(text_1, 'value', text_1_value_binding));
-    	/*text_1_binding*/ ctx[14](text_1);
+    	/*text_1_binding*/ ctx[19](text_1);
     	text_1.$on("keydown", /*handleKeydown*/ ctx[8]);
     	text_1.$on("blur", /*handleBlur*/ ctx[7]);
     	text_1.$on("focus", /*handleFocus*/ ctx[6]);
@@ -1064,21 +1065,21 @@ var app = (function () {
     			attr_dev(br0, "class", "above svelte-17w8vem");
     			toggle_class(br0, "left", /*data*/ ctx[0].children.length > 0);
     			toggle_class(br0, "right", /*data*/ ctx[0].index == 0 && /*data*/ ctx[0].level > 1);
-    			add_location(br0, file$7, 153, 6, 3712);
+    			add_location(br0, file$7, 159, 6, 3798);
     			attr_dev(br1, "class", "below svelte-17w8vem");
-    			add_location(br1, file$7, 166, 6, 4074);
+    			add_location(br1, file$7, 172, 6, 4160);
     			attr_dev(div0, "class", "barcontainer svelte-17w8vem");
-    			add_location(div0, file$7, 152, 4, 3679);
+    			add_location(div0, file$7, 158, 4, 3765);
     			attr_dev(div1, "class", "content svelte-17w8vem");
     			toggle_class(div1, "root", /*root*/ ctx[1]);
-    			add_location(div1, file$7, 151, 2, 3642);
+    			add_location(div1, file$7, 157, 2, 3728);
     			attr_dev(ul, "class", "children svelte-17w8vem");
-    			add_location(ul, file$7, 179, 2, 4357);
+    			add_location(ul, file$7, 185, 2, 4443);
     			attr_dev(div2, "class", "top svelte-17w8vem");
     			toggle_class(div2, "empty", /*data*/ ctx[0].children.length == 0);
     			toggle_class(div2, "two", /*data*/ ctx[0].level % 2 == 0 && !/*neg*/ ctx[3] || /*data*/ ctx[0].level % 2 == 1 && /*neg*/ ctx[3]);
     			toggle_class(div2, "focus", /*data*/ ctx[0].focus);
-    			add_location(div2, file$7, 145, 0, 3474);
+    			add_location(div2, file$7, 151, 0, 3560);
     		},
     		l: function claim(nodes) {
     			throw new Error("options.hydrate only works if the component was compiled with the `hydratable: true` option");
@@ -1149,7 +1150,7 @@ var app = (function () {
     				toggle_class(div1, "root", /*root*/ ctx[1]);
     			}
 
-    			if (dirty & /*data, addChild, deleteChild, focusChild, saveFocus, focusSelf*/ 7713) {
+    			if (dirty & /*addChild, deleteChild, focusChild, focusSelf, saveChildFocus, data*/ 7713) {
     				each_value = /*data*/ ctx[0].children;
     				validate_each_argument(each_value);
     				let i;
@@ -1213,7 +1214,7 @@ var app = (function () {
     		},
     		d: function destroy(detaching) {
     			if (detaching) detach_dev(div2);
-    			/*text_1_binding*/ ctx[14](null);
+    			/*text_1_binding*/ ctx[19](null);
     			destroy_component(text_1);
     			if (if_block) if_block.d();
     			destroy_each(each_blocks, detaching);
@@ -1241,6 +1242,27 @@ var app = (function () {
     	const dispatch = createEventDispatcher();
     	let { root = false } = $$props;
     	let { data } = $$props;
+
+    	let { addSibling = () => {
+    		
+    	} } = $$props;
+
+    	let { deleteSelf = () => {
+    		
+    	} } = $$props;
+
+    	let { focusSibling = () => {
+    		
+    	} } = $$props;
+
+    	let { focusParent = () => {
+    		
+    	} } = $$props;
+
+    	let { saveFocus = () => {
+    		
+    	} } = $$props;
+
     	const { getNeg } = getContext('neg');
     	let neg = getNeg();
     	const { getColumnCount } = getContext('columnCount');
@@ -1250,12 +1272,12 @@ var app = (function () {
     	afterUpdate(function () {
     		if (data.focus) {
     			textarea.focus();
-    			dispatch('saveChildFocus', data.index);
+    			saveFocus(data.index);
     		}
     	});
 
-    	function saveFocus(index) {
-    		dispatch('saveFocus', { parent: data, index });
+    	function saveChildFocus(index) {
+    		dispatch('saveChildFocus', data.index);
     	}
 
     	function handleFocus() {
@@ -1281,25 +1303,25 @@ var app = (function () {
     				addChild(0);
     			} else {
     				$$invalidate(0, data.focus = false, data);
-    				dispatch('addSibling', data.index + 1);
+    				addSibling(data.index + 1);
     			}
     		} else if (e.key == 'Backspace') {
     			if (data.content.length == 0) {
     				$$invalidate(0, data.focus = false, data);
-    				dispatch('deleteSelf', data.index);
+    				deleteSelf(data.index);
     			}
     		} else if (e.key == 'ArrowDown') {
     			e.preventDefault();
     			$$invalidate(0, data.focus = false, data);
-    			dispatch('focusSibling', data.index + 1);
+    			focusSibling(data.index + 1);
     		} else if (e.key == 'ArrowUp') {
     			e.preventDefault();
     			$$invalidate(0, data.focus = false, data);
-    			dispatch('focusSibling', data.index - 1);
+    			focusSibling(data.index - 1);
     		} else if (e.key == 'ArrowLeft') {
     			$$invalidate(0, data.focus = false, data);
     			e.preventDefault();
-    			dispatch('focusParent');
+    			focusParent();
     		} else if (e.key == 'ArrowRight') {
     			e.preventDefault();
     			$$invalidate(0, data.focus = false, data);
@@ -1307,7 +1329,7 @@ var app = (function () {
     			if (data.children.length > 0) {
     				$$invalidate(0, data.children[0].focus = true, data);
     			} else {
-    				dispatch('focusSibling', data.index + 1);
+    				focusSibling(data.index + 1);
     			}
     		}
     	}
@@ -1382,7 +1404,15 @@ var app = (function () {
     		$$invalidate(0, data);
     	}
 
-    	const writable_props = ['root', 'data'];
+    	const writable_props = [
+    		'root',
+    		'data',
+    		'addSibling',
+    		'deleteSelf',
+    		'focusSibling',
+    		'focusParent',
+    		'saveFocus'
+    	];
 
     	Object.keys($$props).forEach(key => {
     		if (!~writable_props.indexOf(key) && key.slice(0, 2) !== '$$' && key !== 'slot') console.warn(`<Box> was created with unknown prop '${key}'`);
@@ -1409,11 +1439,6 @@ var app = (function () {
     		$$invalidate(0, data);
     	}
 
-    	const addSibling_handler = e => addChild(e.detail);
-    	const deleteSelf_handler = e => deleteChild(e.detail);
-    	const focusSibling_handler = e => focusChild(e.detail);
-    	const saveChildFocus_handler = e => saveFocus(e.detail);
-
     	function saveFocus_handler(event) {
     		bubble.call(this, $$self, event);
     	}
@@ -1421,6 +1446,11 @@ var app = (function () {
     	$$self.$$set = $$props => {
     		if ('root' in $$props) $$invalidate(1, root = $$props.root);
     		if ('data' in $$props) $$invalidate(0, data = $$props.data);
+    		if ('addSibling' in $$props) $$invalidate(13, addSibling = $$props.addSibling);
+    		if ('deleteSelf' in $$props) $$invalidate(14, deleteSelf = $$props.deleteSelf);
+    		if ('focusSibling' in $$props) $$invalidate(15, focusSibling = $$props.focusSibling);
+    		if ('focusParent' in $$props) $$invalidate(16, focusParent = $$props.focusParent);
+    		if ('saveFocus' in $$props) $$invalidate(17, saveFocus = $$props.saveFocus);
     	};
 
     	$$self.$capture_state = () => ({
@@ -1433,13 +1463,18 @@ var app = (function () {
     		dispatch,
     		root,
     		data,
+    		addSibling,
+    		deleteSelf,
+    		focusSibling,
+    		focusParent,
+    		saveFocus,
     		getNeg,
     		neg,
     		getColumnCount,
     		columnCount,
     		textarea,
     		preventBlur: preventBlur$1,
-    		saveFocus,
+    		saveChildFocus,
     		handleFocus,
     		handleBlur,
     		handleKeydown,
@@ -1452,6 +1487,11 @@ var app = (function () {
     	$$self.$inject_state = $$props => {
     		if ('root' in $$props) $$invalidate(1, root = $$props.root);
     		if ('data' in $$props) $$invalidate(0, data = $$props.data);
+    		if ('addSibling' in $$props) $$invalidate(13, addSibling = $$props.addSibling);
+    		if ('deleteSelf' in $$props) $$invalidate(14, deleteSelf = $$props.deleteSelf);
+    		if ('focusSibling' in $$props) $$invalidate(15, focusSibling = $$props.focusSibling);
+    		if ('focusParent' in $$props) $$invalidate(16, focusParent = $$props.focusParent);
+    		if ('saveFocus' in $$props) $$invalidate(17, saveFocus = $$props.saveFocus);
     		if ('neg' in $$props) $$invalidate(3, neg = $$props.neg);
     		if ('columnCount' in $$props) $$invalidate(4, columnCount = $$props.columnCount);
     		if ('textarea' in $$props) $$invalidate(2, textarea = $$props.textarea);
@@ -1467,7 +1507,7 @@ var app = (function () {
     		textarea,
     		neg,
     		columnCount,
-    		saveFocus,
+    		saveChildFocus,
     		handleFocus,
     		handleBlur,
     		handleKeydown,
@@ -1475,14 +1515,15 @@ var app = (function () {
     		deleteChild,
     		focusChild,
     		focusSelf,
+    		addSibling,
+    		deleteSelf,
+    		focusSibling,
+    		focusParent,
+    		saveFocus,
     		text_1_value_binding,
     		text_1_binding,
     		click_handler,
     		box_data_binding,
-    		addSibling_handler,
-    		deleteSelf_handler,
-    		focusSibling_handler,
-    		saveChildFocus_handler,
     		saveFocus_handler
     	];
     }
@@ -1490,7 +1531,16 @@ var app = (function () {
     class Box extends SvelteComponentDev {
     	constructor(options) {
     		super(options);
-    		init(this, options, instance$7, create_fragment$7, safe_not_equal, { root: 1, data: 0 });
+
+    		init(this, options, instance$7, create_fragment$7, safe_not_equal, {
+    			root: 1,
+    			data: 0,
+    			addSibling: 13,
+    			deleteSelf: 14,
+    			focusSibling: 15,
+    			focusParent: 16,
+    			saveFocus: 17
+    		});
 
     		dispatch_dev("SvelteRegisterComponent", {
     			component: this,
@@ -1520,6 +1570,46 @@ var app = (function () {
     	}
 
     	set data(value) {
+    		throw new Error("<Box>: Props cannot be set directly on the component instance unless compiling with 'accessors: true' or '<svelte:options accessors/>'");
+    	}
+
+    	get addSibling() {
+    		throw new Error("<Box>: Props cannot be read directly from the component instance unless compiling with 'accessors: true' or '<svelte:options accessors/>'");
+    	}
+
+    	set addSibling(value) {
+    		throw new Error("<Box>: Props cannot be set directly on the component instance unless compiling with 'accessors: true' or '<svelte:options accessors/>'");
+    	}
+
+    	get deleteSelf() {
+    		throw new Error("<Box>: Props cannot be read directly from the component instance unless compiling with 'accessors: true' or '<svelte:options accessors/>'");
+    	}
+
+    	set deleteSelf(value) {
+    		throw new Error("<Box>: Props cannot be set directly on the component instance unless compiling with 'accessors: true' or '<svelte:options accessors/>'");
+    	}
+
+    	get focusSibling() {
+    		throw new Error("<Box>: Props cannot be read directly from the component instance unless compiling with 'accessors: true' or '<svelte:options accessors/>'");
+    	}
+
+    	set focusSibling(value) {
+    		throw new Error("<Box>: Props cannot be set directly on the component instance unless compiling with 'accessors: true' or '<svelte:options accessors/>'");
+    	}
+
+    	get focusParent() {
+    		throw new Error("<Box>: Props cannot be read directly from the component instance unless compiling with 'accessors: true' or '<svelte:options accessors/>'");
+    	}
+
+    	set focusParent(value) {
+    		throw new Error("<Box>: Props cannot be set directly on the component instance unless compiling with 'accessors: true' or '<svelte:options accessors/>'");
+    	}
+
+    	get saveFocus() {
+    		throw new Error("<Box>: Props cannot be read directly from the component instance unless compiling with 'accessors: true' or '<svelte:options accessors/>'");
+    	}
+
+    	set saveFocus(value) {
     		throw new Error("<Box>: Props cannot be set directly on the component instance unless compiling with 'accessors: true' or '<svelte:options accessors/>'");
     	}
     }
