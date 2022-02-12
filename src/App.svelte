@@ -170,18 +170,18 @@
     --font-size: 0.9em;
     --font-family: Avenir, sans-serif;
     --border-radius: 15px;
-    --br-height: 3px;
+    --br-height: 4px;
   }
   :global(body) {
     --background-back: hsl(0 0% 90%);
 
     --background: hsl(0 0% 100%);
-    --background-indent: hsl(0 0% 90%);
-    --background-active: hsl(0 0% 70%);
+    --background-indent: hsl(0 0% 92%);
+    --background-active: hsl(0 0% 84%);
 
     --background-secondary: hsl(0 0% 97%);
-    --background-secondary-indent: hsl(0 0% 85%);
-    --background-secondary-active: hsl(0 0% 65%);
+    --background-secondary-indent: hsl(0 0% 89%);
+    --background-secondary-active: hsl(0 0% 81%);
 
     --color: hsl(0 0% 30%);
     --color-weak: hsl(0, 0%, 70%);

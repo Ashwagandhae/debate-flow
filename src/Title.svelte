@@ -14,11 +14,18 @@
     if (flow.focus) {
       textarea.focus();
     }
-    if (flow.lastFocus) {
-      let { parent, index } = flow.lastFocus;
-      validFocus = parent.children[index].focus;
-    }
   });
+  function setValidFocus() {
+    // it works ok
+    setTimeout(() => {
+      if (flow.lastFocus) {
+        let { parent, index } = flow.lastFocus;
+        validFocus = parent?.children[index]?.focus;
+      }
+    }, 0);
+  }
+  $: flow.lastFocus, setValidFocus();
+
   function handleBlur() {
     if (flow.focus) {
       delete flow.focus;
@@ -45,6 +52,7 @@
       }
       if (parent.children[newIndex]) {
         parent.children[newIndex].focus = true;
+        parent.children = parent.children;
       } else {
         parent.focus = true;
       }

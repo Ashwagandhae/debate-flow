@@ -21,7 +21,6 @@
   let textarea;
   afterUpdate(function () {
     if (data.focus) {
-      console.log('bruh');
       textarea.focus();
       dispatch('saveChildFocus', data.index);
     }
@@ -62,15 +61,23 @@
         dispatch('deleteSelf', data.index);
       }
     } else if (e.key == 'ArrowDown') {
+      e.preventDefault();
+
       data.focus = false;
       dispatch('focusSibling', data.index + 1);
     } else if (e.key == 'ArrowUp') {
+      e.preventDefault();
+
       data.focus = false;
       dispatch('focusSibling', data.index - 1);
     } else if (e.key == 'ArrowLeft') {
       data.focus = false;
+      e.preventDefault();
+
       dispatch('focusParent');
     } else if (e.key == 'ArrowRight') {
+      e.preventDefault();
+
       data.focus = false;
 
       if (data.children.length > 0) {
@@ -81,7 +88,7 @@
     }
   }
   function addChild(index) {
-    let children = [...data.children];
+    let children = data.children;
     children.splice(index, 0, {
       content: '',
       children: [],
@@ -96,40 +103,43 @@
   }
   function deleteChild(index) {
     if (data.children.length > 1 || data.level >= 1) {
-      let children = [...data.children];
+      let children = data.children;
       children.splice(index, 1);
       for (let i = index; i < children.length; i++) {
         children[i].index = i;
       }
+      data.children = children;
       if (children[index - 1]) {
         children[index - 1].focus = true;
+      } else if (data.children.length == 0) {
+        data.focus = true;
       }
       data.children = children;
-
-      if (data.children.length == 0) {
-        data.focus = true;
-        data = data;
-      }
     } else {
       data.children[index].focus = true;
     }
+    data = data;
   }
   function focusChild(index) {
     if (index < 0) {
       data.focus = true;
       return;
     }
-    if (index >= data.children.length) {
-      if (data.children[data.children.length - 1].children.length > 0) {
-        data.children[data.children.length - 1].children[0].focus = true;
+    let children = data.children;
+    if (index >= children.length) {
+      if (children[children.length - 1].children.length > 0) {
+        children[children.length - 1].children[0].focus = true;
       }
+      data.children = children;
+      data = data;
       return;
     }
-    data.children[index].focus = true;
-    data = data;
+    children[index].focus = true;
+    data.children = children;
   }
   function focusSelf() {
     data.focus = true;
+    data = data;
   }
 </script>
 
