@@ -11,12 +11,14 @@
   export let root = false;
 
   export let data;
+  export let parentPath = [];
+
+  $: path = [...parentPath, data.index];
 
   export let addSibling = () => {};
   export let deleteSelf = () => {};
   export let focusSibling = () => {};
   export let focusParent = () => {};
-  export let saveFocus = () => {};
 
   const { getNeg } = getContext('neg');
   let neg = getNeg();
@@ -28,14 +30,11 @@
   afterUpdate(function () {
     if (data.focus) {
       textarea.focus();
-      saveFocus(data.index);
+      dispatch('saveFocus', path);
     }
   });
   function preventBlur(e) {
     e.preventDefault();
-  }
-  function saveChildFocus(index) {
-    dispatch('saveChildFocus', data.index);
   }
   function handleFocus() {
     if (!data.focus) {
@@ -56,10 +55,10 @@
       e.preventDefault();
       if (e.shiftKey) {
         data.focus = false;
-        addChild(0);
+        addChild(0, 0);
       } else {
         data.focus = false;
-        addSibling(data.index + 1);
+        addSibling(data.index, 1);
       }
     } else if (e.key == 'Backspace') {
       if (data.content.length == 0) {
@@ -70,12 +69,12 @@
       e.preventDefault();
 
       data.focus = false;
-      focusSibling(data.index + 1);
+      focusSibling(data.index, 1);
     } else if (e.key == 'ArrowUp') {
       e.preventDefault();
 
       data.focus = false;
-      focusSibling(data.index - 1);
+      focusSibling(data.index, -1);
     } else if (e.key == 'ArrowLeft') {
       data.focus = false;
       e.preventDefault();
@@ -87,61 +86,84 @@
       data.focus = false;
 
       if (data.children.length > 0) {
-        data.children[0].focus = true;
+        focusChild(0, 0);
       } else {
-        focusSibling(data.index + 1);
+        focusSibling(data.index, 1);
       }
     }
   }
-  function addChild(index) {
-    let children = data.children;
-    children.splice(index, 0, {
-      content: '',
-      children: [],
-      index: index,
-      level: data.level + 1,
-      focus: true,
-    });
-    for (let i = index; i < children.length; i++) {
-      children[i].index = i;
+  function addChild(index, direction) {
+    let newIndex = index + direction;
+    // if not at end of column
+    if (data.level < columnCount) {
+      let children = [...data.children];
+
+      children.splice(newIndex, 0, {
+        content: '',
+        children: [],
+        index: newIndex,
+        level: data.level + 1,
+        focus: true,
+      });
+      for (let i = newIndex; i < children.length; i++) {
+        children[i].index = i;
+      }
+      data.children = [...children];
+      data = data;
+    } else {
+      // stay focused
+      data.focus = true;
     }
-    data.children = children;
   }
   function deleteChild(index) {
+    // if target isn't only child of first level
     if (data.children.length > 1 || data.level >= 1) {
-      let children = data.children;
+      let children = [...data.children];
       children.splice(index, 1);
+      // fix index
       for (let i = index; i < children.length; i++) {
         children[i].index = i;
       }
-      data.children = children;
+      // focus on previous child of deleted
       if (children[index - 1]) {
         children[index - 1].focus = true;
+        // focus on parent when empty
       } else if (data.children.length == 0) {
         data.focus = true;
       }
-      data.children = children;
+      data.children = [...children];
     } else {
+      // stay focused
       data.children[index].focus = true;
     }
     data = data;
   }
-  function focusChild(index) {
-    if (index < 0) {
+  function focusChild(index, direction) {
+    let newIndex = index + direction;
+    // focus on parent when index is before children
+    if (newIndex < 0) {
       data.focus = true;
       return;
     }
+    // direct pointer
     let children = data.children;
-    if (index >= children.length) {
+    // if index is beyond children
+    if (newIndex >= children.length) {
+      // if has grandchild
       if (children[children.length - 1].children.length > 0) {
+        // focus on first grandchild
+
         children[children.length - 1].children[0].focus = true;
+      } else {
+        // stay focused
+        children[index].focus = true;
       }
-      data.children = children;
-      data = data;
-      return;
+    } else {
+      // focus on new
+      children[newIndex].focus = true;
     }
-    children[index].focus = true;
     data.children = children;
+    data = data;
   }
   function focusSelf() {
     data.focus = true;
@@ -191,7 +213,7 @@
         deleteSelf={deleteChild}
         focusSibling={focusChild}
         focusParent={focusSelf}
-        saveFocus={saveChildFocus}
+        parentPath={path}
         on:saveFocus
       />
     {/each}

@@ -4,23 +4,35 @@
   import { afterUpdate } from 'svelte';
 
   import { createEventDispatcher } from 'svelte';
-  const dispatch = createEventDispatcher();
 
   export let flow;
 
   let textarea;
-  let validFocus = false;
   afterUpdate(function () {
     if (flow.focus) {
       textarea.focus();
     }
   });
+  function boxFromPath(path, scope) {
+    if (!scope) {
+      scope = 0;
+    }
+    let ret = flow;
+    if (path.length > 1) {
+      for (let i = 1; i < path.length - scope; i++) {
+        ret = ret.children[path[i]];
+      }
+    }
+    return ret;
+  }
+  let validFocus = false;
+
   function setValidFocus() {
-    // it works ok
+    // wait until its actually done updating
     setTimeout(() => {
-      if (flow.lastFocus) {
-        let { parent, index } = flow.lastFocus;
-        validFocus = parent?.children[index]?.focus;
+      if (flow.lastFocus && flow.lastFocus.length > 1) {
+        let box = boxFromPath(flow.lastFocus);
+        validFocus = box.focus;
       }
     }, 0);
   }
@@ -36,63 +48,75 @@
   function handleKeydown(e) {
     if (e.key == 'Enter' || e.key == 'ArrowDown') {
       e.preventDefault();
-      dispatch('focusFlow');
+      if (flow.children.length > 0) {
+        flow.children[0].focus = true;
+      }
     }
   }
   function deleteChild() {
-    let { parent, index } = flow.lastFocus;
-    if (!(parent.children[index].level == 1 && parent.children.length == 1)) {
-      parent.children.splice(index, 1);
-      for (let i = index; i < parent.children.length; i++) {
-        parent.children[i].index = i;
+    let parent = boxFromPath(flow.lastFocus, 1);
+    let target = boxFromPath(flow.lastFocus);
+    let children = [...parent.children];
+    // if target isn't only child of first level
+    if (children.length > 1 || parent.level >= 1) {
+      children.splice(target.index, 1);
+      // fix index
+      for (let i = target.index; i < children.length; i++) {
+        children[i].index = i;
       }
-      let newIndex = index;
-      if (index != 0) {
-        newIndex = index - 1;
-      }
-      if (parent.children[newIndex]) {
-        parent.children[newIndex].focus = true;
-        parent.children = parent.children;
-      } else {
+      // focus parent when empty
+      if (children.length <= 0) {
         parent.focus = true;
+        // focus last child when last child deleted
+      } else if (target.index >= children.length) {
+        children[children.length - 1].focus = true;
+        // focus next child of deleted
+      } else {
+        children[target.index].focus = true;
       }
-    } else {
-      parent.children[index].focus = true;
+
+      parent.children = [...children];
+      flow = flow;
     }
-    flow = flow;
   }
 
   function addChild() {
-    let { parent, index } = flow.lastFocus;
-    let children = parent.children[index].children;
-    children.splice(0, 0, {
-      content: '',
-      children: [],
-      index: index,
-      level: parent.level + 1,
-      focus: false,
-    });
-    for (let i = index; i < children.length; i++) {
-      children[i].index = i;
+    // if not at end of column
+    let target = boxFromPath(flow.lastFocus);
+    let children = [...target.children];
+    if (target.level < flow.columns.length) {
+      children.splice(0, 0, {
+        content: '',
+        children: [],
+        index: 0,
+        level: target.level + 1,
+        focus: false,
+      });
+      // fix index
+      for (let i = 0; i < children.length; i++) {
+        children[i].index = i;
+      }
+
+      target.children = [...children];
+      flow = flow;
     }
-    parent.children[index].children = children;
-    flow = flow;
   }
   function addSibling(direction) {
-    let { parent, index } = flow.lastFocus;
-    let children = parent.children;
-    index = index + direction;
-    children.splice(index, 0, {
+    let parent = boxFromPath(flow.lastFocus, 1);
+    let target = boxFromPath(flow.lastFocus);
+    let children = [...parent.children];
+    children.splice(target.index + direction, 0, {
       content: '',
       children: [],
-      index: index,
-      level: parent.level + 1,
+      index: target.index + direction,
+      level: target.level,
       focus: false,
     });
-    for (let i = index; i < children.length; i++) {
+    // fix index
+    for (let i = target.index; i < children.length; i++) {
       children[i].index = i;
     }
-    parent.children = children;
+    parent.children = [...children];
     flow = flow;
   }
 </script>

@@ -865,7 +865,7 @@ var app = (function () {
     	return child_ctx;
     }
 
-    // (175:4) {#if data.children.length == 0 && data.level < columnCount}
+    // (197:4) {#if data.children.length == 0 && data.level < columnCount}
     function create_if_block$2(ctx) {
     	let button;
     	let icon;
@@ -883,7 +883,7 @@ var app = (function () {
     			button = element("button");
     			create_component(icon.$$.fragment);
     			attr_dev(button, "class", "add svelte-17w8vem");
-    			add_location(button, file$7, 175, 6, 4262);
+    			add_location(button, file$7, 197, 6, 4903);
     		},
     		m: function mount(target, anchor) {
     			insert_dev(target, button, anchor);
@@ -921,14 +921,14 @@ var app = (function () {
     		block,
     		id: create_if_block$2.name,
     		type: "if",
-    		source: "(175:4) {#if data.children.length == 0 && data.level < columnCount}",
+    		source: "(197:4) {#if data.children.length == 0 && data.level < columnCount}",
     		ctx
     	});
 
     	return block;
     }
 
-    // (187:4) {#each data.children as child}
+    // (209:4) {#each data.children as child}
     function create_each_block$2(ctx) {
     	let box;
     	let updating_data;
@@ -943,7 +943,7 @@ var app = (function () {
     		deleteSelf: /*deleteChild*/ ctx[10],
     		focusSibling: /*focusChild*/ ctx[11],
     		focusParent: /*focusSelf*/ ctx[12],
-    		saveFocus: /*saveChildFocus*/ ctx[5]
+    		parentPath: /*path*/ ctx[3]
     	};
 
     	if (/*child*/ ctx[26] !== void 0) {
@@ -965,6 +965,7 @@ var app = (function () {
     		p: function update(new_ctx, dirty) {
     			ctx = new_ctx;
     			const box_changes = {};
+    			if (dirty & /*path*/ 8) box_changes.parentPath = /*path*/ ctx[3];
 
     			if (!updating_data && dirty & /*data*/ 1) {
     				updating_data = true;
@@ -992,7 +993,7 @@ var app = (function () {
     		block,
     		id: create_each_block$2.name,
     		type: "each",
-    		source: "(187:4) {#each data.children as child}",
+    		source: "(209:4) {#each data.children as child}",
     		ctx
     	});
 
@@ -1030,7 +1031,7 @@ var app = (function () {
     	text_1.$on("keydown", /*handleKeydown*/ ctx[8]);
     	text_1.$on("blur", /*handleBlur*/ ctx[7]);
     	text_1.$on("focus", /*handleFocus*/ ctx[6]);
-    	let if_block = /*data*/ ctx[0].children.length == 0 && /*data*/ ctx[0].level < /*columnCount*/ ctx[4] && create_if_block$2(ctx);
+    	let if_block = /*data*/ ctx[0].children.length == 0 && /*data*/ ctx[0].level < /*columnCount*/ ctx[5] && create_if_block$2(ctx);
     	let each_value = /*data*/ ctx[0].children;
     	validate_each_argument(each_value);
     	let each_blocks = [];
@@ -1065,21 +1066,21 @@ var app = (function () {
     			attr_dev(br0, "class", "above svelte-17w8vem");
     			toggle_class(br0, "left", /*data*/ ctx[0].children.length > 0);
     			toggle_class(br0, "right", /*data*/ ctx[0].index == 0 && /*data*/ ctx[0].level > 1);
-    			add_location(br0, file$7, 159, 6, 3798);
+    			add_location(br0, file$7, 181, 6, 4439);
     			attr_dev(br1, "class", "below svelte-17w8vem");
-    			add_location(br1, file$7, 172, 6, 4160);
+    			add_location(br1, file$7, 194, 6, 4801);
     			attr_dev(div0, "class", "barcontainer svelte-17w8vem");
-    			add_location(div0, file$7, 158, 4, 3765);
+    			add_location(div0, file$7, 180, 4, 4406);
     			attr_dev(div1, "class", "content svelte-17w8vem");
     			toggle_class(div1, "root", /*root*/ ctx[1]);
-    			add_location(div1, file$7, 157, 2, 3728);
+    			add_location(div1, file$7, 179, 2, 4369);
     			attr_dev(ul, "class", "children svelte-17w8vem");
-    			add_location(ul, file$7, 185, 2, 4443);
+    			add_location(ul, file$7, 207, 2, 5084);
     			attr_dev(div2, "class", "top svelte-17w8vem");
     			toggle_class(div2, "empty", /*data*/ ctx[0].children.length == 0);
-    			toggle_class(div2, "two", /*data*/ ctx[0].level % 2 == 0 && !/*neg*/ ctx[3] || /*data*/ ctx[0].level % 2 == 1 && /*neg*/ ctx[3]);
+    			toggle_class(div2, "two", /*data*/ ctx[0].level % 2 == 0 && !/*neg*/ ctx[4] || /*data*/ ctx[0].level % 2 == 1 && /*neg*/ ctx[4]);
     			toggle_class(div2, "focus", /*data*/ ctx[0].focus);
-    			add_location(div2, file$7, 151, 0, 3560);
+    			add_location(div2, file$7, 173, 0, 4201);
     		},
     		l: function claim(nodes) {
     			throw new Error("options.hydrate only works if the component was compiled with the `hydratable: true` option");
@@ -1123,7 +1124,7 @@ var app = (function () {
 
     			text_1.$set(text_1_changes);
 
-    			if (/*data*/ ctx[0].children.length == 0 && /*data*/ ctx[0].level < /*columnCount*/ ctx[4]) {
+    			if (/*data*/ ctx[0].children.length == 0 && /*data*/ ctx[0].level < /*columnCount*/ ctx[5]) {
     				if (if_block) {
     					if_block.p(ctx, dirty);
 
@@ -1150,7 +1151,7 @@ var app = (function () {
     				toggle_class(div1, "root", /*root*/ ctx[1]);
     			}
 
-    			if (dirty & /*addChild, deleteChild, focusChild, focusSelf, saveChildFocus, data*/ 7713) {
+    			if (dirty & /*addChild, deleteChild, focusChild, focusSelf, path, data*/ 7689) {
     				each_value = /*data*/ ctx[0].children;
     				validate_each_argument(each_value);
     				let i;
@@ -1182,8 +1183,8 @@ var app = (function () {
     				toggle_class(div2, "empty", /*data*/ ctx[0].children.length == 0);
     			}
 
-    			if (dirty & /*data, neg*/ 9) {
-    				toggle_class(div2, "two", /*data*/ ctx[0].level % 2 == 0 && !/*neg*/ ctx[3] || /*data*/ ctx[0].level % 2 == 1 && /*neg*/ ctx[3]);
+    			if (dirty & /*data, neg*/ 17) {
+    				toggle_class(div2, "two", /*data*/ ctx[0].level % 2 == 0 && !/*neg*/ ctx[4] || /*data*/ ctx[0].level % 2 == 1 && /*neg*/ ctx[4]);
     			}
 
     			if (dirty & /*data*/ 1) {
@@ -1237,11 +1238,13 @@ var app = (function () {
     }
 
     function instance$7($$self, $$props, $$invalidate) {
+    	let path;
     	let { $$slots: slots = {}, $$scope } = $$props;
     	validate_slots('Box', slots, []);
     	const dispatch = createEventDispatcher();
     	let { root = false } = $$props;
     	let { data } = $$props;
+    	let { parentPath = [] } = $$props;
 
     	let { addSibling = () => {
     		
@@ -1259,10 +1262,6 @@ var app = (function () {
     		
     	} } = $$props;
 
-    	let { saveFocus = () => {
-    		
-    	} } = $$props;
-
     	const { getNeg } = getContext('neg');
     	let neg = getNeg();
     	const { getColumnCount } = getContext('columnCount');
@@ -1272,13 +1271,9 @@ var app = (function () {
     	afterUpdate(function () {
     		if (data.focus) {
     			textarea.focus();
-    			saveFocus(data.index);
+    			dispatch('saveFocus', path);
     		}
     	});
-
-    	function saveChildFocus(index) {
-    		dispatch('saveChildFocus', data.index);
-    	}
 
     	function handleFocus() {
     		if (!data.focus) {
@@ -1300,10 +1295,10 @@ var app = (function () {
 
     			if (e.shiftKey) {
     				$$invalidate(0, data.focus = false, data);
-    				addChild(0);
+    				addChild(0, 0);
     			} else {
     				$$invalidate(0, data.focus = false, data);
-    				addSibling(data.index + 1);
+    				addSibling(data.index, 1);
     			}
     		} else if (e.key == 'Backspace') {
     			if (data.content.length == 0) {
@@ -1313,11 +1308,11 @@ var app = (function () {
     		} else if (e.key == 'ArrowDown') {
     			e.preventDefault();
     			$$invalidate(0, data.focus = false, data);
-    			focusSibling(data.index + 1);
+    			focusSibling(data.index, 1);
     		} else if (e.key == 'ArrowUp') {
     			e.preventDefault();
     			$$invalidate(0, data.focus = false, data);
-    			focusSibling(data.index - 1);
+    			focusSibling(data.index, -1);
     		} else if (e.key == 'ArrowLeft') {
     			$$invalidate(0, data.focus = false, data);
     			e.preventDefault();
@@ -1327,76 +1322,96 @@ var app = (function () {
     			$$invalidate(0, data.focus = false, data);
 
     			if (data.children.length > 0) {
-    				$$invalidate(0, data.children[0].focus = true, data);
+    				focusChild(0, 0);
     			} else {
-    				focusSibling(data.index + 1);
+    				focusSibling(data.index, 1);
     			}
     		}
     	}
 
-    	function addChild(index) {
-    		let children = data.children;
+    	function addChild(index, direction) {
+    		let newIndex = index + direction;
 
-    		children.splice(index, 0, {
-    			content: '',
-    			children: [],
-    			index,
-    			level: data.level + 1,
-    			focus: true
-    		});
+    		// if not at end of column
+    		if (data.level < columnCount) {
+    			let children = [...data.children];
 
-    		for (let i = index; i < children.length; i++) {
-    			children[i].index = i;
+    			children.splice(newIndex, 0, {
+    				content: '',
+    				children: [],
+    				index: newIndex,
+    				level: data.level + 1,
+    				focus: true
+    			});
+
+    			for (let i = newIndex; i < children.length; i++) {
+    				children[i].index = i;
+    			}
+
+    			$$invalidate(0, data.children = [...children], data);
+    			$$invalidate(0, data);
+    		} else {
+    			// stay focused
+    			$$invalidate(0, data.focus = true, data);
     		}
-
-    		$$invalidate(0, data.children = children, data);
     	}
 
     	function deleteChild(index) {
+    		// if target isn't only child of first level
     		if (data.children.length > 1 || data.level >= 1) {
-    			let children = data.children;
+    			let children = [...data.children];
     			children.splice(index, 1);
 
+    			// fix index
     			for (let i = index; i < children.length; i++) {
     				children[i].index = i;
     			}
 
-    			$$invalidate(0, data.children = children, data);
-
+    			// focus on previous child of deleted
     			if (children[index - 1]) {
     				children[index - 1].focus = true;
     			} else if (data.children.length == 0) {
-    				$$invalidate(0, data.focus = true, data);
+    				$$invalidate(0, data.focus = true, data); // focus on parent when empty
     			}
 
-    			$$invalidate(0, data.children = children, data);
+    			$$invalidate(0, data.children = [...children], data);
     		} else {
+    			// stay focused
     			$$invalidate(0, data.children[index].focus = true, data);
     		}
 
     		$$invalidate(0, data);
     	}
 
-    	function focusChild(index) {
-    		if (index < 0) {
+    	function focusChild(index, direction) {
+    		let newIndex = index + direction;
+
+    		// focus on parent when index is before children
+    		if (newIndex < 0) {
     			$$invalidate(0, data.focus = true, data);
     			return;
     		}
 
+    		// direct pointer
     		let children = data.children;
 
-    		if (index >= children.length) {
+    		// if index is beyond children
+    		if (newIndex >= children.length) {
+    			// if has grandchild
     			if (children[children.length - 1].children.length > 0) {
+    				// focus on first grandchild
     				children[children.length - 1].children[0].focus = true;
+    			} else {
+    				// stay focused
+    				children[index].focus = true;
     			}
-
-    			$$invalidate(0, data.children = children, data);
-    			$$invalidate(0, data);
-    			return;
+    		} else {
+    			// focus on new
+    			children[newIndex].focus = true;
     		}
 
-    		children[index].focus = true;
     		$$invalidate(0, data.children = children, data);
+    		$$invalidate(0, data);
     	}
 
     	function focusSelf() {
@@ -1407,11 +1422,11 @@ var app = (function () {
     	const writable_props = [
     		'root',
     		'data',
+    		'parentPath',
     		'addSibling',
     		'deleteSelf',
     		'focusSibling',
-    		'focusParent',
-    		'saveFocus'
+    		'focusParent'
     	];
 
     	Object.keys($$props).forEach(key => {
@@ -1446,11 +1461,11 @@ var app = (function () {
     	$$self.$$set = $$props => {
     		if ('root' in $$props) $$invalidate(1, root = $$props.root);
     		if ('data' in $$props) $$invalidate(0, data = $$props.data);
-    		if ('addSibling' in $$props) $$invalidate(13, addSibling = $$props.addSibling);
-    		if ('deleteSelf' in $$props) $$invalidate(14, deleteSelf = $$props.deleteSelf);
-    		if ('focusSibling' in $$props) $$invalidate(15, focusSibling = $$props.focusSibling);
-    		if ('focusParent' in $$props) $$invalidate(16, focusParent = $$props.focusParent);
-    		if ('saveFocus' in $$props) $$invalidate(17, saveFocus = $$props.saveFocus);
+    		if ('parentPath' in $$props) $$invalidate(13, parentPath = $$props.parentPath);
+    		if ('addSibling' in $$props) $$invalidate(14, addSibling = $$props.addSibling);
+    		if ('deleteSelf' in $$props) $$invalidate(15, deleteSelf = $$props.deleteSelf);
+    		if ('focusSibling' in $$props) $$invalidate(16, focusSibling = $$props.focusSibling);
+    		if ('focusParent' in $$props) $$invalidate(17, focusParent = $$props.focusParent);
     	};
 
     	$$self.$capture_state = () => ({
@@ -1463,51 +1478,17 @@ var app = (function () {
     		dispatch,
     		root,
     		data,
+    		parentPath,
     		addSibling,
     		deleteSelf,
     		focusSibling,
     		focusParent,
-    		saveFocus,
     		getNeg,
     		neg,
     		getColumnCount,
     		columnCount,
     		textarea,
     		preventBlur: preventBlur$1,
-    		saveChildFocus,
-    		handleFocus,
-    		handleBlur,
-    		handleKeydown,
-    		addChild,
-    		deleteChild,
-    		focusChild,
-    		focusSelf
-    	});
-
-    	$$self.$inject_state = $$props => {
-    		if ('root' in $$props) $$invalidate(1, root = $$props.root);
-    		if ('data' in $$props) $$invalidate(0, data = $$props.data);
-    		if ('addSibling' in $$props) $$invalidate(13, addSibling = $$props.addSibling);
-    		if ('deleteSelf' in $$props) $$invalidate(14, deleteSelf = $$props.deleteSelf);
-    		if ('focusSibling' in $$props) $$invalidate(15, focusSibling = $$props.focusSibling);
-    		if ('focusParent' in $$props) $$invalidate(16, focusParent = $$props.focusParent);
-    		if ('saveFocus' in $$props) $$invalidate(17, saveFocus = $$props.saveFocus);
-    		if ('neg' in $$props) $$invalidate(3, neg = $$props.neg);
-    		if ('columnCount' in $$props) $$invalidate(4, columnCount = $$props.columnCount);
-    		if ('textarea' in $$props) $$invalidate(2, textarea = $$props.textarea);
-    	};
-
-    	if ($$props && "$$inject" in $$props) {
-    		$$self.$inject_state($$props.$$inject);
-    	}
-
-    	return [
-    		data,
-    		root,
-    		textarea,
-    		neg,
-    		columnCount,
-    		saveChildFocus,
     		handleFocus,
     		handleBlur,
     		handleKeydown,
@@ -1515,11 +1496,52 @@ var app = (function () {
     		deleteChild,
     		focusChild,
     		focusSelf,
+    		path
+    	});
+
+    	$$self.$inject_state = $$props => {
+    		if ('root' in $$props) $$invalidate(1, root = $$props.root);
+    		if ('data' in $$props) $$invalidate(0, data = $$props.data);
+    		if ('parentPath' in $$props) $$invalidate(13, parentPath = $$props.parentPath);
+    		if ('addSibling' in $$props) $$invalidate(14, addSibling = $$props.addSibling);
+    		if ('deleteSelf' in $$props) $$invalidate(15, deleteSelf = $$props.deleteSelf);
+    		if ('focusSibling' in $$props) $$invalidate(16, focusSibling = $$props.focusSibling);
+    		if ('focusParent' in $$props) $$invalidate(17, focusParent = $$props.focusParent);
+    		if ('neg' in $$props) $$invalidate(4, neg = $$props.neg);
+    		if ('columnCount' in $$props) $$invalidate(5, columnCount = $$props.columnCount);
+    		if ('textarea' in $$props) $$invalidate(2, textarea = $$props.textarea);
+    		if ('path' in $$props) $$invalidate(3, path = $$props.path);
+    	};
+
+    	if ($$props && "$$inject" in $$props) {
+    		$$self.$inject_state($$props.$$inject);
+    	}
+
+    	$$self.$$.update = () => {
+    		if ($$self.$$.dirty & /*parentPath, data*/ 8193) {
+    			$$invalidate(3, path = [...parentPath, data.index]);
+    		}
+    	};
+
+    	return [
+    		data,
+    		root,
+    		textarea,
+    		path,
+    		neg,
+    		columnCount,
+    		handleFocus,
+    		handleBlur,
+    		handleKeydown,
+    		addChild,
+    		deleteChild,
+    		focusChild,
+    		focusSelf,
+    		parentPath,
     		addSibling,
     		deleteSelf,
     		focusSibling,
     		focusParent,
-    		saveFocus,
     		text_1_value_binding,
     		text_1_binding,
     		click_handler,
@@ -1535,11 +1557,11 @@ var app = (function () {
     		init(this, options, instance$7, create_fragment$7, safe_not_equal, {
     			root: 1,
     			data: 0,
-    			addSibling: 13,
-    			deleteSelf: 14,
-    			focusSibling: 15,
-    			focusParent: 16,
-    			saveFocus: 17
+    			parentPath: 13,
+    			addSibling: 14,
+    			deleteSelf: 15,
+    			focusSibling: 16,
+    			focusParent: 17
     		});
 
     		dispatch_dev("SvelteRegisterComponent", {
@@ -1573,6 +1595,14 @@ var app = (function () {
     		throw new Error("<Box>: Props cannot be set directly on the component instance unless compiling with 'accessors: true' or '<svelte:options accessors/>'");
     	}
 
+    	get parentPath() {
+    		throw new Error("<Box>: Props cannot be read directly from the component instance unless compiling with 'accessors: true' or '<svelte:options accessors/>'");
+    	}
+
+    	set parentPath(value) {
+    		throw new Error("<Box>: Props cannot be set directly on the component instance unless compiling with 'accessors: true' or '<svelte:options accessors/>'");
+    	}
+
     	get addSibling() {
     		throw new Error("<Box>: Props cannot be read directly from the component instance unless compiling with 'accessors: true' or '<svelte:options accessors/>'");
     	}
@@ -1602,14 +1632,6 @@ var app = (function () {
     	}
 
     	set focusParent(value) {
-    		throw new Error("<Box>: Props cannot be set directly on the component instance unless compiling with 'accessors: true' or '<svelte:options accessors/>'");
-    	}
-
-    	get saveFocus() {
-    		throw new Error("<Box>: Props cannot be read directly from the component instance unless compiling with 'accessors: true' or '<svelte:options accessors/>'");
-    	}
-
-    	set saveFocus(value) {
     		throw new Error("<Box>: Props cannot be set directly on the component instance unless compiling with 'accessors: true' or '<svelte:options accessors/>'");
     	}
     }
@@ -2437,13 +2459,13 @@ var app = (function () {
     			t3 = space();
     			create_component(button3.$$.fragment);
     			attr_dev(div0, "class", "content svelte-13zjvtp");
-    			add_location(div0, file$3, 100, 2, 2423);
+    			add_location(div0, file$3, 124, 2, 3106);
     			attr_dev(div1, "class", "buttons svelte-13zjvtp");
-    			add_location(div1, file$3, 111, 4, 2674);
+    			add_location(div1, file$3, 135, 4, 3357);
     			attr_dev(div2, "class", "buttons-wrapper svelte-13zjvtp");
-    			add_location(div2, file$3, 110, 2, 2640);
+    			add_location(div2, file$3, 134, 2, 3323);
     			attr_dev(div3, "class", "top svelte-13zjvtp");
-    			add_location(div3, file$3, 99, 0, 2403);
+    			add_location(div3, file$3, 123, 0, 3086);
     		},
     		l: function claim(nodes) {
     			throw new Error("options.hydrate only works if the component was compiled with the `hydratable: true` option");
@@ -2529,10 +2551,8 @@ var app = (function () {
     function instance$3($$self, $$props, $$invalidate) {
     	let { $$slots: slots = {}, $$scope } = $$props;
     	validate_slots('Title', slots, []);
-    	const dispatch = createEventDispatcher();
     	let { flow } = $$props;
     	let textarea;
-    	let validFocus = false;
 
     	afterUpdate(function () {
     		if (flow.focus) {
@@ -2540,13 +2560,31 @@ var app = (function () {
     		}
     	});
 
+    	function boxFromPath(path, scope) {
+    		if (!scope) {
+    			scope = 0;
+    		}
+
+    		let ret = flow;
+
+    		if (path.length > 1) {
+    			for (let i = 1; i < path.length - scope; i++) {
+    				ret = ret.children[path[i]];
+    			}
+    		}
+
+    		return ret;
+    	}
+
+    	let validFocus = false;
+
     	function setValidFocus() {
-    		// it works ok
+    		// wait until its actually done updating
     		setTimeout(
     			() => {
-    				if (flow.lastFocus) {
-    					let { parent, index } = flow.lastFocus;
-    					$$invalidate(2, validFocus = parent?.children[index]?.focus);
+    				if (flow.lastFocus && flow.lastFocus.length > 1) {
+    					let box = boxFromPath(flow.lastFocus);
+    					$$invalidate(2, validFocus = box.focus);
     				}
     			},
     			0
@@ -2563,77 +2601,85 @@ var app = (function () {
     	function handleKeydown(e) {
     		if (e.key == 'Enter' || e.key == 'ArrowDown') {
     			e.preventDefault();
-    			dispatch('focusFlow');
+
+    			if (flow.children.length > 0) {
+    				$$invalidate(0, flow.children[0].focus = true, flow);
+    			}
     		}
     	}
 
     	function deleteChild() {
-    		let { parent, index } = flow.lastFocus;
+    		let parent = boxFromPath(flow.lastFocus, 1);
+    		let target = boxFromPath(flow.lastFocus);
+    		let children = [...parent.children];
 
-    		if (!(parent.children[index].level == 1 && parent.children.length == 1)) {
-    			parent.children.splice(index, 1);
+    		// if target isn't only child of first level
+    		if (children.length > 1 || parent.level >= 1) {
+    			children.splice(target.index, 1);
 
-    			for (let i = index; i < parent.children.length; i++) {
-    				parent.children[i].index = i;
+    			// fix index
+    			for (let i = target.index; i < children.length; i++) {
+    				children[i].index = i;
     			}
 
-    			let newIndex = index;
-
-    			if (index != 0) {
-    				newIndex = index - 1;
-    			}
-
-    			if (parent.children[newIndex]) {
-    				parent.children[newIndex].focus = true;
-    				parent.children = parent.children;
-    			} else {
+    			// focus parent when empty
+    			if (children.length <= 0) {
     				parent.focus = true;
+    			} else if (target.index >= children.length) {
+    				children[children.length - 1].focus = true; // focus last child when last child deleted
+    			} else {
+    				children[target.index].focus = true; // focus next child of deleted
     			}
-    		} else {
-    			parent.children[index].focus = true;
-    		}
 
-    		$$invalidate(0, flow);
+    			parent.children = [...children];
+    			$$invalidate(0, flow);
+    		}
     	}
 
     	function addChild() {
-    		let { parent, index } = flow.lastFocus;
-    		let children = parent.children[index].children;
+    		// if not at end of column
+    		let target = boxFromPath(flow.lastFocus);
 
-    		children.splice(0, 0, {
-    			content: '',
-    			children: [],
-    			index,
-    			level: parent.level + 1,
-    			focus: false
-    		});
+    		let children = [...target.children];
 
-    		for (let i = index; i < children.length; i++) {
-    			children[i].index = i;
+    		if (target.level < flow.columns.length) {
+    			children.splice(0, 0, {
+    				content: '',
+    				children: [],
+    				index: 0,
+    				level: target.level + 1,
+    				focus: false
+    			});
+
+    			// fix index
+    			for (let i = 0; i < children.length; i++) {
+    				children[i].index = i;
+    			}
+
+    			target.children = [...children];
+    			$$invalidate(0, flow);
     		}
-
-    		parent.children[index].children = children;
-    		$$invalidate(0, flow);
     	}
 
     	function addSibling(direction) {
-    		let { parent, index } = flow.lastFocus;
-    		let children = parent.children;
-    		index = index + direction;
+    		let parent = boxFromPath(flow.lastFocus, 1);
+    		let target = boxFromPath(flow.lastFocus);
+    		let children = [...parent.children];
 
-    		children.splice(index, 0, {
+    		children.splice(target.index + direction, 0, {
     			content: '',
     			children: [],
-    			index,
-    			level: parent.level + 1,
+    			index: target.index + direction,
+    			level: target.level,
     			focus: false
     		});
 
-    		for (let i = index; i < children.length; i++) {
+    		// fix index
+    		for (let i = target.index; i < children.length; i++) {
     			children[i].index = i;
     		}
 
-    		parent.children = children;
+    		parent.children = [...children];
     		$$invalidate(0, flow);
     	}
 
@@ -2669,9 +2715,9 @@ var app = (function () {
     		Button,
     		afterUpdate,
     		createEventDispatcher,
-    		dispatch,
     		flow,
     		textarea,
+    		boxFromPath,
     		validFocus,
     		setValidFocus,
     		handleBlur,
@@ -3086,7 +3132,7 @@ var app = (function () {
     	return child_ctx;
     }
 
-    // (64:6) {#each flows as flow, index}
+    // (65:6) {#each flows as flow, index}
     function create_each_block_1(ctx) {
     	let tab;
     	let updating_content;
@@ -3111,7 +3157,6 @@ var app = (function () {
     	tab = new Tab({ props: tab_props, $$inline: true });
     	binding_callbacks.push(() => bind(tab, 'content', tab_content_binding));
     	tab.$on("click", click_handler);
-    	tab.$on("focusFlow", /*focusFlow*/ ctx[4]);
 
     	const block = {
     		c: function create() {
@@ -3152,7 +3197,7 @@ var app = (function () {
     		block,
     		id: create_each_block_1.name,
     		type: "each",
-    		source: "(64:6) {#each flows as flow, index}",
+    		source: "(65:6) {#each flows as flow, index}",
     		ctx
     	});
 
@@ -3177,7 +3222,6 @@ var app = (function () {
 
     	title = new Title({ props: title_props, $$inline: true });
     	binding_callbacks.push(() => bind(title, 'flow', title_flow_binding));
-    	title.$on("focusFlow", /*focusFlow*/ ctx[4]);
 
     	const block = {
     		c: function create() {
@@ -3432,18 +3476,18 @@ var app = (function () {
     			}
 
     			attr_dev(div0, "class", "add-tab svelte-cqpg7r");
-    			add_location(div0, file, 71, 6, 1633);
+    			add_location(div0, file, 71, 6, 1625);
     			attr_dev(ul, "class", "svelte-cqpg7r");
-    			add_location(ul, file, 62, 4, 1394);
+    			add_location(ul, file, 63, 4, 1421);
     			attr_dev(div1, "class", "tabs svelte-cqpg7r");
-    			add_location(div1, file, 61, 2, 1371);
+    			add_location(div1, file, 62, 2, 1398);
     			attr_dev(div2, "class", "title svelte-cqpg7r");
-    			add_location(div2, file, 77, 2, 1831);
+    			add_location(div2, file, 77, 2, 1823);
     			attr_dev(div3, "class", "flow svelte-cqpg7r");
-    			add_location(div3, file, 82, 2, 1968);
+    			add_location(div3, file, 82, 2, 1935);
     			attr_dev(main, "class", "svelte-cqpg7r");
     			toggle_class(main, "dark", /*dark*/ ctx[2]);
-    			add_location(main, file, 60, 0, 1351);
+    			add_location(main, file, 61, 0, 1378);
     		},
     		l: function claim(nodes) {
     			throw new Error("options.hydrate only works if the component was compiled with the `hydratable: true` option");
@@ -3475,7 +3519,7 @@ var app = (function () {
     			current = true;
     		},
     		p: function update(ctx, [dirty]) {
-    			if (dirty & /*selected, flows, clickTab, focusFlow*/ 27) {
+    			if (dirty & /*selected, flows, clickTab*/ 11) {
     				each_value_1 = /*flows*/ ctx[1];
     				validate_each_argument(each_value_1);
     				let i;
@@ -3659,6 +3703,7 @@ var app = (function () {
     			columns,
     			neg,
     			focus: true,
+    			index: flows.length,
     			lastFocus: undefined,
     			children: [
     				{

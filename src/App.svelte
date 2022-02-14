@@ -42,6 +42,7 @@
       columns: columns,
       neg: neg,
       focus: true,
+      index: flows.length,
       lastFocus: undefined,
       children: [
         {
@@ -64,7 +65,6 @@
       {#each flows as flow, index}
         <Tab
           on:click={() => clickTab(index)}
-          on:focusFlow={focusFlow}
           bind:content={flow.content}
           selected={index == selected}
         />
@@ -77,7 +77,7 @@
   </div>
   <div class="title">
     {#if flows.length > 0}
-      <Title on:focusFlow={focusFlow} bind:flow={flows[selected]} />
+      <Title bind:flow={flows[selected]} />
     {/if}
   </div>
   <div class="flow">
