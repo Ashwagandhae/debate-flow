@@ -15,18 +15,26 @@
     focusFlow();
   }
   let flows = [];
-  function focusFlow() {
-    if (flows[selected]?.lastFocus != undefined) {
-      let { parent, index } = flows[selected].lastFocus;
-      if (parent.children[index]) {
-        parent.children[index].focus = true;
-        flows = flows;
-      } else {
-        flows[selected].children[0].focus = true;
+  function boxFromPath(path, scope) {
+    if (!scope) {
+      scope = 0;
+    }
+    let ret = flows[selected];
+    if (path.length > 1) {
+      for (let i = 1; i < path.length - scope; i++) {
+        ret = ret.children[path[i]];
       }
+    }
+    return ret;
+  }
+  function focusFlow() {
+    let lastFocus = boxFromPath(flows[selected]?.lastFocus);
+    if (lastFocus) {
+      lastFocus.focus = true;
     } else {
       flows[selected].children[0].focus = true;
     }
+    flows = flows;
   }
   function addFlow(neg) {
     // function addFlow(neg) {
@@ -86,6 +94,7 @@
         <Flow on:focusFlow={focusFlow} bind:root={flow} />
       {/if}
     {/each}
+    <!-- <Flow on:focusFlow={focusFlow} bind:root={flows[selected]} /> -->
   </div>
 </main>
 
@@ -169,7 +178,7 @@
     --view-height: calc(90vh - var(--title-height) - var(--gap));
     --font-size: 0.9em;
     --font-family: Avenir, sans-serif;
-    --border-radius: 15px;
+    --border-radius: 12px;
     --br-height: 4px;
   }
   :global(body) {
@@ -197,7 +206,7 @@
     --background-secondary-indent: hsl(0 0% 28%);
     --background-secondary-active: hsl(0 0% 32%);
 
-    --color: hsl(0 0% 85%);
+    --color: hsl(0 0% 80%);
     --color-weak: hsl(0, 0%, 40%);
   }
 </style>

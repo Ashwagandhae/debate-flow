@@ -4,6 +4,7 @@ var app = (function () {
     'use strict';
 
     function noop() { }
+    const identity = x => x;
     function add_location(element, file, line, column, char) {
         element.__svelte_meta = {
             loc: { file, line, column, char }
@@ -27,8 +28,60 @@ var app = (function () {
     function is_empty(obj) {
         return Object.keys(obj).length === 0;
     }
+
+    const is_client = typeof window !== 'undefined';
+    let now = is_client
+        ? () => window.performance.now()
+        : () => Date.now();
+    let raf = is_client ? cb => requestAnimationFrame(cb) : noop;
+
+    const tasks = new Set();
+    function run_tasks(now) {
+        tasks.forEach(task => {
+            if (!task.c(now)) {
+                tasks.delete(task);
+                task.f();
+            }
+        });
+        if (tasks.size !== 0)
+            raf(run_tasks);
+    }
+    /**
+     * Creates a new task that runs on each raf frame
+     * until it returns a falsy value or is aborted
+     */
+    function loop(callback) {
+        let task;
+        if (tasks.size === 0)
+            raf(run_tasks);
+        return {
+            promise: new Promise(fulfill => {
+                tasks.add(task = { c: callback, f: fulfill });
+            }),
+            abort() {
+                tasks.delete(task);
+            }
+        };
+    }
     function append(target, node) {
         target.appendChild(node);
+    }
+    function get_root_for_style(node) {
+        if (!node)
+            return document;
+        const root = node.getRootNode ? node.getRootNode() : node.ownerDocument;
+        if (root && root.host) {
+            return root;
+        }
+        return node.ownerDocument;
+    }
+    function append_empty_stylesheet(node) {
+        const style_element = element('style');
+        append_stylesheet(get_root_for_style(node), style_element);
+        return style_element.sheet;
+    }
+    function append_stylesheet(node, style) {
+        append(node.head || node, style);
     }
     function insert(target, node, anchor) {
         target.insertBefore(node, anchor || null);
@@ -80,6 +133,72 @@ var app = (function () {
         const e = document.createEvent('CustomEvent');
         e.initCustomEvent(type, bubbles, false, detail);
         return e;
+    }
+
+    // we need to store the information for multiple documents because a Svelte application could also contain iframes
+    // https://github.com/sveltejs/svelte/issues/3624
+    const managed_styles = new Map();
+    let active = 0;
+    // https://github.com/darkskyapp/string-hash/blob/master/index.js
+    function hash(str) {
+        let hash = 5381;
+        let i = str.length;
+        while (i--)
+            hash = ((hash << 5) - hash) ^ str.charCodeAt(i);
+        return hash >>> 0;
+    }
+    function create_style_information(doc, node) {
+        const info = { stylesheet: append_empty_stylesheet(node), rules: {} };
+        managed_styles.set(doc, info);
+        return info;
+    }
+    function create_rule(node, a, b, duration, delay, ease, fn, uid = 0) {
+        const step = 16.666 / duration;
+        let keyframes = '{\n';
+        for (let p = 0; p <= 1; p += step) {
+            const t = a + (b - a) * ease(p);
+            keyframes += p * 100 + `%{${fn(t, 1 - t)}}\n`;
+        }
+        const rule = keyframes + `100% {${fn(b, 1 - b)}}\n}`;
+        const name = `__svelte_${hash(rule)}_${uid}`;
+        const doc = get_root_for_style(node);
+        const { stylesheet, rules } = managed_styles.get(doc) || create_style_information(doc, node);
+        if (!rules[name]) {
+            rules[name] = true;
+            stylesheet.insertRule(`@keyframes ${name} ${rule}`, stylesheet.cssRules.length);
+        }
+        const animation = node.style.animation || '';
+        node.style.animation = `${animation ? `${animation}, ` : ''}${name} ${duration}ms linear ${delay}ms 1 both`;
+        active += 1;
+        return name;
+    }
+    function delete_rule(node, name) {
+        const previous = (node.style.animation || '').split(', ');
+        const next = previous.filter(name
+            ? anim => anim.indexOf(name) < 0 // remove specific animation
+            : anim => anim.indexOf('__svelte') === -1 // remove all Svelte animations
+        );
+        const deleted = previous.length - next.length;
+        if (deleted) {
+            node.style.animation = next.join(', ');
+            active -= deleted;
+            if (!active)
+                clear_rules();
+        }
+    }
+    function clear_rules() {
+        raf(() => {
+            if (active)
+                return;
+            managed_styles.forEach(info => {
+                const { stylesheet } = info;
+                let i = stylesheet.cssRules.length;
+                while (i--)
+                    stylesheet.deleteRule(i);
+                info.rules = {};
+            });
+            managed_styles.clear();
+        });
     }
 
     let current_component;
@@ -212,6 +331,20 @@ var app = (function () {
             $$.after_update.forEach(add_render_callback);
         }
     }
+
+    let promise;
+    function wait() {
+        if (!promise) {
+            promise = Promise.resolve();
+            promise.then(() => {
+                promise = null;
+            });
+        }
+        return promise;
+    }
+    function dispatch(node, direction, kind) {
+        node.dispatchEvent(custom_event(`${direction ? 'intro' : 'outro'}${kind}`));
+    }
     const outroing = new Set();
     let outros;
     function group_outros() {
@@ -247,6 +380,216 @@ var app = (function () {
                 }
             });
             block.o(local);
+        }
+    }
+    const null_transition = { duration: 0 };
+    function create_in_transition(node, fn, params) {
+        let config = fn(node, params);
+        let running = false;
+        let animation_name;
+        let task;
+        let uid = 0;
+        function cleanup() {
+            if (animation_name)
+                delete_rule(node, animation_name);
+        }
+        function go() {
+            const { delay = 0, duration = 300, easing = identity, tick = noop, css } = config || null_transition;
+            if (css)
+                animation_name = create_rule(node, 0, 1, duration, delay, easing, css, uid++);
+            tick(0, 1);
+            const start_time = now() + delay;
+            const end_time = start_time + duration;
+            if (task)
+                task.abort();
+            running = true;
+            add_render_callback(() => dispatch(node, true, 'start'));
+            task = loop(now => {
+                if (running) {
+                    if (now >= end_time) {
+                        tick(1, 0);
+                        dispatch(node, true, 'end');
+                        cleanup();
+                        return running = false;
+                    }
+                    if (now >= start_time) {
+                        const t = easing((now - start_time) / duration);
+                        tick(t, 1 - t);
+                    }
+                }
+                return running;
+            });
+        }
+        let started = false;
+        return {
+            start() {
+                if (started)
+                    return;
+                started = true;
+                delete_rule(node);
+                if (is_function(config)) {
+                    config = config();
+                    wait().then(go);
+                }
+                else {
+                    go();
+                }
+            },
+            invalidate() {
+                started = false;
+            },
+            end() {
+                if (running) {
+                    cleanup();
+                    running = false;
+                }
+            }
+        };
+    }
+    function create_out_transition(node, fn, params) {
+        let config = fn(node, params);
+        let running = true;
+        let animation_name;
+        const group = outros;
+        group.r += 1;
+        function go() {
+            const { delay = 0, duration = 300, easing = identity, tick = noop, css } = config || null_transition;
+            if (css)
+                animation_name = create_rule(node, 1, 0, duration, delay, easing, css);
+            const start_time = now() + delay;
+            const end_time = start_time + duration;
+            add_render_callback(() => dispatch(node, false, 'start'));
+            loop(now => {
+                if (running) {
+                    if (now >= end_time) {
+                        tick(0, 1);
+                        dispatch(node, false, 'end');
+                        if (!--group.r) {
+                            // this will result in `end()` being called,
+                            // so we don't need to clean up here
+                            run_all(group.c);
+                        }
+                        return false;
+                    }
+                    if (now >= start_time) {
+                        const t = easing((now - start_time) / duration);
+                        tick(1 - t, t);
+                    }
+                }
+                return running;
+            });
+        }
+        if (is_function(config)) {
+            wait().then(() => {
+                // @ts-ignore
+                config = config();
+                go();
+            });
+        }
+        else {
+            go();
+        }
+        return {
+            end(reset) {
+                if (reset && config.tick) {
+                    config.tick(1, 0);
+                }
+                if (running) {
+                    if (animation_name)
+                        delete_rule(node, animation_name);
+                    running = false;
+                }
+            }
+        };
+    }
+    function outro_and_destroy_block(block, lookup) {
+        transition_out(block, 1, 1, () => {
+            lookup.delete(block.key);
+        });
+    }
+    function update_keyed_each(old_blocks, dirty, get_key, dynamic, ctx, list, lookup, node, destroy, create_each_block, next, get_context) {
+        let o = old_blocks.length;
+        let n = list.length;
+        let i = o;
+        const old_indexes = {};
+        while (i--)
+            old_indexes[old_blocks[i].key] = i;
+        const new_blocks = [];
+        const new_lookup = new Map();
+        const deltas = new Map();
+        i = n;
+        while (i--) {
+            const child_ctx = get_context(ctx, list, i);
+            const key = get_key(child_ctx);
+            let block = lookup.get(key);
+            if (!block) {
+                block = create_each_block(key, child_ctx);
+                block.c();
+            }
+            else if (dynamic) {
+                block.p(child_ctx, dirty);
+            }
+            new_lookup.set(key, new_blocks[i] = block);
+            if (key in old_indexes)
+                deltas.set(key, Math.abs(i - old_indexes[key]));
+        }
+        const will_move = new Set();
+        const did_move = new Set();
+        function insert(block) {
+            transition_in(block, 1);
+            block.m(node, next);
+            lookup.set(block.key, block);
+            next = block.first;
+            n--;
+        }
+        while (o && n) {
+            const new_block = new_blocks[n - 1];
+            const old_block = old_blocks[o - 1];
+            const new_key = new_block.key;
+            const old_key = old_block.key;
+            if (new_block === old_block) {
+                // do nothing
+                next = new_block.first;
+                o--;
+                n--;
+            }
+            else if (!new_lookup.has(old_key)) {
+                // remove old block
+                destroy(old_block, lookup);
+                o--;
+            }
+            else if (!lookup.has(new_key) || will_move.has(new_key)) {
+                insert(new_block);
+            }
+            else if (did_move.has(old_key)) {
+                o--;
+            }
+            else if (deltas.get(new_key) > deltas.get(old_key)) {
+                did_move.add(new_key);
+                insert(new_block);
+            }
+            else {
+                will_move.add(old_key);
+                o--;
+            }
+        }
+        while (o--) {
+            const old_block = old_blocks[o];
+            if (!new_lookup.has(old_block.key))
+                destroy(old_block, lookup);
+        }
+        while (n)
+            insert(new_blocks[n - 1]);
+        return new_blocks;
+    }
+    function validate_each_keys(ctx, list, get_context, get_key) {
+        const keys = new Set();
+        for (let i = 0; i < list.length; i++) {
+            const key = get_key(get_context(ctx, list, i));
+            if (keys.has(key)) {
+                throw new Error('Cannot have duplicate keys in a keyed each');
+            }
+            keys.add(key);
         }
     }
 
@@ -479,7 +822,7 @@ var app = (function () {
     			attr_dev(textarea_1, "spellcheck", "false");
     			attr_dev(textarea_1, "placeholder", /*placeholder*/ ctx[1]);
     			attr_dev(textarea_1, "style", textarea_1_style_value = `--white-space:${/*whiteSpaceCss*/ ctx[2]};`);
-    			attr_dev(textarea_1, "class", "svelte-oek2ek");
+    			attr_dev(textarea_1, "class", "svelte-1hlgi3k");
     			add_location(textarea_1, file$9, 29, 0, 572);
     		},
     		l: function claim(nodes) {
@@ -854,21 +1197,112 @@ var app = (function () {
     	}
     }
 
+    function quadIn(t) {
+        return t * t;
+    }
+    function quadOut(t) {
+        return -t * (t - 2.0);
+    }
+
+    const speed = 300;
+
+    function boxIn(node, { duration = speed }) {
+      const h = node.clientHeight;
+      return {
+        duration,
+        css: (t) => {
+          const eased = quadOut(t);
+          return `
+        height: ${eased * h}px;
+        overflow: visible;
+        clip-path: inset(${(1 - eased) * h}px -20px -20px -20px);
+        transform: translateY(${(1 - eased) * -h}px);`;
+        },
+      };
+    }
+    function boxOut(node, { duration = speed }) {
+      const h = node.clientHeight;
+      return {
+        duration,
+        css: (t) => {
+          const eased = quadIn(t);
+          return `
+      height: ${eased * h}px;
+      overflow: visible;
+      clip-path: inset(${(1 - eased) * h}px -20px -20px -20px);
+      transform: translateY(${(1 - eased) * -h}px);`;
+        },
+      };
+    }
+    function boxButtonIn(node, { delay = 0, duration = speed }) {
+      return {
+        delay,
+        duration,
+        css: (t) => {
+          return `
+        opacity:${t};
+      `;
+        },
+      };
+    }
+    function brIn(node, { delay = 0, duration = speed }) {
+      return {
+        delay,
+        duration,
+        css: (t) => {
+          const eased = quadOut(t);
+
+          return `
+      clip-path:inset(0% ${(1 - eased) * 100}% 0% 0%);
+      transform: translateX(${(1 - eased) * 50}%)`;
+        },
+      };
+    }
+
+    function brOut(node, { delay = 0, duration = speed }) {
+      return {
+        delay,
+        duration,
+        css: (t) => {
+          const eased = quadIn(t);
+
+          return `
+      clip-path:inset(0% ${(1 - eased) * 100}% 0% 0%);
+      transform: translateX(${(1 - eased) * 50}%)`;
+        },
+      };
+    }
+
+    function tabIn(node, { duration = speed }) {
+      const h = node.clientHeight;
+      return {
+        duration,
+        css: (t) => {
+          const eased = quadOut(t);
+          return `
+        clip-path: inset(-20px -20px ${(1 - eased) * h}px  -20px);
+        height: ${h * eased}px;
+        overflow: hidden;`;
+        },
+      };
+    }
+
     /* src/Box.svelte generated by Svelte v3.46.2 */
     const file$7 = "src/Box.svelte";
 
     function get_each_context$2(ctx, list, i) {
     	const child_ctx = ctx.slice();
-    	child_ctx[26] = list[i];
-    	child_ctx[27] = list;
-    	child_ctx[28] = i;
+    	child_ctx[27] = list[i];
+    	child_ctx[28] = list;
+    	child_ctx[29] = i;
     	return child_ctx;
     }
 
-    // (197:4) {#if data.children.length == 0 && data.level < columnCount}
+    // (217:4) {#if data.children.length == 0 && data.level < columnCount}
     function create_if_block$2(ctx) {
     	let button;
     	let icon;
+    	let button_intro;
     	let current;
     	let mounted;
     	let dispose;
@@ -882,8 +1316,8 @@ var app = (function () {
     		c: function create() {
     			button = element("button");
     			create_component(icon.$$.fragment);
-    			attr_dev(button, "class", "add svelte-17w8vem");
-    			add_location(button, file$7, 197, 6, 4903);
+    			attr_dev(button, "class", "add svelte-1xogqxn");
+    			add_location(button, file$7, 217, 6, 5453);
     		},
     		m: function mount(target, anchor) {
     			insert_dev(target, button, anchor);
@@ -892,7 +1326,7 @@ var app = (function () {
 
     			if (!mounted) {
     				dispose = [
-    					listen_dev(button, "click", /*click_handler*/ ctx[20], false, false, false),
+    					listen_dev(button, "click", /*click_handler*/ ctx[21], false, false, false),
     					listen_dev(button, "mousedown", preventBlur$1, false, false, false)
     				];
 
@@ -903,6 +1337,16 @@ var app = (function () {
     		i: function intro(local) {
     			if (current) return;
     			transition_in(icon.$$.fragment, local);
+
+    			if (local) {
+    				if (!button_intro) {
+    					add_render_callback(() => {
+    						button_intro = create_in_transition(button, boxButtonIn, {});
+    						button_intro.start();
+    					});
+    				}
+    			}
+
     			current = true;
     		},
     		o: function outro(local) {
@@ -921,55 +1365,61 @@ var app = (function () {
     		block,
     		id: create_if_block$2.name,
     		type: "if",
-    		source: "(197:4) {#if data.children.length == 0 && data.level < columnCount}",
+    		source: "(217:4) {#if data.children.length == 0 && data.level < columnCount}",
     		ctx
     	});
 
     	return block;
     }
 
-    // (209:4) {#each data.children as child}
-    function create_each_block$2(ctx) {
+    // (230:4) {#each data.children as child, index (child)}
+    function create_each_block$2(key_1, ctx) {
+    	let first;
     	let box;
     	let updating_data;
     	let current;
 
     	function box_data_binding(value) {
-    		/*box_data_binding*/ ctx[21](value, /*child*/ ctx[26], /*each_value*/ ctx[27], /*child_index*/ ctx[28]);
+    		/*box_data_binding*/ ctx[22](value, /*child*/ ctx[27], /*each_value*/ ctx[28], /*index*/ ctx[29]);
     	}
 
     	let box_props = {
-    		addSibling: /*addChild*/ ctx[9],
-    		deleteSelf: /*deleteChild*/ ctx[10],
-    		focusSibling: /*focusChild*/ ctx[11],
-    		focusParent: /*focusSelf*/ ctx[12],
-    		parentPath: /*path*/ ctx[3]
+    		addSibling: /*addChild*/ ctx[10],
+    		deleteSelf: /*deleteChild*/ ctx[11],
+    		focusSibling: /*focusChild*/ ctx[12],
+    		focusParent: /*focusSelf*/ ctx[13],
+    		parentPath: /*path*/ ctx[4]
     	};
 
-    	if (/*child*/ ctx[26] !== void 0) {
-    		box_props.data = /*child*/ ctx[26];
+    	if (/*child*/ ctx[27] !== void 0) {
+    		box_props.data = /*child*/ ctx[27];
     	}
 
     	box = new Box({ props: box_props, $$inline: true });
     	binding_callbacks.push(() => bind(box, 'data', box_data_binding));
-    	box.$on("saveFocus", /*saveFocus_handler*/ ctx[22]);
+    	box.$on("saveFocus", /*saveFocus_handler*/ ctx[23]);
 
     	const block = {
+    		key: key_1,
+    		first: null,
     		c: function create() {
+    			first = empty();
     			create_component(box.$$.fragment);
+    			this.first = first;
     		},
     		m: function mount(target, anchor) {
+    			insert_dev(target, first, anchor);
     			mount_component(box, target, anchor);
     			current = true;
     		},
     		p: function update(new_ctx, dirty) {
     			ctx = new_ctx;
     			const box_changes = {};
-    			if (dirty & /*path*/ 8) box_changes.parentPath = /*path*/ ctx[3];
+    			if (dirty & /*path*/ 16) box_changes.parentPath = /*path*/ ctx[4];
 
     			if (!updating_data && dirty & /*data*/ 1) {
     				updating_data = true;
-    				box_changes.data = /*child*/ ctx[26];
+    				box_changes.data = /*child*/ ctx[27];
     				add_flush_callback(() => updating_data = false);
     			}
 
@@ -985,6 +1435,7 @@ var app = (function () {
     			current = false;
     		},
     		d: function destroy(detaching) {
+    			if (detaching) detach_dev(first);
     			destroy_component(box, detaching);
     		}
     	};
@@ -993,7 +1444,7 @@ var app = (function () {
     		block,
     		id: create_each_block$2.name,
     		type: "each",
-    		source: "(209:4) {#each data.children as child}",
+    		source: "(230:4) {#each data.children as child, index (child)}",
     		ctx
     	});
 
@@ -1001,25 +1452,32 @@ var app = (function () {
     }
 
     function create_fragment$7(ctx) {
+    	let div3;
     	let div2;
     	let div1;
-    	let div0;
     	let br0;
     	let t0;
+    	let div0;
     	let text_1;
     	let updating_value;
     	let t1;
     	let br1;
+    	let br1_intro;
+    	let br1_outro;
     	let t2;
     	let t3;
     	let ul;
+    	let each_blocks = [];
+    	let each_1_lookup = new Map();
+    	let div3_intro;
+    	let div3_outro;
     	let current;
 
     	function text_1_value_binding(value) {
-    		/*text_1_value_binding*/ ctx[18](value);
+    		/*text_1_value_binding*/ ctx[19](value);
     	}
 
-    	let text_1_props = { placeholder: "type content here" };
+    	let text_1_props = { placeholder: /*placeholder*/ ctx[3] };
 
     	if (/*data*/ ctx[0].content !== void 0) {
     		text_1_props.value = /*data*/ ctx[0].content;
@@ -1027,30 +1485,30 @@ var app = (function () {
 
     	text_1 = new Text({ props: text_1_props, $$inline: true });
     	binding_callbacks.push(() => bind(text_1, 'value', text_1_value_binding));
-    	/*text_1_binding*/ ctx[19](text_1);
-    	text_1.$on("keydown", /*handleKeydown*/ ctx[8]);
-    	text_1.$on("blur", /*handleBlur*/ ctx[7]);
-    	text_1.$on("focus", /*handleFocus*/ ctx[6]);
-    	let if_block = /*data*/ ctx[0].children.length == 0 && /*data*/ ctx[0].level < /*columnCount*/ ctx[5] && create_if_block$2(ctx);
+    	/*text_1_binding*/ ctx[20](text_1);
+    	text_1.$on("keydown", /*handleKeydown*/ ctx[9]);
+    	text_1.$on("blur", /*handleBlur*/ ctx[8]);
+    	text_1.$on("focus", /*handleFocus*/ ctx[7]);
+    	let if_block = /*data*/ ctx[0].children.length == 0 && /*data*/ ctx[0].level < /*columnCount*/ ctx[6] && create_if_block$2(ctx);
     	let each_value = /*data*/ ctx[0].children;
     	validate_each_argument(each_value);
-    	let each_blocks = [];
+    	const get_key = ctx => /*child*/ ctx[27];
+    	validate_each_keys(ctx, each_value, get_each_context$2, get_key);
 
     	for (let i = 0; i < each_value.length; i += 1) {
-    		each_blocks[i] = create_each_block$2(get_each_context$2(ctx, each_value, i));
+    		let child_ctx = get_each_context$2(ctx, each_value, i);
+    		let key = get_key(child_ctx);
+    		each_1_lookup.set(key, each_blocks[i] = create_each_block$2(key, child_ctx));
     	}
-
-    	const out = i => transition_out(each_blocks[i], 1, 1, () => {
-    		each_blocks[i] = null;
-    	});
 
     	const block = {
     		c: function create() {
+    			div3 = element("div");
     			div2 = element("div");
     			div1 = element("div");
-    			div0 = element("div");
     			br0 = element("br");
     			t0 = space();
+    			div0 = element("div");
     			create_component(text_1.$$.fragment);
     			t1 = space();
     			br1 = element("br");
@@ -1063,41 +1521,43 @@ var app = (function () {
     				each_blocks[i].c();
     			}
 
-    			attr_dev(br0, "class", "above svelte-17w8vem");
+    			attr_dev(br0, "class", "above svelte-1xogqxn");
     			toggle_class(br0, "left", /*data*/ ctx[0].children.length > 0);
     			toggle_class(br0, "right", /*data*/ ctx[0].index == 0 && /*data*/ ctx[0].level > 1);
-    			add_location(br0, file$7, 181, 6, 4439);
-    			attr_dev(br1, "class", "below svelte-17w8vem");
-    			add_location(br1, file$7, 194, 6, 4801);
-    			attr_dev(div0, "class", "barcontainer svelte-17w8vem");
-    			add_location(div0, file$7, 180, 4, 4406);
-    			attr_dev(div1, "class", "content svelte-17w8vem");
-    			toggle_class(div1, "root", /*root*/ ctx[1]);
-    			add_location(div1, file$7, 179, 2, 4369);
-    			attr_dev(ul, "class", "children svelte-17w8vem");
-    			add_location(ul, file$7, 207, 2, 5084);
-    			attr_dev(div2, "class", "top svelte-17w8vem");
-    			toggle_class(div2, "empty", /*data*/ ctx[0].children.length == 0);
-    			toggle_class(div2, "two", /*data*/ ctx[0].level % 2 == 0 && !/*neg*/ ctx[4] || /*data*/ ctx[0].level % 2 == 1 && /*neg*/ ctx[4]);
-    			toggle_class(div2, "focus", /*data*/ ctx[0].focus);
-    			add_location(div2, file$7, 173, 0, 4201);
+    			add_location(br0, file$7, 199, 6, 4936);
+    			add_location(div0, file$7, 204, 6, 5079);
+    			attr_dev(br1, "class", "below svelte-1xogqxn");
+    			add_location(br1, file$7, 214, 6, 5321);
+    			attr_dev(div1, "class", "barcontainer svelte-1xogqxn");
+    			add_location(div1, file$7, 198, 4, 4903);
+    			attr_dev(div2, "class", "content svelte-1xogqxn");
+    			toggle_class(div2, "root", /*root*/ ctx[1]);
+    			add_location(div2, file$7, 197, 2, 4866);
+    			attr_dev(ul, "class", "children svelte-1xogqxn");
+    			add_location(ul, file$7, 228, 2, 5666);
+    			attr_dev(div3, "class", "top svelte-1xogqxn");
+    			toggle_class(div3, "empty", /*data*/ ctx[0].children.length == 0);
+    			toggle_class(div3, "two", /*data*/ ctx[0].level % 2 == 0 && !/*neg*/ ctx[5] || /*data*/ ctx[0].level % 2 == 1 && /*neg*/ ctx[5]);
+    			toggle_class(div3, "focus", /*data*/ ctx[0].focus);
+    			add_location(div3, file$7, 189, 0, 4662);
     		},
     		l: function claim(nodes) {
     			throw new Error("options.hydrate only works if the component was compiled with the `hydratable: true` option");
     		},
     		m: function mount(target, anchor) {
-    			insert_dev(target, div2, anchor);
+    			insert_dev(target, div3, anchor);
+    			append_dev(div3, div2);
     			append_dev(div2, div1);
+    			append_dev(div1, br0);
+    			append_dev(div1, t0);
     			append_dev(div1, div0);
-    			append_dev(div0, br0);
-    			append_dev(div0, t0);
     			mount_component(text_1, div0, null);
-    			append_dev(div0, t1);
-    			append_dev(div0, br1);
-    			append_dev(div1, t2);
-    			if (if_block) if_block.m(div1, null);
-    			append_dev(div2, t3);
-    			append_dev(div2, ul);
+    			append_dev(div1, t1);
+    			append_dev(div1, br1);
+    			append_dev(div2, t2);
+    			if (if_block) if_block.m(div2, null);
+    			append_dev(div3, t3);
+    			append_dev(div3, ul);
 
     			for (let i = 0; i < each_blocks.length; i += 1) {
     				each_blocks[i].m(ul, null);
@@ -1115,6 +1575,7 @@ var app = (function () {
     			}
 
     			const text_1_changes = {};
+    			if (dirty & /*placeholder*/ 8) text_1_changes.placeholder = /*placeholder*/ ctx[3];
 
     			if (!updating_value && dirty & /*data*/ 1) {
     				updating_value = true;
@@ -1124,7 +1585,7 @@ var app = (function () {
 
     			text_1.$set(text_1_changes);
 
-    			if (/*data*/ ctx[0].children.length == 0 && /*data*/ ctx[0].level < /*columnCount*/ ctx[5]) {
+    			if (/*data*/ ctx[0].children.length == 0 && /*data*/ ctx[0].level < /*columnCount*/ ctx[6]) {
     				if (if_block) {
     					if_block.p(ctx, dirty);
 
@@ -1135,7 +1596,7 @@ var app = (function () {
     					if_block = create_if_block$2(ctx);
     					if_block.c();
     					transition_in(if_block, 1);
-    					if_block.m(div1, null);
+    					if_block.m(div2, null);
     				}
     			} else if (if_block) {
     				group_outros();
@@ -1148,77 +1609,92 @@ var app = (function () {
     			}
 
     			if (dirty & /*root*/ 2) {
-    				toggle_class(div1, "root", /*root*/ ctx[1]);
+    				toggle_class(div2, "root", /*root*/ ctx[1]);
     			}
 
-    			if (dirty & /*addChild, deleteChild, focusChild, focusSelf, path, data*/ 7689) {
+    			if (dirty & /*addChild, deleteChild, focusChild, focusSelf, path, data*/ 15377) {
     				each_value = /*data*/ ctx[0].children;
     				validate_each_argument(each_value);
-    				let i;
-
-    				for (i = 0; i < each_value.length; i += 1) {
-    					const child_ctx = get_each_context$2(ctx, each_value, i);
-
-    					if (each_blocks[i]) {
-    						each_blocks[i].p(child_ctx, dirty);
-    						transition_in(each_blocks[i], 1);
-    					} else {
-    						each_blocks[i] = create_each_block$2(child_ctx);
-    						each_blocks[i].c();
-    						transition_in(each_blocks[i], 1);
-    						each_blocks[i].m(ul, null);
-    					}
-    				}
-
     				group_outros();
-
-    				for (i = each_value.length; i < each_blocks.length; i += 1) {
-    					out(i);
-    				}
-
+    				validate_each_keys(ctx, each_value, get_each_context$2, get_key);
+    				each_blocks = update_keyed_each(each_blocks, dirty, get_key, 1, ctx, each_value, each_1_lookup, ul, outro_and_destroy_block, create_each_block$2, null, get_each_context$2);
     				check_outros();
     			}
 
     			if (dirty & /*data*/ 1) {
-    				toggle_class(div2, "empty", /*data*/ ctx[0].children.length == 0);
+    				toggle_class(div3, "empty", /*data*/ ctx[0].children.length == 0);
     			}
 
-    			if (dirty & /*data, neg*/ 17) {
-    				toggle_class(div2, "two", /*data*/ ctx[0].level % 2 == 0 && !/*neg*/ ctx[4] || /*data*/ ctx[0].level % 2 == 1 && /*neg*/ ctx[4]);
+    			if (dirty & /*data, neg*/ 33) {
+    				toggle_class(div3, "two", /*data*/ ctx[0].level % 2 == 0 && !/*neg*/ ctx[5] || /*data*/ ctx[0].level % 2 == 1 && /*neg*/ ctx[5]);
     			}
 
     			if (dirty & /*data*/ 1) {
-    				toggle_class(div2, "focus", /*data*/ ctx[0].focus);
+    				toggle_class(div3, "focus", /*data*/ ctx[0].focus);
     			}
     		},
     		i: function intro(local) {
     			if (current) return;
     			transition_in(text_1.$$.fragment, local);
+
+    			if (local) {
+    				add_render_callback(() => {
+    					if (br1_outro) br1_outro.end(1);
+    					br1_intro = create_in_transition(br1, brIn, {});
+    					br1_intro.start();
+    				});
+    			}
+
     			transition_in(if_block);
 
     			for (let i = 0; i < each_value.length; i += 1) {
     				transition_in(each_blocks[i]);
     			}
 
+    			if (local) {
+    				add_render_callback(() => {
+    					if (div3_outro) div3_outro.end(1);
+    					div3_intro = create_in_transition(div3, boxIn, {});
+    					div3_intro.start();
+    				});
+    			}
+
     			current = true;
     		},
     		o: function outro(local) {
     			transition_out(text_1.$$.fragment, local);
+    			if (br1_intro) br1_intro.invalidate();
+
+    			if (local) {
+    				br1_outro = create_out_transition(br1, brOut, {});
+    			}
+
     			transition_out(if_block);
-    			each_blocks = each_blocks.filter(Boolean);
 
     			for (let i = 0; i < each_blocks.length; i += 1) {
     				transition_out(each_blocks[i]);
     			}
 
+    			if (div3_intro) div3_intro.invalidate();
+
+    			if (local) {
+    				div3_outro = create_out_transition(div3, boxOut, {});
+    			}
+
     			current = false;
     		},
     		d: function destroy(detaching) {
-    			if (detaching) detach_dev(div2);
-    			/*text_1_binding*/ ctx[19](null);
+    			if (detaching) detach_dev(div3);
+    			/*text_1_binding*/ ctx[20](null);
     			destroy_component(text_1);
+    			if (detaching && br1_outro) br1_outro.end();
     			if (if_block) if_block.d();
-    			destroy_each(each_blocks, detaching);
+
+    			for (let i = 0; i < each_blocks.length; i += 1) {
+    				each_blocks[i].d();
+    			}
+
+    			if (detaching && div3_outro) div3_outro.end();
     		}
     	};
 
@@ -1274,6 +1750,8 @@ var app = (function () {
     			dispatch('saveFocus', path);
     		}
     	});
+
+    	let placeholder = '';
 
     	function handleFocus() {
     		if (!data.focus) {
@@ -1370,8 +1848,10 @@ var app = (function () {
     			// focus on previous child of deleted
     			if (children[index - 1]) {
     				children[index - 1].focus = true;
-    			} else if (data.children.length == 0) {
+    			} else if (children.length == 0) {
     				$$invalidate(0, data.focus = true, data); // focus on parent when empty
+    			} else if (index - 1 < 0) {
+    				children[0].focus = true; // focus on first child if deleted first child
     			}
 
     			$$invalidate(0, data.children = [...children], data);
@@ -1447,10 +1927,10 @@ var app = (function () {
     		});
     	}
 
-    	const click_handler = () => addChild(0);
+    	const click_handler = () => addChild(0, 0);
 
-    	function box_data_binding(value, child, each_value, child_index) {
-    		each_value[child_index] = value;
+    	function box_data_binding(value, child, each_value, index) {
+    		each_value[index] = value;
     		$$invalidate(0, data);
     	}
 
@@ -1461,11 +1941,11 @@ var app = (function () {
     	$$self.$$set = $$props => {
     		if ('root' in $$props) $$invalidate(1, root = $$props.root);
     		if ('data' in $$props) $$invalidate(0, data = $$props.data);
-    		if ('parentPath' in $$props) $$invalidate(13, parentPath = $$props.parentPath);
-    		if ('addSibling' in $$props) $$invalidate(14, addSibling = $$props.addSibling);
-    		if ('deleteSelf' in $$props) $$invalidate(15, deleteSelf = $$props.deleteSelf);
-    		if ('focusSibling' in $$props) $$invalidate(16, focusSibling = $$props.focusSibling);
-    		if ('focusParent' in $$props) $$invalidate(17, focusParent = $$props.focusParent);
+    		if ('parentPath' in $$props) $$invalidate(14, parentPath = $$props.parentPath);
+    		if ('addSibling' in $$props) $$invalidate(15, addSibling = $$props.addSibling);
+    		if ('deleteSelf' in $$props) $$invalidate(16, deleteSelf = $$props.deleteSelf);
+    		if ('focusSibling' in $$props) $$invalidate(17, focusSibling = $$props.focusSibling);
+    		if ('focusParent' in $$props) $$invalidate(18, focusParent = $$props.focusParent);
     	};
 
     	$$self.$capture_state = () => ({
@@ -1475,6 +1955,11 @@ var app = (function () {
     		onMount,
     		afterUpdate,
     		createEventDispatcher,
+    		boxIn,
+    		boxOut,
+    		boxButtonIn,
+    		brIn,
+    		brOut,
     		dispatch,
     		root,
     		data,
@@ -1488,6 +1973,7 @@ var app = (function () {
     		getColumnCount,
     		columnCount,
     		textarea,
+    		placeholder,
     		preventBlur: preventBlur$1,
     		handleFocus,
     		handleBlur,
@@ -1502,15 +1988,16 @@ var app = (function () {
     	$$self.$inject_state = $$props => {
     		if ('root' in $$props) $$invalidate(1, root = $$props.root);
     		if ('data' in $$props) $$invalidate(0, data = $$props.data);
-    		if ('parentPath' in $$props) $$invalidate(13, parentPath = $$props.parentPath);
-    		if ('addSibling' in $$props) $$invalidate(14, addSibling = $$props.addSibling);
-    		if ('deleteSelf' in $$props) $$invalidate(15, deleteSelf = $$props.deleteSelf);
-    		if ('focusSibling' in $$props) $$invalidate(16, focusSibling = $$props.focusSibling);
-    		if ('focusParent' in $$props) $$invalidate(17, focusParent = $$props.focusParent);
-    		if ('neg' in $$props) $$invalidate(4, neg = $$props.neg);
-    		if ('columnCount' in $$props) $$invalidate(5, columnCount = $$props.columnCount);
+    		if ('parentPath' in $$props) $$invalidate(14, parentPath = $$props.parentPath);
+    		if ('addSibling' in $$props) $$invalidate(15, addSibling = $$props.addSibling);
+    		if ('deleteSelf' in $$props) $$invalidate(16, deleteSelf = $$props.deleteSelf);
+    		if ('focusSibling' in $$props) $$invalidate(17, focusSibling = $$props.focusSibling);
+    		if ('focusParent' in $$props) $$invalidate(18, focusParent = $$props.focusParent);
+    		if ('neg' in $$props) $$invalidate(5, neg = $$props.neg);
+    		if ('columnCount' in $$props) $$invalidate(6, columnCount = $$props.columnCount);
     		if ('textarea' in $$props) $$invalidate(2, textarea = $$props.textarea);
-    		if ('path' in $$props) $$invalidate(3, path = $$props.path);
+    		if ('placeholder' in $$props) $$invalidate(3, placeholder = $$props.placeholder);
+    		if ('path' in $$props) $$invalidate(4, path = $$props.path);
     	};
 
     	if ($$props && "$$inject" in $$props) {
@@ -1518,8 +2005,16 @@ var app = (function () {
     	}
 
     	$$self.$$.update = () => {
-    		if ($$self.$$.dirty & /*parentPath, data*/ 8193) {
-    			$$invalidate(3, path = [...parentPath, data.index]);
+    		if ($$self.$$.dirty & /*parentPath, data*/ 16385) {
+    			$$invalidate(4, path = [...parentPath, data.index]);
+    		}
+
+    		if ($$self.$$.dirty & /*data*/ 1) {
+    			{
+    				if (data.level == 1 && data.index == 0) {
+    					$$invalidate(3, placeholder = 'type here');
+    				}
+    			}
     		}
     	};
 
@@ -1527,6 +2022,7 @@ var app = (function () {
     		data,
     		root,
     		textarea,
+    		placeholder,
     		path,
     		neg,
     		columnCount,
@@ -1557,11 +2053,11 @@ var app = (function () {
     		init(this, options, instance$7, create_fragment$7, safe_not_equal, {
     			root: 1,
     			data: 0,
-    			parentPath: 13,
-    			addSibling: 14,
-    			deleteSelf: 15,
-    			focusSibling: 16,
-    			focusParent: 17
+    			parentPath: 14,
+    			addSibling: 15,
+    			deleteSelf: 16,
+    			focusSibling: 17,
+    			focusParent: 18
     		});
 
     		dispatch_dev("SvelteRegisterComponent", {
@@ -2231,7 +2727,7 @@ var app = (function () {
     		c: function create() {
     			button = element("button");
     			create_component(icon.$$.fragment);
-    			attr_dev(button, "class", "top svelte-5ed4ej");
+    			attr_dev(button, "class", "top svelte-1cyrolw");
     			toggle_class(button, "disabled", /*disabled*/ ctx[1]);
     			add_location(button, file$4, 9, 0, 162);
     		},
@@ -2459,13 +2955,13 @@ var app = (function () {
     			t3 = space();
     			create_component(button3.$$.fragment);
     			attr_dev(div0, "class", "content svelte-13zjvtp");
-    			add_location(div0, file$3, 124, 2, 3106);
+    			add_location(div0, file$3, 130, 2, 3272);
     			attr_dev(div1, "class", "buttons svelte-13zjvtp");
-    			add_location(div1, file$3, 135, 4, 3357);
+    			add_location(div1, file$3, 141, 4, 3523);
     			attr_dev(div2, "class", "buttons-wrapper svelte-13zjvtp");
-    			add_location(div2, file$3, 134, 2, 3323);
+    			add_location(div2, file$3, 140, 2, 3489);
     			attr_dev(div3, "class", "top svelte-13zjvtp");
-    			add_location(div3, file$3, 123, 0, 3086);
+    			add_location(div3, file$3, 129, 0, 3252);
     		},
     		l: function claim(nodes) {
     			throw new Error("options.hydrate only works if the component was compiled with the `hydratable: true` option");
@@ -2584,7 +3080,7 @@ var app = (function () {
     			() => {
     				if (flow.lastFocus && flow.lastFocus.length > 1) {
     					let box = boxFromPath(flow.lastFocus);
-    					$$invalidate(2, validFocus = box.focus);
+    					$$invalidate(2, validFocus = box?.focus);
     				}
     			},
     			0
@@ -2609,6 +3105,9 @@ var app = (function () {
     	}
 
     	function deleteChild() {
+    		// cancel if disabled
+    		if (!validFocus) return;
+
     		let parent = boxFromPath(flow.lastFocus, 1);
     		let target = boxFromPath(flow.lastFocus);
     		let children = [...parent.children];
@@ -2637,6 +3136,9 @@ var app = (function () {
     	}
 
     	function addChild() {
+    		// cancel if disabled
+    		if (!validFocus) return;
+
     		// if not at end of column
     		let target = boxFromPath(flow.lastFocus);
 
@@ -2662,6 +3164,9 @@ var app = (function () {
     	}
 
     	function addSibling(direction) {
+    		// cancel if disabled
+    		if (!validFocus) return;
+
     		let parent = boxFromPath(flow.lastFocus, 1);
     		let target = boxFromPath(flow.lastFocus);
     		let children = [...parent.children];
@@ -2789,10 +3294,9 @@ var app = (function () {
     }
 
     /* src/Tab.svelte generated by Svelte v3.46.2 */
-
     const file$2 = "src/Tab.svelte";
 
-    // (9:2) {:else}
+    // (18:2) {:else}
     function create_else_block(ctx) {
     	let t;
 
@@ -2813,14 +3317,14 @@ var app = (function () {
     		block,
     		id: create_else_block.name,
     		type: "else",
-    		source: "(9:2) {:else}",
+    		source: "(18:2) {:else}",
     		ctx
     	});
 
     	return block;
     }
 
-    // (7:2) {#if content}
+    // (16:2) {#if content}
     function create_if_block$1(ctx) {
     	let t;
 
@@ -2843,7 +3347,7 @@ var app = (function () {
     		block,
     		id: create_if_block$1.name,
     		type: "if",
-    		source: "(7:2) {#if content}",
+    		source: "(16:2) {#if content}",
     		ctx
     	});
 
@@ -2852,6 +3356,7 @@ var app = (function () {
 
     function create_fragment$2(ctx) {
     	let button;
+    	let button_intro;
     	let mounted;
     	let dispose;
 
@@ -2870,7 +3375,7 @@ var app = (function () {
     			attr_dev(button, "class", "top svelte-uh3prp");
     			toggle_class(button, "selected", /*selected*/ ctx[1]);
     			toggle_class(button, "empty", /*content*/ ctx[0].length == 0);
-    			add_location(button, file$2, 5, 0, 65);
+    			add_location(button, file$2, 8, 0, 152);
     		},
     		l: function claim(nodes) {
     			throw new Error("options.hydrate only works if the component was compiled with the `hydratable: true` option");
@@ -2905,7 +3410,14 @@ var app = (function () {
     				toggle_class(button, "empty", /*content*/ ctx[0].length == 0);
     			}
     		},
-    		i: noop,
+    		i: function intro(local) {
+    			if (!button_intro) {
+    				add_render_callback(() => {
+    					button_intro = create_in_transition(button, tabIn, {});
+    					button_intro.start();
+    				});
+    			}
+    		},
     		o: noop,
     		d: function destroy(detaching) {
     			if (detaching) detach_dev(button);
@@ -2946,7 +3458,7 @@ var app = (function () {
     		if ('selected' in $$props) $$invalidate(1, selected = $$props.selected);
     	};
 
-    	$$self.$capture_state = () => ({ content, selected });
+    	$$self.$capture_state = () => ({ boxIn, tabIn, content, selected });
 
     	$$self.$inject_state = $$props => {
     		if ('content' in $$props) $$invalidate(0, content = $$props.content);
@@ -3118,40 +3630,40 @@ var app = (function () {
 
     function get_each_context(ctx, list, i) {
     	const child_ctx = ctx.slice();
-    	child_ctx[12] = list[i];
-    	child_ctx[13] = list;
-    	child_ctx[14] = i;
+    	child_ctx[13] = list[i];
+    	child_ctx[14] = list;
+    	child_ctx[15] = i;
     	return child_ctx;
     }
 
     function get_each_context_1(ctx, list, i) {
     	const child_ctx = ctx.slice();
-    	child_ctx[12] = list[i];
-    	child_ctx[15] = list;
-    	child_ctx[16] = i;
+    	child_ctx[13] = list[i];
+    	child_ctx[16] = list;
+    	child_ctx[17] = i;
     	return child_ctx;
     }
 
-    // (65:6) {#each flows as flow, index}
+    // (73:6) {#each flows as flow, index}
     function create_each_block_1(ctx) {
     	let tab;
     	let updating_content;
     	let current;
 
     	function tab_content_binding(value) {
-    		/*tab_content_binding*/ ctx[6](value, /*flow*/ ctx[12]);
+    		/*tab_content_binding*/ ctx[6](value, /*flow*/ ctx[13]);
     	}
 
     	function click_handler() {
-    		return /*click_handler*/ ctx[7](/*index*/ ctx[16]);
+    		return /*click_handler*/ ctx[7](/*index*/ ctx[17]);
     	}
 
     	let tab_props = {
-    		selected: /*index*/ ctx[16] == /*selected*/ ctx[0]
+    		selected: /*index*/ ctx[17] == /*selected*/ ctx[0]
     	};
 
-    	if (/*flow*/ ctx[12].content !== void 0) {
-    		tab_props.content = /*flow*/ ctx[12].content;
+    	if (/*flow*/ ctx[13].content !== void 0) {
+    		tab_props.content = /*flow*/ ctx[13].content;
     	}
 
     	tab = new Tab({ props: tab_props, $$inline: true });
@@ -3169,11 +3681,11 @@ var app = (function () {
     		p: function update(new_ctx, dirty) {
     			ctx = new_ctx;
     			const tab_changes = {};
-    			if (dirty & /*selected*/ 1) tab_changes.selected = /*index*/ ctx[16] == /*selected*/ ctx[0];
+    			if (dirty & /*selected*/ 1) tab_changes.selected = /*index*/ ctx[17] == /*selected*/ ctx[0];
 
     			if (!updating_content && dirty & /*flows*/ 2) {
     				updating_content = true;
-    				tab_changes.content = /*flow*/ ctx[12].content;
+    				tab_changes.content = /*flow*/ ctx[13].content;
     				add_flush_callback(() => updating_content = false);
     			}
 
@@ -3197,14 +3709,14 @@ var app = (function () {
     		block,
     		id: create_each_block_1.name,
     		type: "each",
-    		source: "(65:6) {#each flows as flow, index}",
+    		source: "(73:6) {#each flows as flow, index}",
     		ctx
     	});
 
     	return block;
     }
 
-    // (79:4) {#if flows.length > 0}
+    // (87:4) {#if flows.length > 0}
     function create_if_block_1(ctx) {
     	let title;
     	let updating_flow;
@@ -3260,27 +3772,27 @@ var app = (function () {
     		block,
     		id: create_if_block_1.name,
     		type: "if",
-    		source: "(79:4) {#if flows.length > 0}",
+    		source: "(87:4) {#if flows.length > 0}",
     		ctx
     	});
 
     	return block;
     }
 
-    // (85:6) {#if i == selected}
+    // (93:6) {#if i == selected}
     function create_if_block(ctx) {
     	let flow;
     	let updating_root;
     	let current;
 
     	function flow_root_binding(value) {
-    		/*flow_root_binding*/ ctx[11](value, /*flow*/ ctx[12], /*each_value*/ ctx[13], /*i*/ ctx[14]);
+    		/*flow_root_binding*/ ctx[11](value, /*flow*/ ctx[13], /*each_value*/ ctx[14], /*i*/ ctx[15]);
     	}
 
     	let flow_props = {};
 
-    	if (/*flow*/ ctx[12] !== void 0) {
-    		flow_props.root = /*flow*/ ctx[12];
+    	if (/*flow*/ ctx[13] !== void 0) {
+    		flow_props.root = /*flow*/ ctx[13];
     	}
 
     	flow = new Flow({ props: flow_props, $$inline: true });
@@ -3301,7 +3813,7 @@ var app = (function () {
 
     			if (!updating_root && dirty & /*flows*/ 2) {
     				updating_root = true;
-    				flow_changes.root = /*flow*/ ctx[12];
+    				flow_changes.root = /*flow*/ ctx[13];
     				add_flush_callback(() => updating_root = false);
     			}
 
@@ -3325,18 +3837,18 @@ var app = (function () {
     		block,
     		id: create_if_block.name,
     		type: "if",
-    		source: "(85:6) {#if i == selected}",
+    		source: "(93:6) {#if i == selected}",
     		ctx
     	});
 
     	return block;
     }
 
-    // (84:4) {#each flows as flow, i}
+    // (92:4) {#each flows as flow, i}
     function create_each_block(ctx) {
     	let if_block_anchor;
     	let current;
-    	let if_block = /*i*/ ctx[14] == /*selected*/ ctx[0] && create_if_block(ctx);
+    	let if_block = /*i*/ ctx[15] == /*selected*/ ctx[0] && create_if_block(ctx);
 
     	const block = {
     		c: function create() {
@@ -3349,7 +3861,7 @@ var app = (function () {
     			current = true;
     		},
     		p: function update(ctx, dirty) {
-    			if (/*i*/ ctx[14] == /*selected*/ ctx[0]) {
+    			if (/*i*/ ctx[15] == /*selected*/ ctx[0]) {
     				if (if_block) {
     					if_block.p(ctx, dirty);
 
@@ -3391,7 +3903,7 @@ var app = (function () {
     		block,
     		id: create_each_block.name,
     		type: "each",
-    		source: "(84:4) {#each flows as flow, i}",
+    		source: "(92:4) {#each flows as flow, i}",
     		ctx
     	});
 
@@ -3475,19 +3987,19 @@ var app = (function () {
     				each_blocks[i].c();
     			}
 
-    			attr_dev(div0, "class", "add-tab svelte-cqpg7r");
-    			add_location(div0, file, 71, 6, 1625);
-    			attr_dev(ul, "class", "svelte-cqpg7r");
-    			add_location(ul, file, 63, 4, 1421);
-    			attr_dev(div1, "class", "tabs svelte-cqpg7r");
-    			add_location(div1, file, 62, 2, 1398);
-    			attr_dev(div2, "class", "title svelte-cqpg7r");
-    			add_location(div2, file, 77, 2, 1823);
-    			attr_dev(div3, "class", "flow svelte-cqpg7r");
-    			add_location(div3, file, 82, 2, 1935);
-    			attr_dev(main, "class", "svelte-cqpg7r");
+    			attr_dev(div0, "class", "add-tab svelte-1paz6jv");
+    			add_location(div0, file, 79, 6, 1733);
+    			attr_dev(ul, "class", "svelte-1paz6jv");
+    			add_location(ul, file, 71, 4, 1529);
+    			attr_dev(div1, "class", "tabs svelte-1paz6jv");
+    			add_location(div1, file, 70, 2, 1506);
+    			attr_dev(div2, "class", "title svelte-1paz6jv");
+    			add_location(div2, file, 85, 2, 1931);
+    			attr_dev(div3, "class", "flow svelte-1paz6jv");
+    			add_location(div3, file, 90, 2, 2043);
+    			attr_dev(main, "class", "svelte-1paz6jv");
     			toggle_class(main, "dark", /*dark*/ ctx[2]);
-    			add_location(main, file, 61, 0, 1378);
+    			add_location(main, file, 69, 0, 1486);
     		},
     		l: function claim(nodes) {
     			throw new Error("options.hydrate only works if the component was compiled with the `hydratable: true` option");
@@ -3672,19 +4184,32 @@ var app = (function () {
 
     	let flows = [];
 
-    	function focusFlow() {
-    		if (flows[selected]?.lastFocus != undefined) {
-    			let { parent, index } = flows[selected].lastFocus;
+    	function boxFromPath(path, scope) {
+    		if (!scope) {
+    			scope = 0;
+    		}
 
-    			if (parent.children[index]) {
-    				parent.children[index].focus = true;
-    				$$invalidate(1, flows);
-    			} else {
-    				$$invalidate(1, flows[selected].children[0].focus = true, flows);
+    		let ret = flows[selected];
+
+    		if (path.length > 1) {
+    			for (let i = 1; i < path.length - scope; i++) {
+    				ret = ret.children[path[i]];
     			}
+    		}
+
+    		return ret;
+    	}
+
+    	function focusFlow() {
+    		let lastFocus = boxFromPath(flows[selected]?.lastFocus);
+
+    		if (lastFocus) {
+    			lastFocus.focus = true;
     		} else {
     			$$invalidate(1, flows[selected].children[0].focus = true, flows);
     		}
+
+    		$$invalidate(1, flows);
     	}
 
     	function addFlow(neg) {
@@ -3758,6 +4283,7 @@ var app = (function () {
     		selected,
     		clickTab,
     		flows,
+    		boxFromPath,
     		focusFlow,
     		addFlow
     	});

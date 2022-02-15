@@ -53,6 +53,7 @@
     background: none;
     padding: var(--padding);
     border: none;
+    height: calc(1em + var(--padding) * 2 + 6px);
     border-radius: 0;
     font-size: inherit;
     color: inherit;
