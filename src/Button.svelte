@@ -25,11 +25,16 @@
     border-radius: var(--border-radius);
     color: var(--color);
   }
-  .disabled {
+  .top.disabled {
     --color: var(--color-weak);
   }
   .top:hover {
     background-color: var(--background-indent);
+  }
+  .top.disabled:hover,
+  .top.disabled:active {
+    cursor: not-allowed;
+    background: none;
   }
   .top:active {
     background-color: var(--background-active);

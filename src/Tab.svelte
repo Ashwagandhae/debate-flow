@@ -1,9 +1,18 @@
 <script>
+  import { boxIn } from './transition.js';
+  import { tabIn } from './transition.js';
+
   export let content;
   export let selected;
 </script>
 
-<button class="top" class:selected class:empty={content.length == 0} on:click>
+<button
+  class="top"
+  class:selected
+  class:empty={content.length == 0}
+  on:click
+  in:tabIn
+>
   {#if content}
     {content}
   {:else}

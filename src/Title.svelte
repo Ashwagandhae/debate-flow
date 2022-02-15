@@ -25,14 +25,14 @@
     }
     return ret;
   }
-  let validFocus = false;
 
+  let validFocus = false;
   function setValidFocus() {
     // wait until its actually done updating
     setTimeout(() => {
       if (flow.lastFocus && flow.lastFocus.length > 1) {
         let box = boxFromPath(flow.lastFocus);
-        validFocus = box.focus;
+        validFocus = box?.focus;
       }
     }, 0);
   }
@@ -54,6 +54,8 @@
     }
   }
   function deleteChild() {
+    // cancel if disabled
+    if (!validFocus) return;
     let parent = boxFromPath(flow.lastFocus, 1);
     let target = boxFromPath(flow.lastFocus);
     let children = [...parent.children];
@@ -81,6 +83,8 @@
   }
 
   function addChild() {
+    // cancel if disabled
+    if (!validFocus) return;
     // if not at end of column
     let target = boxFromPath(flow.lastFocus);
     let children = [...target.children];
@@ -102,6 +106,8 @@
     }
   }
   function addSibling(direction) {
+    // cancel if disabled
+    if (!validFocus) return;
     let parent = boxFromPath(flow.lastFocus, 1);
     let target = boxFromPath(flow.lastFocus);
     let children = [...parent.children];

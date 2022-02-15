@@ -6,6 +6,12 @@
   import { afterUpdate } from 'svelte';
   import { createEventDispatcher } from 'svelte';
 
+  import { boxIn } from './transition.js';
+  import { boxOut } from './transition.js';
+  import { boxButtonIn } from './transition.js';
+  import { brIn } from './transition.js';
+  import { brOut } from './transition.js';
+
   const dispatch = createEventDispatcher();
 
   export let root = false;
@@ -33,6 +39,12 @@
       dispatch('saveFocus', path);
     }
   });
+  let placeholder = '';
+  $: {
+    if (data.level == 1 && data.index == 0) {
+      placeholder = 'type here';
+    }
+  }
   function preventBlur(e) {
     e.preventDefault();
   }
@@ -124,12 +136,16 @@
       for (let i = index; i < children.length; i++) {
         children[i].index = i;
       }
+
       // focus on previous child of deleted
       if (children[index - 1]) {
         children[index - 1].focus = true;
         // focus on parent when empty
-      } else if (data.children.length == 0) {
+      } else if (children.length == 0) {
         data.focus = true;
+        // focus on first child if deleted first child
+      } else if (index - 1 < 0) {
+        children[0].focus = true;
       }
       data.children = [...children];
     } else {
@@ -176,6 +192,8 @@
   class:empty={data.children.length == 0}
   class:two={(data.level % 2 == 0 && !neg) || (data.level % 2 == 1 && neg)}
   class:focus={data.focus}
+  in:boxIn|local
+  out:boxOut|local
 >
   <div class="content" class:root>
     <div class="barcontainer">
@@ -184,21 +202,24 @@
         class:left={data.children.length > 0}
         class:right={data.index == 0 && data.level > 1}
       />
-      <Text
-        on:keydown={handleKeydown}
-        on:blur={handleBlur}
-        on:focus={handleFocus}
-        bind:value={data.content}
-        bind:this={textarea}
-        placeholder="type content here"
-      />
-      <br class="below" />
+      <div>
+        <Text
+          on:keydown={handleKeydown}
+          on:blur={handleBlur}
+          on:focus={handleFocus}
+          bind:value={data.content}
+          bind:this={textarea}
+          {placeholder}
+        />
+      </div>
+      <br class="below" in:brIn|local out:brOut|local />
     </div>
     {#if data.children.length == 0 && data.level < columnCount}
       <button
         class="add"
-        on:click={() => addChild(0)}
+        on:click={() => addChild(0, 0)}
         on:mousedown={preventBlur}
+        in:boxButtonIn|local
       >
         <Icon name="arrowRight" />
       </button>
@@ -206,7 +227,7 @@
   </div>
 
   <ul class="children">
-    {#each data.children as child}
+    {#each data.children as child, index (child)}
       <svelte:self
         bind:data={child}
         addSibling={addChild}
@@ -244,6 +265,7 @@
     grid-template-rows: min-content;
     width: max-content;
     height: auto;
+    overflow: visible;
     align-items: start;
     color: var(--color);
   }
@@ -263,19 +285,25 @@
   }
   br {
     content: '';
-    position: absolute;
+    display: block;
     background-color: var(--this-background-indent);
     height: var(--br-height);
-    margin-left: 10px;
-    width: calc(var(--column-width) - 20px);
+    margin-left: var(--padding);
+    width: calc(var(--column-width) - var(--padding) * 2);
     border-radius: 3px;
+    margin-top: calc(-0 * var(--br-height) / 2);
+    position: absolute;
+    z-index: 2;
+  }
+  br.below {
+    margin-top: calc(0 * var(--br-height) / 2);
   }
   br.left {
-    width: calc(var(--column-width) - 10px);
+    width: calc(var(--column-width) - var(--padding));
     border-radius: 3px 0 0 3px;
   }
   br.right {
-    width: calc(var(--column-width) - 10px);
+    width: calc(var(--column-width) - var(--padding));
     margin-left: 0;
     border-radius: 0 3px 3px 0;
   }
@@ -284,9 +312,7 @@
     border-radius: 0;
     margin-left: 0;
   }
-  br.below {
-    display: none;
-  }
+
   .barcontainer {
     width: var(--column-width);
   }
@@ -302,15 +328,18 @@
   .add {
     opacity: 0;
     border: none;
+    display: block;
+    position: absolute;
+    transform: translateX(var(--column-width));
     border-radius: var(--border-radius);
     --color: var(--color-weak);
     padding: var(--padding);
-    margin: 0 var(--padding);
+    margin: var(--br-height) var(--padding) 0 var(--padding);
     width: calc(var(--column-width) - var(--padding) * 2);
     z-index: 0;
     background-color: var(--this-outside);
     box-sizing: border-box;
-    height: calc(1em + var(--padding) * 2 + var(--br-height) * 1);
+    height: calc(1em + var(--padding) * 2);
   }
   .focus > .content > .add,
   .add:hover {
