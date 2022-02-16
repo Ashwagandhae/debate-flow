@@ -3988,18 +3988,18 @@ var app = (function () {
     			}
 
     			attr_dev(div0, "class", "add-tab svelte-1paz6jv");
-    			add_location(div0, file, 79, 6, 1733);
+    			add_location(div0, file, 79, 6, 1727);
     			attr_dev(ul, "class", "svelte-1paz6jv");
-    			add_location(ul, file, 71, 4, 1529);
+    			add_location(ul, file, 71, 4, 1523);
     			attr_dev(div1, "class", "tabs svelte-1paz6jv");
-    			add_location(div1, file, 70, 2, 1506);
+    			add_location(div1, file, 70, 2, 1500);
     			attr_dev(div2, "class", "title svelte-1paz6jv");
-    			add_location(div2, file, 85, 2, 1931);
+    			add_location(div2, file, 85, 2, 1925);
     			attr_dev(div3, "class", "flow svelte-1paz6jv");
-    			add_location(div3, file, 90, 2, 2043);
+    			add_location(div3, file, 90, 2, 2037);
     			attr_dev(main, "class", "svelte-1paz6jv");
     			toggle_class(main, "dark", /*dark*/ ctx[2]);
-    			add_location(main, file, 69, 0, 1486);
+    			add_location(main, file, 69, 0, 1480);
     		},
     		l: function claim(nodes) {
     			throw new Error("options.hydrate only works if the component was compiled with the `hydratable: true` option");
@@ -4217,9 +4217,9 @@ var app = (function () {
     		let columns;
 
     		if (neg) {
-    			columns = ['1NC', '2AC', '2NC', '1NR', '1AR', '2NR', '2AR'];
+    			columns = ['1NC', '2AC', '2NC/1NR', '1AR', '2NR', '2AR'];
     		} else {
-    			columns = ['1AC', '1NC', '2AC', '2NC', '1NR', '1AR', '2NR', '2AR'];
+    			columns = ['1AC', '1NC', '2AC', '2NC/1NR', '1AR', '2NR', '2AR'];
     		}
 
     		flows.push({

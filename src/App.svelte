@@ -40,9 +40,9 @@
     // function addFlow(neg) {
     let columns;
     if (neg) {
-      columns = ['1NC', '2AC', '2NC', '1NR', '1AR', '2NR', '2AR'];
+      columns = ['1NC', '2AC', '2NC/1NR', '1AR', '2NR', '2AR'];
     } else {
-      columns = ['1AC', '1NC', '2AC', '2NC', '1NR', '1AR', '2NR', '2AR'];
+      columns = ['1AC', '1NC', '2AC', '2NC/1NR', '1AR', '2NR', '2AR'];
     }
     flows.push({
       content: '',
