@@ -82,7 +82,7 @@
     height: var(--view-height);
     transform: translateX(-200%);
     pointer-events: none;
-    z-index: -1;
+    z-index: -2;
   }
   .column {
     height: 100%;

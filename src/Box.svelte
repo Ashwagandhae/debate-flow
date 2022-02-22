@@ -1,16 +1,14 @@
 <script>
   import Text from './Text.svelte';
   import Icon from './Icon.svelte';
+  import Overlay from './Overlay.svelte';
   import { getContext } from 'svelte';
   import { onMount } from 'svelte';
   import { afterUpdate } from 'svelte';
+  import { beforeUpdate } from 'svelte';
   import { createEventDispatcher } from 'svelte';
 
-  import { boxIn } from './transition.js';
-  import { boxOut } from './transition.js';
-  import { boxButtonIn } from './transition.js';
-  import { brIn } from './transition.js';
-  import { brOut } from './transition.js';
+  import { boxIn, boxOut, boxButtonIn, brIn, brOut } from './transition.js';
 
   const dispatch = createEventDispatcher();
 
@@ -26,6 +24,29 @@
   export let focusSibling = () => {};
   export let focusParent = () => {};
 
+  let lineColor;
+  let backgroundColor;
+  let childFocus = false;
+  function saveFocus(e) {
+    if (e.detail.length - path.length == 1) {
+      childFocus = true;
+    }
+    dispatch('saveFocus', e.detail);
+  }
+  $: {
+    if (data.focus) {
+      lineColor = 'var(--accent)';
+      backgroundColor = 'var(--background-accent)';
+    } else if (childFocus) {
+      lineColor = 'var(--accent-fade)';
+      backgroundColor = 'var(--background-accent-fade)';
+    } else {
+      lineColor = 'none';
+      backgroundColor = 'none';
+    }
+  }
+  $: highlight = childFocus || data.focus;
+
   const { getNeg } = getContext('neg');
   let neg = getNeg();
 
@@ -33,25 +54,32 @@
   let columnCount = getColumnCount();
 
   let textarea;
+  beforeUpdate(function () {
+    childFocus = false;
+  });
   afterUpdate(function () {
-    if (data.focus) {
+    if (data.focus && data.level >= 1) {
       textarea.focus();
       dispatch('saveFocus', path);
     }
   });
+
   let placeholder = '';
   $: {
     if (data.level == 1 && data.index == 0) {
       placeholder = 'type here';
+    } else {
+      placeholder = '';
     }
   }
+
   function preventBlur(e) {
     e.preventDefault();
   }
+
   function handleFocus() {
     if (!data.focus) {
-      data.focus = true;
-      data = data;
+      focusSelf();
     }
   }
 
@@ -61,49 +89,67 @@
       data = data;
     }
   }
-
-  function handleKeydown(e) {
-    if (e.key == 'Enter') {
-      e.preventDefault();
-      if (e.shiftKey) {
-        data.focus = false;
-        addChild(0, 0);
-      } else {
-        data.focus = false;
-        addSibling(data.index, 1);
-      }
-    } else if (e.key == 'Backspace') {
-      if (data.content.length == 0) {
-        data.focus = false;
-        deleteSelf(data.index);
-      }
-    } else if (e.key == 'ArrowDown') {
-      e.preventDefault();
-
-      data.focus = false;
-      focusSibling(data.index, 1);
-    } else if (e.key == 'ArrowUp') {
-      e.preventDefault();
-
-      data.focus = false;
-      focusSibling(data.index, -1);
-    } else if (e.key == 'ArrowLeft') {
-      data.focus = false;
-      e.preventDefault();
-
-      focusParent();
-    } else if (e.key == 'ArrowRight') {
-      e.preventDefault();
-
-      data.focus = false;
-
-      if (data.children.length > 0) {
-        focusChild(0, 0);
-      } else {
-        focusSibling(data.index, 1);
-      }
+  class keyDown {
+    constructor(
+      handle,
+      require = () => true,
+      stopRepeat = true,
+      preventDefault = true,
+      keepFocus = false
+    ) {
+      this.require = require;
+      this.preventDefault = preventDefault;
+      this.keepFocus = keepFocus;
+      this.stopRepeat = stopRepeat;
+      this.handle = function (e) {
+        if (!this.require()) {
+          return false;
+        }
+        if (this.preventDefault) {
+          e.preventDefault();
+        }
+        if (this.stopRepeat && e.repeat == true) {
+          return false;
+        }
+        if (this.keepFocus) {
+          focusSelf();
+        }
+        handle();
+        return true;
+      };
     }
   }
+  const keyDowns = {
+    shiftKey: {
+      Enter: new keyDown(() => addChild(0, 0)),
+    },
+    other: {
+      Enter: new keyDown(() => addSibling(data.index, 1)),
+      Backspace: new keyDown(
+        () => deleteSelf(data.index),
+        () => data.content.length == 0
+      ),
+
+      ArrowUp: new keyDown(() => focusSibling(data.index, -1)),
+      ArrowDown: new keyDown(() => focusSibling(data.index, 1)),
+      ArrowLeft: new keyDown(() => focusParent()),
+      ArrowRight: new keyDown(() => {
+        if (data.children.length > 0) {
+          focusChild(0, 0);
+        } else {
+          focusSibling(data.index, 1);
+        }
+      }),
+    },
+  };
+  function handleKeydown(e) {
+    if (e.shiftKey && keyDowns.shiftKey[e.key]) {
+      keyDowns.shiftKey[e.key].handle(e);
+    } else if (keyDowns.other[e.key]) {
+      keyDowns.other[e.key].handle(e);
+    }
+  }
+
   function addChild(index, direction) {
     let newIndex = index + direction;
     // if not at end of column
@@ -124,13 +170,14 @@
       data = data;
     } else {
       // stay focused
-      data.focus = true;
+      focusSelf();
     }
   }
   function deleteChild(index) {
     // if target isn't only child of first level
     if (data.children.length > 1 || data.level >= 1) {
       let children = [...data.children];
+      children[index].focus = false;
       children.splice(index, 1);
       // fix index
       for (let i = index; i < children.length; i++) {
@@ -142,7 +189,7 @@
         children[index - 1].focus = true;
         // focus on parent when empty
       } else if (children.length == 0) {
-        data.focus = true;
+        focusSelf();
         // focus on first child if deleted first child
       } else if (index - 1 < 0) {
         children[0].focus = true;
@@ -158,7 +205,7 @@
     let newIndex = index + direction;
     // focus on parent when index is before children
     if (newIndex < 0) {
-      data.focus = true;
+      focusSelf();
       return;
     }
     // direct pointer
@@ -192,27 +239,39 @@
   class:empty={data.children.length == 0}
   class:two={(data.level % 2 == 0 && !neg) || (data.level % 2 == 1 && neg)}
   class:focus={data.focus}
+  class:highlight
   in:boxIn|local
   out:boxOut|local
 >
-  <div class="content" class:root>
+  <div
+    class="content"
+    class:root
+    style={`--this-background: ${backgroundColor}`}
+    class:left={data.children.length > 0}
+    class:right={data.index == 0 && data.level > 1}
+  >
     <div class="barcontainer">
-      <br
-        class="above"
+      <div
+        class="line above"
         class:left={data.children.length > 0}
         class:right={data.index == 0 && data.level > 1}
-      />
-      <div>
-        <Text
-          on:keydown={handleKeydown}
-          on:blur={handleBlur}
-          on:focus={handleFocus}
-          bind:value={data.content}
-          bind:this={textarea}
-          {placeholder}
-        />
+        in:brIn|local
+        out:brOut|local
+      >
+        <Overlay background={lineColor} />
       </div>
-      <br class="below" in:brIn|local out:brOut|local />
+
+      <Text
+        on:keydown={handleKeydown}
+        on:blur={handleBlur}
+        on:focus={handleFocus}
+        bind:value={data.content}
+        bind:this={textarea}
+        {placeholder}
+      />
+      <div class="line below" in:brIn|local out:brOut|local>
+        <Overlay background={lineColor} />
+      </div>
     </div>
     {#if data.children.length == 0 && data.level < columnCount}
       <button
@@ -221,7 +280,7 @@
         on:mousedown={preventBlur}
         in:boxButtonIn|local
       >
-        <Icon name="arrowRight" />
+        <Icon name="add" />
       </button>
     {/if}
   </div>
@@ -235,7 +294,7 @@
         focusSibling={focusChild}
         focusParent={focusSelf}
         parentPath={path}
-        on:saveFocus
+        on:saveFocus={saveFocus}
       />
     {/each}
   </ul>
@@ -269,13 +328,28 @@
     align-items: start;
     color: var(--color);
   }
+
   .content {
     width: var(--column-width);
     height: min-content;
     flex-direction: row;
     display: flex;
-    position: relative;
     grid-area: a;
+    background: var(--this-background);
+    transition: background var(--transition-speed);
+    position: relative;
+    border-radius: var(--border-radius-small);
+  }
+  .content.left {
+    border-radius: var(--border-radius-small) 0 var(--border-radius-small)
+      var(--border-radius-small);
+  }
+  .content.right {
+    border-radius: 0 var(--border-radius-small) var(--border-radius-small)
+      var(--border-radius-small);
+  }
+  .content.left.right {
+    border-radius: 0 0 var(--border-radius-small) var(--border-radius-small);
   }
   .empty .content {
     width: max-content;
@@ -283,31 +357,36 @@
   .root.content {
     display: none;
   }
-  br {
+  .line {
+    z-index: -1;
+  }
+  .top.highlight > .content > .barcontainer > .line {
+    z-index: 2;
+  }
+  .line {
     content: '';
     display: block;
     background-color: var(--this-background-indent);
     height: var(--br-height);
     margin-left: var(--padding);
     width: calc(var(--column-width) - var(--padding) * 2);
-    border-radius: 3px;
-    margin-top: calc(-0 * var(--br-height) / 2);
+    border-radius: var(--border-radius-small);
+    margin-top: calc(-0.5 * var(--br-height));
     position: absolute;
-    z-index: 2;
   }
-  br.below {
-    margin-top: calc(0 * var(--br-height) / 2);
+  .line.below {
+    margin-top: calc(-0.5 * var(--br-height));
   }
-  br.left {
+  .line.left {
     width: calc(var(--column-width) - var(--padding));
     border-radius: 3px 0 0 3px;
   }
-  br.right {
+  .line.right {
     width: calc(var(--column-width) - var(--padding));
     margin-left: 0;
     border-radius: 0 3px 3px 0;
   }
-  br.left.right {
+  .line.left.right {
     width: calc(var(--column-width));
     border-radius: 0;
     margin-left: 0;
@@ -315,9 +394,6 @@
 
   .barcontainer {
     width: var(--column-width);
-  }
-  .top:last-child > .content > .barcontainer > br.below {
-    display: block;
   }
   .children {
     grid-area: b;
@@ -327,6 +403,7 @@
   }
   .add {
     opacity: 0;
+    transition: background var(--transition-speed);
     border: none;
     display: block;
     position: absolute;
@@ -334,9 +411,8 @@
     border-radius: var(--border-radius);
     --color: var(--color-weak);
     padding: var(--padding);
-    margin: var(--br-height) var(--padding) 0 var(--padding);
+    margin: calc(var(--br-height) / 2) var(--padding) 0 var(--padding);
     width: calc(var(--column-width) - var(--padding) * 2);
-    z-index: 0;
     background-color: var(--this-outside);
     box-sizing: border-box;
     height: calc(1em + var(--padding) * 2);
@@ -350,6 +426,7 @@
     --color: inherit;
   }
   .add:active {
+    transition: none;
     background-color: var(--this-outside-active);
   }
 </style>

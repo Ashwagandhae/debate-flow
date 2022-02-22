@@ -24,6 +24,7 @@
     text-align: left;
     border-radius: var(--border-radius);
     color: var(--color);
+    transition: background var(--transition-speed);
   }
   .top.disabled {
     --color: var(--color-weak);
@@ -37,6 +38,7 @@
     background: none;
   }
   .top:active {
+    transition: none;
     background-color: var(--background-active);
   }
 </style>

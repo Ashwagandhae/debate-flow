@@ -1,8 +1,11 @@
 <script>
   import Flow from './Flow.svelte';
   import Title from './Title.svelte';
+  import Button from './Button.svelte';
+  import ButtonBar from './ButtonBar.svelte';
   import Tab from './Tab.svelte';
   import AddTab from './AddTab.svelte';
+  import { speed } from './transition.js';
 
   let dark = 1;
   if (dark) {
@@ -64,38 +67,114 @@
     selected = flows.length - 1;
     flows = flows;
   }
+  function handleKeydown(e) {
+    if (e.ctrlKey && e.shiftKey && e.key == 'N') {
+      e.preventDefault();
+      addFlow(false);
+    } else if (e.ctrlKey && e.key == 'n') {
+      e.preventDefault();
+      addFlow(true);
+    }
+  }
   addFlow(false);
+  function download() {
+    let data = JSON.stringify(flows);
+    let element = document.createElement('a');
+    element.setAttribute(
+      'href',
+      'data:text/json;charset=utf-8, ' + encodeURIComponent(data)
+    );
+    element.setAttribute('download', 'flow.json');
+    document.body.appendChild(element);
+    element.click();
+    document.body.removeChild(element);
+  }
+  function readUploadDragged(e) {
+    e.preventDefault();
+    let file = e.dataTransfer.files[0];
+
+    let reader = new FileReader();
+    reader.onload = function (fileLoadedEvent) {
+      handleUpload(fileLoadedEvent.target.result);
+    };
+    reader.readAsText(file, 'UTF-8');
+  }
+  function readUpload() {
+    let file = document.getElementById('uploadId').files[0];
+
+    let reader = new FileReader();
+    reader.onload = function (fileLoadedEvent) {
+      handleUpload(fileLoadedEvent.target.result);
+    };
+    reader.readAsText(file, 'UTF-8');
+  }
+  function preventDefault(e) {
+    e.preventDefault();
+  }
+  function openUploadDialog() {
+    document.getElementById('uploadId').click();
+  }
+  function handleUpload(data) {
+    flows = JSON.parse(data);
+  }
+
+  window.addEventListener(
+    'dragover',
+    function (e) {
+      e = e || event;
+      e.preventDefault();
+    },
+    false
+  );
+  window.addEventListener(
+    'drop',
+    function (e) {
+      e = e || event;
+      e.preventDefault();
+    },
+    false
+  );
 </script>
 
-<main class:dark>
-  <div class="tabs">
-    <ul>
-      {#each flows as flow, index}
-        <Tab
-          on:click={() => clickTab(index)}
-          bind:content={flow.content}
-          selected={index == selected}
-        />
-      {/each}
-      <div class="add-tab">
-        <AddTab content="+ on case" on:click={() => addFlow(false)} />
-        <AddTab content="+ off case" on:click={() => addFlow(true)} />
-      </div>
-    </ul>
+<svelte:body
+  on:keydown={handleKeydown}
+  on:dragenter={preventDefault}
+  on:drop={readUploadDragged} />
+<main class:dark style={`--transition-speed: ${speed}ms;`}>
+  <div class="sidebar">
+    <div class="header">
+      <ButtonBar>
+        <Button name="download" on:click={download} />
+        <input id="uploadId" type="file" hidden on:change={readUpload} />
+        <Button name="upload" on:click={openUploadDialog} />
+      </ButtonBar>
+    </div>
+    <div class="tabs">
+      <ul>
+        {#each flows as flow, index}
+          <Tab
+            on:click={() => clickTab(index)}
+            bind:content={flow.content}
+            selected={index == selected}
+          />
+        {/each}
+        <div class="add-tab">
+          <AddTab content="on case" on:click={() => addFlow(false)} />
+          <AddTab content="off case" on:click={() => addFlow(true)} />
+        </div>
+      </ul>
+    </div>
   </div>
   <div class="title">
     {#if flows.length > 0}
       <Title bind:flow={flows[selected]} />
     {/if}
   </div>
-  <div class="flow">
-    {#each flows as flow, i}
-      {#if i == selected}
-        <Flow on:focusFlow={focusFlow} bind:root={flow} />
-      {/if}
-    {/each}
-    <!-- <Flow on:focusFlow={focusFlow} bind:root={flows[selected]} /> -->
-  </div>
+  {#key selected}
+    <div class="flow">
+      <Flow on:focusFlow={focusFlow} bind:root={flows[selected]} />
+    </div>
+  {/key}
 </main>
 
 <style>
@@ -119,25 +198,34 @@
     padding: 0;
     margin: 0;
   }
-  .tabs {
+  .sidebar {
     background: var(--background);
     width: 100%;
-    height: 100%;
-    box-sizing: border-box;
-    overflow-y: auto;
+    height: 90vh;
     border-radius: var(--border-radius);
     padding: var(--padding);
     grid-area: a;
+    display: flex;
+    flex-direction: column;
+    box-sizing: border-box;
+  }
+  .header {
+    height: auto;
+    padding-bottom: var(--padding);
+  }
+  .tabs {
+    overflow-y: auto;
+    height: 90vh;
+    box-sizing: border-box;
   }
   .tabs > ul {
     padding-bottom: calc(var(--view-height) * 0.6);
   }
 
   .add-tab {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    align-items: stretch;
-    grid-gap: var(--padding);
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--padding);
   }
   .title {
     background: var(--background);
@@ -169,9 +257,10 @@
     background: var(--background-back);
     color: var(--color);
     font-family: var(--font-family);
+    font-size: var(--font-size);
   }
   :global(:root) {
-    --column-width: 150px;
+    --column-width: 140px;
     --padding: 8px;
     --title-height: 70px;
     --gap: 16px;
@@ -179,7 +268,9 @@
     --font-size: 0.9em;
     --font-family: Avenir, sans-serif;
     --border-radius: 12px;
+    --border-radius-small: 6px;
     --br-height: 4px;
+    --transition-speed: var(--transition-speed);
   }
   :global(body) {
     --background-back: hsl(0 0% 90%);
@@ -193,7 +284,7 @@
     --background-secondary-active: hsl(0 0% 81%);
 
     --color: hsl(0 0% 30%);
-    --color-weak: hsl(0, 0%, 70%);
+    --color-weak: hsl(0, 0%, 50%);
   }
   :global(body.dark) {
     --background-back: hsl(0 0% 10%);
@@ -206,7 +297,13 @@
     --background-secondary-indent: hsl(0 0% 28%);
     --background-secondary-active: hsl(0 0% 32%);
 
+    --background-accent: hsl(200 20% 20%);
+    --background-accent-fade: hsl(205 10% 18%);
+
     --color: hsl(0 0% 80%);
     --color-weak: hsl(0, 0%, 40%);
+
+    --accent: hsl(200, 50%, 42%);
+    --accent-fade: hsl(205, 25%, 32%);
   }
 </style>

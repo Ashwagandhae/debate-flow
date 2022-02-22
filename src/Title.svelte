@@ -1,6 +1,8 @@
 <script>
   import Text from './Text.svelte';
   import Button from './Button.svelte';
+  import ButtonBar from './ButtonBar.svelte';
+  import Overlay from './Overlay.svelte';
   import { afterUpdate } from 'svelte';
 
   import { createEventDispatcher } from 'svelte';
@@ -40,8 +42,22 @@
 
   function handleBlur() {
     if (flow.focus) {
-      delete flow.focus;
+      flow.focus = false;
       flow = flow;
+    }
+  }
+  function handleFocus() {
+    if (!flow.focus) {
+      flow.focus = true;
+      flow = flow;
+    }
+  }
+  let lineColor;
+  $: {
+    if (flow.focus) {
+      lineColor = 'var(--accent)';
+    } else {
+      lineColor = 'none';
     }
   }
 
@@ -128,31 +144,35 @@
 </script>
 
 <div class="top">
-  <div class="content">
+  <div class="content" class:focus={flow.focus}>
     <Text
       on:blur={handleBlur}
+      on:focus={handleFocus}
       on:keydown={handleKeydown}
       bind:value={flow.content}
       bind:this={textarea}
       nowrap
       placeholder="type name here"
     />
+    <div class="line">
+      <Overlay background={lineColor} />
+    </div>
   </div>
   <div class="buttons-wrapper">
-    <div class="buttons">
-      <Button name="arrowRight" on:click={addChild} disabled={!validFocus} />
+    <ButtonBar>
+      <Button name="addRight" on:click={addChild} disabled={!validFocus} />
       <Button
-        name="arrowUp"
+        name="addUp"
         on:click={() => addSibling(0)}
         disabled={!validFocus}
       />
       <Button
-        name="arrowDown"
+        name="addDown"
         on:click={() => addSibling(1)}
         disabled={!validFocus}
       />
       <Button name="delete" on:click={deleteChild} disabled={!validFocus} />
-    </div>
+    </ButtonBar>
   </div>
 </div>
 
@@ -167,16 +187,25 @@
   }
   .content {
     width: 100%;
+    border-radius: var(--border-radius);
+  }
+  .content.focus {
+    background-color: var(--background-accent);
+  }
+  .line {
+    content: '';
+    display: block;
+    background-color: var(--this-background-indent);
+    height: var(--br-height);
+    margin-left: var(--padding);
+    width: calc(100% - var(--padding) * 2);
+    border-radius: 3px;
+    margin-top: calc(-1 * var(--br-height));
+    position: relative;
   }
   .buttons-wrapper {
     display: flex;
     flex-direction: column;
     justify-content: center;
-  }
-  .buttons {
-    display: flex;
-    flex-direction: row;
-    align-items: center;
-    gap: 8px;
   }
 </style>

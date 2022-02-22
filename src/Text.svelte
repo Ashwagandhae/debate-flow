@@ -16,6 +16,7 @@
   let textarea;
 
   function autoHeight() {
+    textarea.value = textarea.value.replace(/\r?\n|\r/g, '');
     textarea.style.height = '0px';
     textarea.style.height = textarea.scrollHeight + 'px';
   }
@@ -58,6 +59,13 @@
     font-size: inherit;
     color: inherit;
     white-space: var(--white-space);
+  }
+  textarea::-webkit-scrollbar {
+    display: none;
+  }
+  textarea {
+    -ms-overflow-style: none; /* IE and Edge */
+    scrollbar-width: none; /* Firefox */
   }
   textarea:focus {
     z-index: 10000;
