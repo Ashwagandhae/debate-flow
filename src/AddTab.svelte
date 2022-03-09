@@ -24,6 +24,7 @@
     display: flex;
     flex-direction: row;
     gap: 0.3em;
+    font-weight: var(--font-weight);
   }
   .top:hover {
     background-color: var(--background-indent);

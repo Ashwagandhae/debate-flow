@@ -1,5 +1,7 @@
 import { quadOut } from 'svelte/easing';
 import { quadIn } from 'svelte/easing';
+import { backIn } from 'svelte/easing';
+import { backOut } from 'svelte/easing';
 
 export const speed = 300;
 
@@ -109,6 +111,36 @@ export function flowOut(node, { duration = speed }) {
 
       return `
         transform: translateX(${100 * (1 - eased)}vw);
+      `;
+    },
+  };
+}
+
+export function tooltipTransition(node, { delay = 0, duration = speed }) {
+  return {
+    delay,
+    duration,
+    css: (t) => {
+      const eased = quadOut(t);
+
+      return `
+        transform: scale(${eased});
+        opacity: ${t};
+      `;
+    },
+  };
+}
+
+export function popupTransition(node, { delay = 0, duration = speed }) {
+  return {
+    delay,
+    duration,
+    css: (t) => {
+      const eased = quadOut(t);
+
+      return `
+        transform: scale(${eased});
+        opacity: ${t};
       `;
     },
   };

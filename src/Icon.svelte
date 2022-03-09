@@ -25,8 +25,8 @@
     },
     {
       name: 'add',
-      svg: `<path d="M50 10L50 90" stroke-width="10" stroke-linecap="round"/>
-<path d="M10 50H90" stroke-width="10" stroke-linecap="round"/>`,
+      svg: `<path d="M50 15L50 85" stroke-width="10" stroke-linecap="round"/>
+<path d="M15 50H85" stroke-width="10" stroke-linecap="round"/>`,
     },
     {
       name: 'download',
@@ -57,6 +57,16 @@
       svg: `<path d="M75 85V85C75 87.7614 72.7614 90 70 90H30C24.4772 90 20 85.5228 20 80V20C20 14.4772 24.4772 10 30 10H70C72.7614 10 75 12.2386 75 15V15" stroke-width="10" stroke-linecap="round" stroke-linejoin="round"/>
 <path d="M75 35V65" stroke-width="10" stroke-linecap="round"/>
 <path d="M60 50H90" stroke-width="10" stroke-linecap="round"/>`,
+    },
+    {
+      name: 'undo',
+      svg: `<path d="M10 47H70C81.0457 47 90 55.9543 90 67V77" stroke-width="10" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M36 70L10 47L36 24" stroke-width="10" stroke-linecap="round" stroke-linejoin="round"/>`,
+    },
+    {
+      name: 'redo',
+      svg: `<path d="M90 47H30C18.9543 47 10 55.9543 10 67V77" stroke-width="10" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M64 70L90 47L64 24" stroke-width="10" stroke-linecap="round" stroke-linejoin="round"/>`,
     },
   ];
   let displayIcon = icons.find((e) => e.name === name);

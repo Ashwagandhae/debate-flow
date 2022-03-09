@@ -1,94 +1,69 @@
 <script>
   import Flow from './Flow.svelte';
   import Title from './Title.svelte';
+  import BoxControl from './BoxControl.svelte';
   import Button from './Button.svelte';
   import ButtonBar from './ButtonBar.svelte';
+  import Popup from './Popup.svelte';
+  import Downloader from './Downloader.svelte';
+  import Uploader from './Uploader.svelte';
   import Tab from './Tab.svelte';
   import AddTab from './AddTab.svelte';
   import { speed } from './transition.js';
+  import { fade } from 'svelte/transition';
+  import { flows, selected, boxFromPath, newFlow, History } from './stores.js';
 
   let dark = 1;
-  if (dark) {
-    window.document.body.classList.toggle('dark');
+  $: {
+    if (dark) {
+      window.document.body.classList.add('dark');
+    }
   }
 
-  let selected = 0;
   function clickTab(index) {
-    selected = index;
+    $selected = index;
     focusFlow();
   }
-  let flows = [];
-  function boxFromPath(path, scope) {
-    if (!scope) {
-      scope = 0;
-    }
-    let ret = flows[selected];
-    if (path.length > 1) {
-      for (let i = 1; i < path.length - scope; i++) {
-        ret = ret.children[path[i]];
-      }
-    }
-    return ret;
-  }
   function focusFlow() {
-    let lastFocus = boxFromPath(flows[selected]?.lastFocus);
+    let lastFocus =
+      $flows[$selected]?.lastFocus && boxFromPath($flows[$selected]?.lastFocus);
     if (lastFocus) {
       lastFocus.focus = true;
     } else {
-      flows[selected].children[0].focus = true;
+      $flows[$selected].children[0].focus = true;
     }
-    flows = flows;
+    $flows = $flows;
   }
-  function addFlow(neg) {
-    // function addFlow(neg) {
-    let columns;
-    if (neg) {
-      columns = ['1NC', '2AC', '2NC/1NR', '1AR', '2NR', '2AR'];
-    } else {
-      columns = ['1AC', '1NC', '2AC', '2NC/1NR', '1AR', '2NR', '2AR'];
+  function blurFlow() {
+    let lastFocus =
+      $flows[$selected]?.lastFocus && boxFromPath($flows[$selected]?.lastFocus);
+    if (lastFocus) {
+      lastFocus.focus = false;
     }
-    flows.push({
-      content: '',
-      level: 0,
-      columns: columns,
-      neg: neg,
-      focus: true,
-      index: flows.length,
-      lastFocus: undefined,
-      children: [
-        {
-          content: '',
-          level: 1,
-          index: 0,
-          children: [],
-        },
-      ],
-    });
-    selected = flows.length - 1;
-    flows = flows;
+  }
+  function addFlow(type) {
+    blurFlow();
+    $flows.push(newFlow($flows.length, type));
+    $selected = $flows.length - 1;
+    $flows = $flows;
   }
   function handleKeydown(e) {
     if (e.ctrlKey && e.shiftKey && e.key == 'N') {
       e.preventDefault();
-      addFlow(false);
+      addFlow('aff');
     } else if (e.ctrlKey && e.key == 'n') {
       e.preventDefault();
-      addFlow(true);
+      addFlow('neg');
+    }
+    if (e.metaKey && e.shiftKey && e.key == 'z') {
+      e.preventDefault();
+      $flows[$selected].history.redo();
+    } else if (e.metaKey && e.key == 'z') {
+      e.preventDefault();
+      $flows[$selected].history.undo();
     }
   }
-  addFlow(false);
-  function download() {
-    let data = JSON.stringify(flows);
-    let element = document.createElement('a');
-    element.setAttribute(
-      'href',
-      'data:text/json;charset=utf-8, ' + encodeURIComponent(data)
-    );
-    element.setAttribute('download', 'flow.json');
-    document.body.appendChild(element);
-    element.click();
-    document.body.removeChild(element);
-  }
+
   function readUploadDragged(e) {
     e.preventDefault();
     let file = e.dataTransfer.files[0];
@@ -111,11 +86,15 @@
   function preventDefault(e) {
     e.preventDefault();
   }
-  function openUploadDialog() {
-    document.getElementById('uploadId').click();
-  }
+
   function handleUpload(data) {
-    flows = JSON.parse(data);
+    let rawFlows = JSON.parse(data);
+    $flows = [];
+    for (let flow of rawFlows) {
+      flow.history = new History();
+      // add to flows
+      $flows.push(flow);
+    }
   }
 
   window.addEventListener(
@@ -132,50 +111,112 @@
     },
     false
   );
+
+  let popups = [Downloader, Downloader, Uploader, Uploader];
+  function closePopup(index) {
+    popups.splice(index, 1);
+    popups = popups;
+  }
+  function openPopup(component) {
+    popups.push(component);
+    popups = popups;
+  }
 </script>
 
 <svelte:body
   on:keydown={handleKeydown}
   on:dragenter={preventDefault}
   on:drop={readUploadDragged} />
-<main class:dark style={`--transition-speed: ${speed}ms;`}>
+{#if popups.length > 0}
+  <div
+    class="screen"
+    on:click|self={() => {
+      popups.length == 1 && closePopup(0);
+    }}
+    transition:fade={{ duration: speed }}
+  >
+    <div
+      class="popups"
+      on:click|self={() => {
+        popups.length == 1 && closePopup(0);
+      }}
+    >
+      {#each popups as popup, index}
+        <Popup component={popup} closeSelf={() => closePopup(index)} />
+      {/each}
+    </div>
+  </div>
+{/if}
+<input id="uploadId" type="file" hidden on:change={readUpload} />
+<main style={`--transition-speed: ${speed}ms;`}>
   <div class="sidebar">
     <div class="header">
       <ButtonBar>
-        <Button name="download" on:click={download} />
-        <input id="uploadId" type="file" hidden on:change={readUpload} />
-        <Button name="upload" on:click={openUploadDialog} />
+        <Button
+          icon="download"
+          on:click={() => openPopup(Downloader)}
+          disabled={$flows.length == 0}
+          disabledReason={'nothing to download'}
+          tooltip="download as file"
+        />
+        <Button
+          icon="upload"
+          on:click={() => openPopup(Uploader)}
+          tooltip="import file"
+        />
       </ButtonBar>
     </div>
     <div class="tabs">
       <ul>
-        {#each flows as flow, index}
+        {#each $flows as flow, index}
           <Tab
             on:click={() => clickTab(index)}
-            bind:content={flow.content}
-            selected={index == selected}
+            bind:flow={$flows[index]}
+            selected={index == $selected}
           />
         {/each}
         <div class="add-tab">
-          <AddTab content="on case" on:click={() => addFlow(false)} />
-          <AddTab content="off case" on:click={() => addFlow(true)} />
+          <Button
+            text="on case"
+            icon="add"
+            on:click={() => addFlow('aff')}
+            tooltip="create new oncase flow"
+          />
+          <Button
+            text="off case"
+            icon="add"
+            on:click={() => addFlow('neg')}
+            tooltip="create new offcase flow"
+          />
         </div>
       </ul>
     </div>
   </div>
-  <div class="title">
-    {#if flows.length > 0}
-      <Title bind:flow={flows[selected]} />
-    {/if}
-  </div>
-  {#key selected}
-    <div class="flow">
-      <Flow on:focusFlow={focusFlow} bind:root={flows[selected]} />
+  {#if $flows.length > 0}
+    <div class="title">
+      <Title
+        bind:content={$flows[$selected].content}
+        bind:children={$flows[$selected].children}
+        bind:index={$flows[$selected].index}
+        bind:level={$flows[$selected].level}
+        bind:focus={$flows[$selected].focus}
+        bind:invert={$flows[$selected].invert}
+      />
     </div>
-  {/key}
+    <div class="box-control">
+      <BoxControl bind:flow={$flows[$selected]} />
+    </div>
+    {#key $selected}
+      <div class="flow">
+        <Flow on:focusFlow={focusFlow} bind:root={$flows[$selected]} />
+      </div>
+    {/key}
+  {/if}
 </main>
 
 <style>
+  @import url('https://fonts.googleapis.com/css2?family=Merriweather+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;1,300;1,400;1,500;1,600;1,700;1,800&display=swap');
+
   :global(body) {
     padding: 0;
     margin: 0;
@@ -184,10 +225,10 @@
     display: grid;
     gap: var(--gap);
     grid-template-areas:
-      'a b'
-      'a c';
-    grid-template-columns: max(150px, 15%) auto;
-    padding: 5vh;
+      'sidebar title box-control'
+      'sidebar flow flow';
+    grid-template-columns: max(150px, 15%) 1fr auto;
+    padding: var(--main-margin);
     width: 100%;
     height: 100%;
     box-sizing: border-box;
@@ -199,10 +240,10 @@
   .sidebar {
     background: var(--background);
     width: 100%;
-    height: 90vh;
+    height: var(--main-height);
     border-radius: var(--border-radius);
     padding: var(--padding);
-    grid-area: a;
+    grid-area: sidebar;
     display: flex;
     flex-direction: column;
     box-sizing: border-box;
@@ -213,7 +254,7 @@
   }
   .tabs {
     overflow-y: auto;
-    height: 90vh;
+    height: var(--main-height);
     box-sizing: border-box;
   }
   .tabs > ul {
@@ -229,6 +270,14 @@
     background: var(--background);
     border-radius: var(--border-radius);
     width: 100%;
+    grid-area: title;
+    height: var(--title-height);
+  }
+  .box-control {
+    background: var(--background);
+    border-radius: var(--border-radius);
+    width: 100%;
+    grid-area: box-control;
     height: var(--title-height);
   }
   .flow {
@@ -237,7 +286,7 @@
     background: var(--background);
     z-index: 0;
     border-radius: var(--border-radius);
-    grid-area: c;
+    grid-area: flow;
     height: var(--view-height);
   }
   /* Hide scrollbar for Chrome, Safari and Opera */
@@ -251,22 +300,54 @@
     -ms-overflow-style: none; /* IE and Edge */
     scrollbar-width: none; /* Firefox */
   }
+  .screen {
+    background-color: var(--screen-color);
+    width: 100vw;
+    height: 100vh;
+    position: fixed;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 999;
+  }
+  .popups {
+    width: 100vw;
+    height: min-content;
+    display: grid;
+    gap: var(--gap);
+    grid-template-columns: auto auto auto;
+    grid-template-rows: auto;
+    align-items: center;
+    justify-content: center;
+  }
+  :global(h1) {
+    font-weight: var(--font-weight);
+    font-size: 1.4em;
+    margin: 0;
+  }
   :global(body) {
     background: var(--background-back);
     color: var(--color);
     font-family: var(--font-family);
     font-size: var(--font-size);
+    font-weight: var(--font-weight);
   }
   :global(:root) {
-    --column-width: 140px;
+    --main-margin: 20px;
+    --main-height: calc(100vh - var(--main-margin) * 2);
+    --column-width: 160px;
     --padding: 8px;
-    --title-height: 70px;
-    --gap: 16px;
-    --view-height: calc(90vh - var(--title-height) - var(--gap));
+    --padding-big: 16px;
+    --title-height: calc(35px + var(--padding) * 2);
+    --gap: 12px;
+    --view-height: calc(var(--main-height) - var(--title-height) - var(--gap));
     --font-size: 0.9em;
-    --font-family: Avenir, sans-serif;
+    --font-weight: 300;
+    --font-weight-bold: 700;
+    --font-family: 'Merriweather Sans', sans-serif;
     --border-radius: 12px;
     --border-radius-small: 6px;
+    --button-size: 20px;
     --br-height: 4px;
     --transition-speed: var(--transition-speed);
   }
@@ -295,13 +376,27 @@
     --background-secondary-indent: hsl(0 0% 28%);
     --background-secondary-active: hsl(0 0% 32%);
 
-    --background-accent: hsl(200 20% 20%);
-    --background-accent-fade: hsl(205 10% 18%);
+    --background-accent: hsl(200 20% 24%);
+    --background-accent-fade: hsl(200 10% 18%);
+
+    --background-accent-secondary: hsl(30 20% 24%);
+    --background-accent-secondary-fade: hsl(30 10% 18%);
 
     --color: hsl(0 0% 80%);
-    --color-weak: hsl(0, 0%, 40%);
+    --color-weak: hsl(0, 0%, 50%);
+    --color-weak-accent: hsl(200, 10%, 50%);
+
+    --color: hsl(0 0% 80%);
+    --color-weak: hsl(0, 0%, 50%);
+    --color-weak-accent-secondary: hsl(200, 10%, 50%);
 
     --accent: hsl(200, 50%, 42%);
-    --accent-fade: hsl(205, 25%, 32%);
+    --accent-fade: hsl(200, 25%, 32%);
+    --accent-text: hsl(200, 60%, 80%);
+
+    --accent-secondary: hsl(30, 50%, 42%);
+    --accent-secondary-fade: hsl(30, 25%, 32%);
+    --accent-secondary-text: hsl(30, 60%, 80%);
+    --screen-color: hsl(0 0% 0%/ 0.3);
   }
 </style>

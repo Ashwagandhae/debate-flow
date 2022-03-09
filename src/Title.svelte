@@ -1,60 +1,39 @@
 <script>
   import Text from './Text.svelte';
-  import Button from './Button.svelte';
-  import ButtonBar from './ButtonBar.svelte';
   import Overlay from './Overlay.svelte';
   import { afterUpdate } from 'svelte';
+  import { flows, selected } from './stores.js';
 
   import { createEventDispatcher } from 'svelte';
 
-  export let flow;
+  export let content;
+  export let children;
+  export let index;
+  export let level;
+  export let focus;
+  export let invert;
+  $: path = [index];
 
   let textarea;
   afterUpdate(function () {
-    if (flow.focus) {
+    if (focus) {
       textarea.focus();
     }
   });
-  function boxFromPath(path, scope) {
-    if (!scope) {
-      scope = 0;
-    }
-    let ret = flow;
-    if (path.length > 1) {
-      for (let i = 1; i < path.length - scope; i++) {
-        ret = ret.children[path[i]];
-      }
-    }
-    return ret;
-  }
-
-  let validFocus = false;
-  function setValidFocus() {
-    // wait until its actually done updating
-    setTimeout(() => {
-      if (flow.lastFocus && flow.lastFocus.length > 1) {
-        let box = boxFromPath(flow.lastFocus);
-        validFocus = box?.focus;
-      }
-    }, 0);
-  }
-  $: flow.lastFocus, setValidFocus();
 
   function handleBlur() {
-    if (flow.focus) {
-      flow.focus = false;
-      flow = flow;
+    if (focus) {
+      focus = false;
     }
   }
   function handleFocus() {
-    if (!flow.focus) {
-      flow.focus = true;
-      flow = flow;
+    if (!focus) {
+      focus = true;
     }
   }
   let lineColor;
   $: {
-    if (flow.focus) {
+    if (focus) {
       lineColor = 'var(--accent)';
     } else {
       lineColor = 'none';
@@ -64,148 +43,80 @@
   function handleKeydown(e) {
     if (e.key == 'Enter' || e.key == 'ArrowDown') {
       e.preventDefault();
-      if (flow.children.length > 0) {
-        flow.children[0].focus = true;
+      if (children.length > 0) {
+        children[0].focus = true;
+        focus = false;
       }
     }
   }
-  function deleteChild() {
-    // cancel if disabled
-    if (!validFocus) return;
-    let parent = boxFromPath(flow.lastFocus, 1);
-    let target = boxFromPath(flow.lastFocus);
-    let children = [...parent.children];
-    // if target isn't only child of first level
-    if (children.length > 1 || parent.level >= 1) {
-      children.splice(target.index, 1);
-      // fix index
-      for (let i = target.index; i < children.length; i++) {
-        children[i].index = i;
+  let hasSentEdit = false;
+  function focusChange() {
+    if (focus) {
+      if (level >= 1) {
+        $flows[$selected].history.addFocus([...path]);
+        dispatch('saveFocus', path);
+        textarea && textarea.focus();
       }
-      // focus parent when empty
-      if (children.length <= 0) {
-        parent.focus = true;
-        // focus last child when last child deleted
-      } else if (target.index >= children.length) {
-        children[children.length - 1].focus = true;
-        // focus next child of deleted
-      } else {
-        children[target.index].focus = true;
-      }
-
-      parent.children = [...children];
-      flow = flow;
+    } else {
+      hasSentEdit = false;
     }
   }
-
-  function addChild() {
-    // cancel if disabled
-    if (!validFocus) return;
-    // if not at end of column
-    let target = boxFromPath(flow.lastFocus);
-    let children = [...target.children];
-    if (target.level < flow.columns.length) {
-      children.splice(0, 0, {
-        content: '',
-        children: [],
-        index: 0,
-        level: target.level + 1,
-        focus: false,
+  $: focus, focusChange();
+  function handleBeforeinput(e) {
+    if (!hasSentEdit) {
+      console.log('created pneding', path);
+      $flows[$selected].history.addPending('edit', [...path], {
+        lastContent: content,
+        getNextContent: function () {
+          return content;
+        },
+        createEditBreak: function () {
+          hasSentEdit = false;
+        },
       });
-      // fix index
-      for (let i = 0; i < children.length; i++) {
-        children[i].index = i;
-      }
-
-      target.children = [...children];
-      flow = flow;
     }
-  }
-  function addSibling(direction) {
-    // cancel if disabled
-    if (!validFocus) return;
-    let parent = boxFromPath(flow.lastFocus, 1);
-    let target = boxFromPath(flow.lastFocus);
-    let children = [...parent.children];
-    children.splice(target.index + direction, 0, {
-      content: '',
-      children: [],
-      index: target.index + direction,
-      level: target.level,
-      focus: false,
-    });
-    // fix index
-    for (let i = target.index; i < children.length; i++) {
-      children[i].index = i;
-    }
-    parent.children = [...children];
-    flow = flow;
+    hasSentEdit = true;
   }
 </script>
 
-<div class="top">
-  <div class="content" class:focus={flow.focus}>
+<div class="top" class:invert>
+  <div class="content" class:focus>
     <Text
       on:blur={handleBlur}
       on:focus={handleFocus}
       on:keydown={handleKeydown}
-      bind:value={flow.content}
+      on:beforeinput={handleBeforeinput}
+      bind:value={content}
       bind:this={textarea}
       nowrap
       placeholder="type name here"
     />
-    <div class="line">
-      <Overlay background={lineColor} />
-    </div>
-  </div>
-  <div class="buttons-wrapper">
-    <ButtonBar>
-      <Button name="addRight" on:click={addChild} disabled={!validFocus} />
-      <Button
-        name="addUp"
-        on:click={() => addSibling(0)}
-        disabled={!validFocus}
-      />
-      <Button
-        name="addDown"
-        on:click={() => addSibling(1)}
-        disabled={!validFocus}
-      />
-      <Button name="delete" on:click={deleteChild} disabled={!validFocus} />
-    </ButtonBar>
   </div>
 </div>
 
 <style>
   .top {
-    padding: var(--padding);
-    font-size: 2em;
+    font-size: calc(var(--title-height) * 0.5);
     display: flex;
     flex-direction: row;
     box-sizing: border-box;
     height: var(--title-height);
   }
+  .top {
+    --this-background-accent: var(--background-accent);
+    --this-accent-text: var(--accent-text);
+  }
+  .top.invert {
+    --this-background-accent: var(--background-accent-secondary);
+    --this-accent-text: var(--accent-secondary-text);
+  }
   .content {
     width: 100%;
+    padding: 0 var(--padding);
     border-radius: var(--border-radius);
+    color: var(--this-accent-text);
   }
   .content.focus {
-    background-color: var(--background-accent);
-  }
-  .line {
-    content: '';
-    display: block;
-    background-color: var(--this-background-indent);
-    height: var(--br-height);
-    margin-left: var(--padding);
-    width: calc(100% - var(--padding) * 2);
-    border-radius: 3px;
-    margin-top: calc(-1 * var(--br-height));
-    position: relative;
-  }
-  .buttons-wrapper {
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
+    background-color: var(--this-background-accent);
   }
 </style>

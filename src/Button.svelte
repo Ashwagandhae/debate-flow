@@ -1,30 +1,60 @@
 <script>
   import Icon from './Icon.svelte';
-  export let name;
+  import Tooltip from './Tooltip.svelte';
+  export let icon;
+  export let text = null;
+  export let tooltip = null;
   export let disabled = false;
+  export let disabledReason = 'disabled';
+  export let tooltipLayout = 'bottom';
   function preventBlur(e) {
     e.preventDefault();
   }
 </script>
 
-<button class="top" class:disabled on:click on:mousedown={preventBlur}>
-  <Icon {name} size="20px" />
-</button>
+<Tooltip
+  content={tooltip}
+  disabled={disabled && disabledReason}
+  layout={tooltipLayout}
+>
+  <button
+    class="top"
+    class:disabled
+    on:click
+    on:mousedown={preventBlur}
+    {disabled}
+  >
+    <Icon name={icon} size="var(--button-size)" />
+    {#if text}
+      <p>{text}</p>
+    {/if}
+  </button>
+</Tooltip>
 
 <style>
   .top {
-    padding: 0;
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    gap: 5px;
+
     box-sizing: content-box;
+    padding: var(--padding);
+    width: max-content;
+    min-width: var(--button-size);
+    height: var(--button-size);
+
     border: none;
     background: none;
-    display: block;
-    width: 35px;
-    height: 35px;
     margin: 0;
     text-align: left;
     border-radius: var(--border-radius);
+    font-weight: var(--font-weight);
     color: var(--color);
     transition: background var(--transition-speed);
+  }
+  p {
+    display: block;
   }
   .top.disabled {
     --color: var(--color-weak);
@@ -34,7 +64,6 @@
   }
   .top.disabled:hover,
   .top.disabled:active {
-    cursor: not-allowed;
     background: none;
   }
   .top:active {

@@ -15,14 +15,15 @@
 </script>
 
 <div class="top">
-  <Text bind:value={column} on:keydown={handleKeydown} nowrap />
+  {column}
 </div>
 
 <style>
   .top {
     width: var(--column-width);
     height: 100%;
-    padding: 0 var(--padding);
+    padding: var(--padding);
+    text-align: center;
     box-sizing: border-box;
   }
 </style>

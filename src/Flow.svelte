@@ -5,9 +5,9 @@
   import { setContext } from 'svelte';
 
   export let root;
-  setContext('neg', {
-    getNeg: () => {
-      return root.neg;
+  setContext('invert', {
+    getinvert: () => {
+      return root.invert;
     },
   });
   setContext('columnCount', {
@@ -24,18 +24,26 @@
 
 <div
   class="top"
-  class:neg={root.neg}
+  class:invert={root.invert}
   style={`--column-count: ${root.columns.length};`}
 >
   <div class="viewer">
-    <div class="content" class:neg={root.neg}>
-      <Box bind:data={root} root on:saveFocus={saveFocus} />
+    <div class="content">
+      <Box
+        bind:content={root.content}
+        bind:children={root.children}
+        bind:index={root.index}
+        bind:level={root.level}
+        bind:focus={root.focus}
+        root
+        on:saveFocus={saveFocus}
+      />
     </div>
     <div class="headers">
       {#each root.columns as column}
-        <div class="header">
+        <h1 class="header">
           <Header bind:column on:focusFlow />
-        </div>
+        </h1>
       {/each}
     </div>
     <div class="columns">
@@ -50,6 +58,18 @@
   .top {
     width: calc(var(--column-width) * var(--column-count));
     overflow: hidden;
+  }
+  .top {
+    --this-background: var(--background-secondary);
+    --this-background-secondary: var(--background);
+    --this-accent-text: var(--accent-secondary-text);
+    --this-accent-secondary-text: var(--accent-text);
+  }
+  .top.invert {
+    --this-background: var(--background);
+    --this-background-secondary: var(--background-secondary);
+    --this-accent-text: var(--accent-text);
+    --this-accent-secondary-text: var(--accent-secondary-text);
   }
   .viewer {
     position: relative;
@@ -66,12 +86,13 @@
     flex-direction: row;
     width: auto;
     z-index: 2;
-    height: 2em;
+    height: 2.4em;
     transform: translateX(-100%);
     background: var(--background);
   }
   .header {
     border-radius: var(--border-radius) var(--border-radius) 0 0;
+    background: var(--background-accent);
   }
 
   .columns {
@@ -90,20 +111,18 @@
     border-radius: var(--border-radius);
   }
   .column:nth-child(even),
-  .neg .column:nth-child(odd),
-  .header:nth-child(even),
-  .neg .header:nth-child(odd) {
-    background-color: var(--background-secondary);
+  .header:nth-child(even) {
+    background-color: var(--this-background);
+    color: var(--this-accent-text);
   }
-  .neg .column:nth-child(even),
   .column:nth-child(odd),
-  .neg .header:nth-child(even),
   .header:nth-child(odd) {
-    background: var(--background);
+    background: var(--this-background-secondary);
+    color: var(--this-accent-secondary-text);
   }
   .content {
     padding-bottom: calc(var(--view-height) * 0.6);
-    padding-top: calc(2em + var(--padding));
+    padding-top: calc(2.4em + var(--padding));
     width: calc(var(--column-width) * var(--column-count));
     height: var(--view-height);
     overflow: auto;

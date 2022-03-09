@@ -33,6 +33,7 @@
   bind:this={textarea}
   on:load={autoHeight}
   on:input={autoHeight}
+  on:beforeinput
   on:keydown
   on:focus
   on:blur
@@ -48,6 +49,7 @@
     display: block;
     overflow-y: hidden;
     margin: 0;
+    line-height: 1.5em;
 
     width: 100%;
 
@@ -57,6 +59,7 @@
     height: calc(1em + var(--padding) * 2 + 6px);
     border-radius: 0;
     font-size: inherit;
+    font-weight: inherit;
     color: inherit;
     white-space: var(--white-space);
   }
@@ -73,4 +76,7 @@
   textarea::placeholder {
     color: var(--color-weak);
   }
+  /* textarea:focus::placeholder {
+    color: var(--color-weak-accent);
+  } */
 </style>
