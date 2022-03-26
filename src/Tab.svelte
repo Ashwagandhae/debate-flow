@@ -3,9 +3,18 @@
 
   export let flow;
   export let selected;
+
+  let palette;
+  $: {
+    if (flow.invert) {
+      palette = 'accent-secondary';
+    } else {
+      palette = 'accent';
+    }
+  }
 </script>
 
-<div class="top" in:tabIn class:invert={flow.invert}>
+<div class={`top palette-${palette}`} in:tabIn class:invert={flow.invert}>
   <button class:selected class:empty={flow.content.length == 0} on:click>
     {#if flow.content}
       {flow.content}
@@ -20,14 +29,6 @@
     margin-bottom: var(--padding);
     border-radius: var(--border-radius-small);
   }
-  .top {
-    --this-background-accent: var(--background-accent);
-    --this-accent-text: var(--accent-text);
-  }
-  .top.invert {
-    --this-background-accent: var(--background-accent-secondary);
-    --this-accent-text: var(--accent-secondary-text);
-  }
   button {
     border: none;
     background: none;
@@ -35,23 +36,23 @@
     width: 100%;
     text-align: left;
     border-radius: var(--border-radius);
-    color: var(--this-accent-text);
+    color: var(--this-text);
     padding: var(--padding);
     overflow-wrap: break-word;
     transition: background var(--transition-speed);
     font-weight: var(--font-weight);
   }
   button.empty {
-    color: var(--color-weak);
+    color: var(--this-text-weak);
   }
   button:hover {
-    background-color: var(--background-indent);
+    background-color: var(--this-background-indent);
   }
   button:active {
     transition: none;
-    background-color: var(--background-active);
+    background-color: var(--this-background-active);
   }
   button.selected {
-    background-color: var(--this-background-accent);
+    background-color: var(--this-background-active);
   }
 </style>

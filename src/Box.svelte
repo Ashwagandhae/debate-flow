@@ -49,18 +49,6 @@
       childFocusIndex = -1;
     }
   }
-  $: {
-    if (focus) {
-      lineColor = 'var(--this-accent)';
-      backgroundColor = 'var(--this-background-accent)';
-    } else if (childFocus) {
-      lineColor = 'var(--this-accent-fade)';
-      backgroundColor = 'var(--this-background-accent-fade)';
-    } else {
-      lineColor = 'none';
-      backgroundColor = 'none';
-    }
-  }
   let hasSentEdit = false;
   function focusChange() {
     if (focus) {
@@ -229,8 +217,8 @@
       childrenClone[childIndex].focus = false;
       childrenClone.splice(childIndex, 1);
       // fix childIndex
-      for (let i = childIndex; i < childrenClone.length; i++) {
-        childrenClone[i].childIndex = i;
+      for (let i = 0; i < childrenClone.length; i++) {
+        childrenClone[i].index = i;
       }
       children = [...childrenClone];
       // focus on previous child of deleted
@@ -245,6 +233,7 @@
       }
       return true;
     } else {
+      focusChild(0, 0);
       return false;
     }
   }
@@ -274,12 +263,27 @@
   function focusSelf() {
     focus = true;
   }
+  let palette;
+  $: {
+    if ((level % 2 == 0 && !invert) || (level % 2 == 1 && invert)) {
+      palette = 'accent-secondary';
+    } else {
+      palette = 'accent';
+    }
+  }
+  let outsidePalette;
+  $: {
+    if ((level % 2 == 0 && !invert) || (level % 2 == 1 && invert)) {
+      outsidePalette = 'accent';
+    } else {
+      outsidePalette = 'accent-secondary';
+    }
+  }
 </script>
 
 <div
-  class="top"
+  class={`top palette-${palette}`}
   class:empty={children.length == 0}
-  class:secondary={(level % 2 == 0 && !invert) || (level % 2 == 1 && invert)}
   class:focus
   class:childFocus
   class:highlight={childFocus || focus}
@@ -331,7 +335,7 @@
     </div>
     {#if children.length == 0 && level < columnCount}
       <button
-        class="add"
+        class={`add palette-${outsidePalette}`}
         on:click={() => {
           addChild(0, 0);
           focusChild(0, 0);
@@ -366,37 +370,6 @@
 
 <style>
   .top {
-    --this-background-indent: var(--background-indent);
-    --this-background-active: var(--background-active);
-
-    --this-outside: var(--background-secondary);
-    --this-outside-indent: var(--background-secondary-indent);
-    --this-outside-active: var(--background-secondary-active);
-
-    --this-color: var(--accent-text);
-
-    --this-background-accent: var(--background-accent);
-    --this-background-accent-fade: var(--background-accent-fade);
-    --this-accent: var(--accent);
-    --this-accent-fade: var(--accent-fade);
-  }
-  .top.secondary {
-    --this-background-indent: var(--background-secondary-indent);
-    --this-background-active: var(--background-secondary-active);
-
-    --this-outside: var(--background);
-    --this-outside-indent: var(--background-indent);
-    --this-outside-active: var(--background-active);
-
-    --this-color: var(--accent-secondary-text);
-
-    --this-background-accent: var(--background-accent-secondary);
-    --this-background-accent-fade: var(--background-accent-secondary-fade);
-    --this-accent: var(--accent-secondary);
-    --this-accent-fade: var(--accent-secondary-fade);
-  }
-
-  .top {
     display: grid;
     grid-template-areas: 'a b';
     grid-template-rows: min-content;
@@ -417,7 +390,15 @@
     transition: background var(--transition-speed);
     position: relative;
     border-radius: var(--border-radius-small);
-    color: var(--this-color);
+    color: var(--this-text);
+  }
+
+  .childFocus > .content,
+  .content:hover {
+    background: var(--this-background-indent);
+  }
+  .focus > .content {
+    background: var(--this-background-active);
   }
   .content.left {
     border-radius: var(--border-radius-small) 0 var(--border-radius-small)
@@ -439,7 +420,8 @@
   .line {
     z-index: -1;
   }
-  .top.highlight > .content > .barcontainer > .line {
+  .top.highlight > .content > .barcontainer > .line,
+  .content:hover > .barcontainer > .line {
     z-index: 2;
   }
   .line {
@@ -473,17 +455,13 @@
     border-radius: 0;
     margin-left: 0;
   }
+
+  .childFocus > .content > .barcontainer > .line,
+  .content:hover > .barcontainer > .line {
+    background-color: var(--this-color-fade);
+  }
   .focus > .content > .barcontainer > .line {
-    background-color: var(--this-accent);
-  }
-  .focus > .content > .barcontainer > .line:hover {
     background-color: var(--this-color);
-  }
-  .childFocus > .content > .barcontainer > .line {
-    background-color: var(--this-accent-fade);
-  }
-  .childFocus > .content > .barcontainer > .line:hover {
-    background-color: var(--this-accent);
   }
 
   .barcontainer {
@@ -507,7 +485,7 @@
     padding: var(--padding);
     margin: calc(var(--br-height) / 2) var(--padding) 0 var(--padding);
     width: calc(var(--column-width) - var(--padding) * 2);
-    background-color: var(--this-outside);
+    background-color: var(--this-background);
     box-sizing: border-box;
     height: calc(1em + var(--padding) * 2);
   }
@@ -516,11 +494,11 @@
     opacity: 1;
   }
   .add:hover {
-    background-color: var(--this-outside-indent);
+    background-color: var(--this-background-indent);
     --color: inherit;
   }
   .add:active {
     transition: none;
-    background-color: var(--this-outside-active);
+    background-color: var(--this-background-active);
   }
 </style>

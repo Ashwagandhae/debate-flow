@@ -1,10 +1,10 @@
 <script>
   import Text from './Text.svelte';
-  import Overlay from './Overlay.svelte';
-  import { afterUpdate } from 'svelte';
   import { flows, selected } from './stores.js';
-
+  import { onMount } from 'svelte';
   import { createEventDispatcher } from 'svelte';
+
+  const dispatch = createEventDispatcher();
 
   export let content;
   export let children;
@@ -15,12 +15,6 @@
   $: path = [index];
 
   let textarea;
-  afterUpdate(function () {
-    if (focus) {
-      textarea.focus();
-    }
-  });
-
   function handleBlur() {
     if (focus) {
       focus = false;
@@ -52,15 +46,14 @@
   let hasSentEdit = false;
   function focusChange() {
     if (focus) {
-      if (level >= 1) {
-        $flows[$selected].history.addFocus([...path]);
-        dispatch('saveFocus', path);
-        textarea && textarea.focus();
-      }
+      $flows[$selected].history.addFocus([...path]);
+      dispatch('saveFocus', path);
+      textarea && textarea.focus();
     } else {
       hasSentEdit = false;
     }
   }
+  onMount(focusChange);
   $: focus, focusChange();
   function handleBeforeinput(e) {
     if (!hasSentEdit) {
@@ -77,9 +70,17 @@
     }
     hasSentEdit = true;
   }
+  let palette = 'plain';
+  $: {
+    if (invert) {
+      palette = 'accent-secondary';
+    } else {
+      palette = 'accent';
+    }
+  }
 </script>
 
-<div class="top" class:invert>
+<div class={`top palette-${palette}`} class:invert>
   <div class="content" class:focus>
     <Text
       on:blur={handleBlur}
@@ -102,21 +103,13 @@
     box-sizing: border-box;
     height: var(--title-height);
   }
-  .top {
-    --this-background-accent: var(--background-accent);
-    --this-accent-text: var(--accent-text);
-  }
-  .top.invert {
-    --this-background-accent: var(--background-accent-secondary);
-    --this-accent-text: var(--accent-secondary-text);
-  }
   .content {
     width: 100%;
     padding: 0 var(--padding);
     border-radius: var(--border-radius);
-    color: var(--this-accent-text);
+    color: var(--this-text);
   }
   .content.focus {
-    background-color: var(--this-background-accent);
+    background-color: var(--this-background-indent);
   }
 </style>

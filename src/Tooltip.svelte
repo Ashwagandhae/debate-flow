@@ -1,7 +1,10 @@
 <script>
   import { tooltipTransition } from './transition.js';
+  import Shortcut from './Shortcut.svelte';
+  import { tick } from 'svelte';
 
-  export let content = '';
+  export let content;
+  export let shortcut;
   export let disabled = false;
   export let layout = 'bottom';
   let isHovered = false;
@@ -14,7 +17,7 @@
     isHovered = true;
     mouseMove(event);
   }
-  function mouseMove(event) {
+  function mouseMove() {
     if (tooltip) {
       let rect = element.getBoundingClientRect();
       x = rect.left - tooltip.offsetWidth / 2 + rect.width / 2;
@@ -30,6 +33,11 @@
       }
     }
   }
+  async function onContentChanged() {
+    await tick();
+    mouseMove();
+  }
+  $: content, shortcut, disabled, layout, onContentChanged();
   function mouseLeave() {
     isHovered = false;
   }
@@ -58,6 +66,9 @@
       <div class="content">
         {content}
       </div>
+      {#if !disabled && shortcut}
+        <Shortcut keys={shortcut} />
+      {/if}
       {#if disabled}
         <div class="disabled">
           {disabled}
@@ -77,14 +88,15 @@
   .tooltip {
     border: none;
     padding: var(--padding);
-    color: var(--color);
+    color: var(--text);
     background-color: var(--background-back);
     border-radius: var(--border-radius);
     position: fixed;
     white-space: nowrap;
     z-index: 10000;
+    box-shadow: var(--box-shadow);
   }
   .disabled {
-    color: var(--color-weak);
+    color: var(--text-weak);
   }
 </style>

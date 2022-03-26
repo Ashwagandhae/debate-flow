@@ -5,6 +5,8 @@
   export let text = null;
   export let tooltip = null;
   export let disabled = false;
+  export let palette = 'plain';
+  export let shortcut = null;
   export let disabledReason = 'disabled';
   export let tooltipLayout = 'bottom';
   function preventBlur(e) {
@@ -15,10 +17,11 @@
 <Tooltip
   content={tooltip}
   disabled={disabled && disabledReason}
+  {shortcut}
   layout={tooltipLayout}
 >
   <button
-    class="top"
+    class={`top palette-${disabled ? 'disabled' : palette}`}
     class:disabled
     on:click
     on:mousedown={preventBlur}
@@ -50,17 +53,14 @@
     text-align: left;
     border-radius: var(--border-radius);
     font-weight: var(--font-weight);
-    color: var(--color);
+    color: var(--this-text);
     transition: background var(--transition-speed);
   }
   p {
     display: block;
   }
-  .top.disabled {
-    --color: var(--color-weak);
-  }
   .top:hover {
-    background-color: var(--background-indent);
+    background-color: var(--this-background-indent);
   }
   .top.disabled:hover,
   .top.disabled:active {
@@ -68,6 +68,6 @@
   }
   .top:active {
     transition: none;
-    background-color: var(--background-active);
+    background-color: var(--this-background-active);
   }
 </style>

@@ -2,6 +2,8 @@
   import Button from './Button.svelte';
   import { flows } from './stores.js';
 
+  export let closePopup;
+
   function openUploadDialog() {
     document.getElementById('uploadId').click();
   }

@@ -68,15 +68,32 @@
       svg: `<path d="M90 47H30C18.9543 47 10 55.9543 10 67V77" stroke-width="10" stroke-linecap="round" stroke-linejoin="round"/>
 <path d="M64 70L90 47L64 24" stroke-width="10" stroke-linecap="round" stroke-linejoin="round"/>`,
     },
+    {
+      name: 'settings',
+      svg: `<line x1="10" y1="50" x2="90" y2="50" stroke-width="10" stroke-linecap="round"/>
+<line x1="10" y1="80" x2="90" y2="80" stroke-width="10" stroke-linecap="round"/>
+<line x1="10" y1="20" x2="90" y2="20" stroke-width="10" stroke-linecap="round"/>
+<circle cx="26.25" cy="50.25" r="6.25" stroke-width="10"/>
+<circle cx="71.25" cy="80.25" r="6.25" stroke-width="10"/>
+<circle cx="71.25" cy="20.25" r="6.25" stroke-width="10"/>`,
+    },
   ];
   let displayIcon = icons.find((e) => e.name === name);
 </script>
 
 <svg
-  style={`width:${size};height:${size};display:block;margin:auto;`}
+  style={`width:${size};height:${size};`}
   viewBox="0 0 {100} {100}"
   fill="none"
-  stroke="var(--color)"
+  stroke="var(--text)"
 >
   {@html displayIcon.svg}
 </svg>
+
+<style>
+  svg {
+    display: block;
+    margin: auto;
+    stroke: var(--this-text);
+  }
+</style>

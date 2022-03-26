@@ -40,15 +40,23 @@
       />
     </div>
     <div class="headers">
-      {#each root.columns as column}
-        <h1 class="header">
-          <Header bind:column on:focusFlow />
+      {#each root.columns as column, index}
+        <h1
+          class={`header palette-${
+            index % 2 == root.invert ? 'accent' : 'accent-secondary'
+          }`}
+        >
+          <Header {column} on:focusFlow />
         </h1>
       {/each}
     </div>
     <div class="columns">
-      {#each root.columns as col}
-        <div class="column" />
+      {#each root.columns as col, index}
+        <div
+          class={`column palette-${
+            index % 2 == root.invert ? 'plain' : 'plain-secondary'
+          }`}
+        />
       {/each}
     </div>
   </div>
@@ -92,7 +100,8 @@
   }
   .header {
     border-radius: var(--border-radius) var(--border-radius) 0 0;
-    background: var(--background-accent);
+    background: var(--this-background);
+    color: var(--this-text);
   }
 
   .columns {
@@ -109,16 +118,17 @@
     height: 100%;
     width: var(--column-width);
     border-radius: var(--border-radius);
+    background-color: var(--this-background);
   }
   .column:nth-child(even),
   .header:nth-child(even) {
-    background-color: var(--this-background);
-    color: var(--this-accent-text);
+    /* background-color: var(--this-background);
+    color: var(--this-accent-text); */
   }
   .column:nth-child(odd),
   .header:nth-child(odd) {
-    background: var(--this-background-secondary);
-    color: var(--this-accent-secondary-text);
+    /* background: var(--this-background-secondary);
+    color: var(--this-accent-secondary-text); */
   }
   .content {
     padding-bottom: calc(var(--view-height) * 0.6);

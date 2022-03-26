@@ -44,6 +44,7 @@
 
 <style>
   textarea {
+    box-sizing: border-box;
     resize: none;
     outline: none;
     display: block;
@@ -52,14 +53,13 @@
     line-height: 1.5em;
 
     width: 100%;
+    height: calc(1em + var(--padding) * 2 + 6px);
 
     background: none;
     padding: var(--padding);
     border: none;
-    height: calc(1em + var(--padding) * 2 + 6px);
     border-radius: 0;
     font-size: inherit;
-    font-weight: inherit;
     color: inherit;
     white-space: var(--white-space);
   }
@@ -74,9 +74,9 @@
     z-index: 10000;
   }
   textarea::placeholder {
-    color: var(--color-weak);
+    color: var(--this-text-weak);
   }
-  /* textarea:focus::placeholder {
-    color: var(--color-weak-accent);
-  } */
+  textarea::selection {
+    background: var(--this-text-select);
+  }
 </style>
