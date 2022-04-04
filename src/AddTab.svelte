@@ -1,6 +1,6 @@
-<script>
+<script lang="ts">
   import Icon from './Icon.svelte';
-  export let content;
+  export let content: string;
 </script>
 
 <button class="top" on:click>

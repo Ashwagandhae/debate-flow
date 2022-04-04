@@ -1,10 +1,11 @@
-<script>
+<script lang="ts">
   import Box from './Box.svelte';
   import Header from './Header.svelte';
+  import { Flow } from './types';
 
   import { setContext } from 'svelte';
 
-  export let root;
+  export let root: Flow;
   setContext('invert', {
     getinvert: () => {
       return root.invert;
@@ -16,7 +17,7 @@
     },
   });
 
-  function saveFocus(e) {
+  function saveFocus(e: { detail: number[] }) {
     root.lastFocus = e.detail;
     root = root;
   }
@@ -43,7 +44,7 @@
       {#each root.columns as column, index}
         <h1
           class={`header palette-${
-            index % 2 == root.invert ? 'accent' : 'accent-secondary'
+            !!(index % 2) == root.invert ? 'accent' : 'accent-secondary'
           }`}
         >
           <Header {column} on:focusFlow />
@@ -54,7 +55,7 @@
       {#each root.columns as col, index}
         <div
           class={`column palette-${
-            index % 2 == root.invert ? 'plain' : 'plain-secondary'
+            !!(index % 2) == root.invert ? 'plain' : 'plain-secondary'
           }`}
         />
       {/each}

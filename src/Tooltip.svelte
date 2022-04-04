@@ -1,21 +1,24 @@
-<script>
-  import { tooltipTransition } from './transition.js';
+<script lang="ts">
+  import { tooltipTransition } from './transition';
   import Shortcut from './Shortcut.svelte';
   import { tick } from 'svelte';
 
-  export let content;
-  export let shortcut;
-  export let disabled = false;
-  export let layout = 'bottom';
-  let isHovered = false;
-  let x;
-  let y;
-  let element;
-  let tooltip;
+  export let content: string;
+  export let shortcut: string[];
+  export let disabled: boolean | string = false;
+  export let layout: string = 'bottom';
+  let isHovered: boolean = false;
+  let x: number = 0;
+  let y: number = 0;
+  let element: HTMLElement;
+  let tooltip: {
+    offsetWidth: number;
+    offsetHeight: number;
+  };
 
-  function mouseOver(event) {
+  function mouseOver() {
     isHovered = true;
-    mouseMove(event);
+    mouseMove();
   }
   function mouseMove() {
     if (tooltip) {

@@ -1,6 +1,5 @@
-<script>
+<script lang="ts">
   import Button from './Button.svelte';
-  import { flows } from './stores.js';
 
   export let closePopup;
 

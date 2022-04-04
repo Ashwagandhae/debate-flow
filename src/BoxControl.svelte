@@ -1,20 +1,20 @@
-<script>
+<script lang="ts">
   import Button from './Button.svelte';
   import ButtonBar from './ButtonBar.svelte';
-  import { flows, selected, boxFromPath } from './stores.js';
+  import { flows, selected, boxFromPath, newBox } from './stores';
   import { afterUpdate, tick } from 'svelte';
-  import { newBox } from './stores.js';
+  import { Flow, Box } from './types';
 
-  export let flow;
+  export let flow: Flow;
 
-  let disabledReason = 'no cell selected';
+  let disabledReason: string = 'no cell selected';
 
-  let validFocus = false;
+  let validFocus: boolean = false;
   async function setValidFocus() {
     // wait until its actually done updating
     await tick();
     if (flow.lastFocus && flow.lastFocus.length > 1) {
-      let box = boxFromPath(flow.lastFocus);
+      let box: Flow | Box = boxFromPath(flow.lastFocus);
       validFocus = box?.focus;
     }
   }
@@ -26,9 +26,9 @@
   function deleteChild() {
     // cancel if disabled
     if (!validFocus) return;
-    let parent = boxFromPath(flow.lastFocus, 1);
-    let target = boxFromPath(flow.lastFocus);
-    let children = [...parent.children];
+    let parent: Box | Flow = boxFromPath(flow.lastFocus, 1);
+    let target: Box = boxFromPath(flow.lastFocus);
+    let children: Box[] = [...parent.children];
     // if target isn't only child of first level
     if (children.length > 1 || parent.level >= 1) {
       // add to history
@@ -60,8 +60,8 @@
     // cancel if disabled
     if (!validFocus) return;
     // if not at end of column
-    let target = boxFromPath(flow.lastFocus);
-    let children = [...target.children];
+    let target: Box = boxFromPath(flow.lastFocus);
+    let children: Box[] = [...target.children];
     if (target.level < flow.columns.length) {
       children.splice(0, 0, newBox(0, target.level + 1, false));
       // fix index
@@ -79,9 +79,9 @@
   function addSibling(direction) {
     // cancel if disabled
     if (!validFocus) return;
-    let parent = boxFromPath(flow.lastFocus, 1);
-    let target = boxFromPath(flow.lastFocus);
-    let children = [...parent.children];
+    let parent: Flow | Box = boxFromPath(flow.lastFocus, 1);
+    let target: Box = boxFromPath(flow.lastFocus);
+    let children: Box[] = [...parent.children];
     children.splice(
       target.index + direction,
       0,

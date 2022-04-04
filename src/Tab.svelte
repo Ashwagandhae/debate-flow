@@ -1,10 +1,11 @@
-<script>
-  import { tabIn } from './transition.js';
+<script lang="ts">
+  import { tabIn } from './transition';
+  import { Flow } from './types';
 
-  export let flow;
-  export let selected;
+  export let flow: Flow;
+  export let selected: boolean;
 
-  let palette;
+  let palette: string;
   $: {
     if (flow.invert) {
       palette = 'accent-secondary';

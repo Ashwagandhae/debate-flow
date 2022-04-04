@@ -1,8 +1,8 @@
-<script>
+<script lang="ts">
   import Button from './Button.svelte';
-  import { popupTransition } from './transition.js';
-  export let component;
-  export let closeSelf;
+  import { popupTransition } from './transition';
+  export let component: any;
+  export let closeSelf: () => void;
 </script>
 
 <div class="top" transition:popupTransition>

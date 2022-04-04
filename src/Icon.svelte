@@ -1,7 +1,7 @@
-<script>
-  export let name;
-  export let size = '1rem';
-  let icons = [
+<script lang="ts">
+  export let name: string;
+  export let size: string = '1rem';
+  let icons: { name: string; svg: string }[] = [
     {
       name: 'arrowRight',
       svg: `<path d="M27 7L74 50L27 93" stroke-width="10" stroke-linecap="round" stroke-linejoin="round"/>`,
@@ -78,7 +78,9 @@
 <circle cx="71.25" cy="20.25" r="6.25" stroke-width="10"/>`,
     },
   ];
-  let displayIcon = icons.find((e) => e.name === name);
+  let displayIcon = icons.find(
+    (icon: { name: string; svg: string }) => icon.name === name
+  );
 </script>
 
 <svg

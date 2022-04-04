@@ -1,10 +1,5 @@
-<script>
-  import Tooltip from './Tooltip.svelte';
-
-  import { createEventDispatcher } from 'svelte';
-  const dispatch = createEventDispatcher();
-
-  export let column;
+<script lang="ts">
+  export let column: string;
 </script>
 
 <div class="top">

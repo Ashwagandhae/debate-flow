@@ -1,32 +1,40 @@
-<script>
+<script lang="ts">
   import Text from './Text.svelte';
   import Icon from './Icon.svelte';
-  import Overlay from './Overlay.svelte';
   import { getContext, onMount } from 'svelte';
-  import { afterUpdate, beforeUpdate, tick } from 'svelte';
   import { createEventDispatcher } from 'svelte';
-  import { flows, selected, newBox } from './stores.js';
+  import { flows, selected, newBox } from './stores';
+  import { Box } from './types';
 
-  import { boxIn, boxOut, boxButtonIn, brIn, brOut } from './transition.js';
+  import { boxIn, boxOut, boxButtonIn, brIn, brOut } from './transition';
 
   const dispatch = createEventDispatcher();
 
   export let root = false;
 
-  export let content;
-  export let children;
-  export let index;
-  export let level;
-  export let focus;
-  export let parentPath = [];
+  export let content: string = '';
+  export let children: Box[];
+  export let index: number;
+  export let level: number;
+  export let focus: boolean = false;
+  export let parentPath: number[] = [];
 
   $: path = [...parentPath, index];
 
-  export let addSibling = () => {};
-  export let deleteSelf = () => {};
-  export let focusSibling = () => {};
-  export let focusParent = () => {};
-  export let dispatchSelfFocus = () => {};
+  export let addSibling: (
+    childIndex: number,
+    direction: number
+  ) => boolean = () => false;
+  export let deleteSelf: (childIndex: number) => void = () => {};
+  export let focusSibling: (
+    childIndex: number,
+    direction: number
+  ) => void = () => {};
+  export let focusParent: () => void = () => {};
+  export let dispatchSelfFocus: (
+    childIndex: number,
+    isFocused: boolean
+  ) => void = () => {};
 
   const { getinvert } = getContext('invert');
   let invert = getinvert();
@@ -34,13 +42,12 @@
   const { getColumnCount } = getContext('columnCount');
   let columnCount = getColumnCount();
 
-  let textarea;
+  let textarea: any = undefined;
 
-  let lineColor;
-  let backgroundColor;
-  let childFocus = false;
-  let childFocusIndex = -1;
-  function onChildFocus(childIndex, isFocused) {
+  let backgroundColor: string;
+  let childFocus: boolean = false;
+  let childFocusIndex: number = -1;
+  function onChildFocus(childIndex: number, isFocused: boolean) {
     if (isFocused) {
       childFocus = true;
       childFocusIndex = childIndex;
@@ -49,7 +56,7 @@
       childFocusIndex = -1;
     }
   }
-  let hasSentEdit = false;
+  let hasSentEdit: boolean = false;
   function focusChange() {
     if (focus) {
       dispatchSelfFocus(index, true);
@@ -74,7 +81,7 @@
   }
   $: path, pathChange();
 
-  let placeholder = '';
+  let placeholder: string = '';
   $: {
     if (level == 1 && index == 0) {
       placeholder = 'type here';
@@ -99,8 +106,13 @@
     }
   }
   class keyDown {
+    require: () => boolean;
+    stopRepeat: boolean;
+    preventDefault: boolean;
+    blur: boolean;
+    handle: (e: KeyboardEvent) => void;
     constructor(
-      handle,
+      handle: () => void,
       require = () => true,
       stopRepeat = true,
       preventDefault = true,
@@ -110,7 +122,7 @@
       this.stopRepeat = stopRepeat;
       this.preventDefault = preventDefault;
       this.blur = blur;
-      this.handle = function (e) {
+      this.handle = function (e: KeyboardEvent) {
         if (!this.require()) {
           return false;
         }
@@ -158,14 +170,14 @@
       }),
     },
   };
-  function handleKeydown(e) {
+  function handleKeydown(e: KeyboardEvent) {
     if (e.shiftKey && keyDowns.shift[e.key]) {
       keyDowns.shift[e.key].handle(e);
     } else if (keyDowns.other[e.key]) {
       keyDowns.other[e.key].handle(e);
     }
   }
-  function handleBeforeinput(e) {
+  function handleBeforeinput(e: InputEvent) {
     if (!hasSentEdit) {
       console.log('created pneding', path);
       $flows[$selected].history.addPending('edit', [...path], {
@@ -181,7 +193,7 @@
     hasSentEdit = true;
   }
 
-  function addChild(childIndex, direction) {
+  function addChild(childIndex: number, direction: number): boolean {
     let newChildIndex = childIndex + direction;
     // if not at end of column
     if (level < columnCount) {
@@ -192,7 +204,7 @@
         newBox(newChildIndex, level + 1, true)
       );
       // fix childIndex
-      for (let i = newChildIndex; i < childrenClone.length; i++) {
+      for (let i: number = newChildIndex; i < childrenClone.length; i++) {
         childrenClone[i].index = i;
       }
       // add to history
@@ -206,7 +218,7 @@
       return false;
     }
   }
-  function deleteChild(childIndex) {
+  function deleteChild(childIndex: number) {
     // if target isn't only child of first level
     if (children.length > 1 || level >= 1) {
       let childrenClone = [...children];
@@ -237,7 +249,7 @@
       return false;
     }
   }
-  function focusChild(childIndex, direction) {
+  function focusChild(childIndex: number, direction: number) {
     let newChildIndex = childIndex + direction;
     // focus on parent when childIndex is before children
     if (newChildIndex < 0) {
@@ -263,7 +275,7 @@
   function focusSelf() {
     focus = true;
   }
-  let palette;
+  let palette: string;
   $: {
     if ((level % 2 == 0 && !invert) || (level % 2 == 1 && invert)) {
       palette = 'accent-secondary';
@@ -271,7 +283,7 @@
       palette = 'accent';
     }
   }
-  let outsidePalette;
+  let outsidePalette: string;
   $: {
     if ((level % 2 == 0 && !invert) || (level % 2 == 1 && invert)) {
       outsidePalette = 'accent';

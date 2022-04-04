@@ -1,14 +1,15 @@
-<script>
+<script lang="ts">
   import Icon from './Icon.svelte';
   import Tooltip from './Tooltip.svelte';
-  export let icon;
-  export let text = null;
-  export let tooltip = null;
-  export let disabled = false;
-  export let palette = 'plain';
-  export let shortcut = null;
-  export let disabledReason = 'disabled';
-  export let tooltipLayout = 'bottom';
+
+  export let icon: string;
+  export let text: string = null;
+  export let tooltip: string = null;
+  export let disabled: boolean | string = false;
+  export let palette: string = 'plain';
+  export let shortcut: string[] = null;
+  export let disabledReason: string = 'disabled';
+  export let tooltipLayout: string = 'bottom';
   function preventBlur(e) {
     e.preventDefault();
   }
@@ -25,7 +26,7 @@
     class:disabled
     on:click
     on:mousedown={preventBlur}
-    {disabled}
+    disabled={!!disabled}
   >
     <Icon name={icon} size="var(--button-size)" />
     {#if text}

@@ -1,11 +1,10 @@
-<script>
+<script lang="ts">
   import { afterUpdate } from 'svelte';
-  import { createEventDispatcher } from 'svelte';
 
-  export let value;
-  export let placeholder = '';
-  export let nowrap = false;
-  let whiteSpaceCss;
+  export let value: string;
+  export let placeholder: string;
+  export let nowrap: boolean = false;
+  let whiteSpaceCss: string;
   $: {
     if (nowrap) {
       whiteSpaceCss = 'nowrap';
@@ -13,7 +12,7 @@
       whiteSpaceCss = 'auto';
     }
   }
-  let textarea;
+  let textarea: HTMLTextAreaElement;
 
   function autoHeight() {
     textarea.value = textarea.value.replace(/\r?\n|\r/g, '');

@@ -1,4 +1,4 @@
-<script>
+<script lang="ts">
   import Flow from './Flow.svelte';
   import Title from './Title.svelte';
   import BoxControl from './BoxControl.svelte';
@@ -9,18 +9,18 @@
   import Uploader from './Uploader.svelte';
   import Tab from './Tab.svelte';
   import AddTab from './AddTab.svelte';
-  import { speed } from './transition.js';
+  import { speed } from './transition';
   import { fade } from 'svelte/transition';
-  import { flows, selected, boxFromPath, newFlow, History } from './stores.js';
+  import { flows, selected, boxFromPath, newFlow, History } from './stores';
 
-  let dark = 1;
+  let dark: number = 1;
   $: {
     if (dark) {
       window.document.body.classList.add('dark');
     }
   }
 
-  function clickTab(index) {
+  function clickTab(index: number) {
     $selected = index;
     focusFlow();
   }
@@ -41,13 +41,13 @@
       lastFocus.focus = false;
     }
   }
-  function addFlow(type) {
+  function addFlow(type: string) {
     blurFlow();
     $flows.push(newFlow($flows.length, type));
     $selected = $flows.length - 1;
     $flows = $flows;
   }
-  function handleKeydown(e) {
+  function handleKeydown(e: KeyboardEvent) {
     if (e.ctrlKey && e.shiftKey && e.key == 'N') {
       e.preventDefault();
       addFlow('aff');
@@ -64,7 +64,7 @@
     }
   }
 
-  function readUploadDragged(e) {
+  function readUploadDragged(e: DragEvent) {
     e.preventDefault();
     let file = e.dataTransfer.files[0];
 
@@ -75,7 +75,7 @@
     reader.readAsText(file, 'UTF-8');
   }
   function readUpload() {
-    let file = document.getElementById('uploadId').files[0];
+    let file = (<HTMLInputElement>document.getElementById('uploadId')).files[0];
 
     let reader = new FileReader();
     reader.onload = function (fileLoadedEvent) {
@@ -83,7 +83,7 @@
     };
     reader.readAsText(file, 'UTF-8');
   }
-  function preventDefault(e) {
+  function preventDefault(e: { preventDefault: () => void }) {
     e.preventDefault();
   }
 
@@ -201,7 +201,6 @@
         bind:content={$flows[$selected].content}
         bind:children={$flows[$selected].children}
         bind:index={$flows[$selected].index}
-        bind:level={$flows[$selected].level}
         bind:focus={$flows[$selected].focus}
         bind:invert={$flows[$selected].invert}
       />

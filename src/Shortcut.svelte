@@ -1,5 +1,5 @@
-<script>
-  export let keys;
+<script lang="ts">
+  export let keys: string[];
 </script>
 
 <span class="top">

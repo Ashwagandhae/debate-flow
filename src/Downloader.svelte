@@ -1,18 +1,19 @@
-<script>
-  import { flows } from './stores.js';
+<script lang="ts">
+  import { flows } from './stores';
   import Button from './Button.svelte';
   import { Workbook } from 'exceljs';
+  import { Flow, Box } from './types';
 
-  export let closePopup;
+  export let closePopup: () => void;
 
   function download() {
-    let data = JSON.stringify($flows, (key, value) => {
+    let data: string = JSON.stringify($flows, (key, value) => {
       if (key === 'history') {
         return undefined;
       }
       return value;
     });
-    let element = document.createElement('a');
+    let element: HTMLAnchorElement = document.createElement('a');
     element.setAttribute(
       'href',
       'data:text/json;charset=utf-8, ' + encodeURIComponent(data)
@@ -24,12 +25,12 @@
     closePopup();
   }
   function downloadXLSX() {
-    let wb = new Workbook();
+    let wb: Workbook = new Workbook();
     for (let flow of $flows) {
-      let data = [];
-      function childToData(box, x, y) {
+      let data: string[][] = [];
+      function childToData(box: Box, x: number, y: number) {
         while (!data[y]) {
-          let row = [];
+          let row: string[] = [];
           for (let i = 0; i < flow.columns.length; i++) {
             row.push('');
           }
@@ -45,18 +46,17 @@
       }
       childToData(flow, -1, 0);
 
-      let name = flow.content;
+      let name: string = flow.content;
       if (name.length >= 31) {
         name = name.substring(0, 31);
       }
       let ws = wb.addWorksheet(name);
-      ws.columns = flow.columns.map(function (column) {
+      ws.columns = flow.columns.map(function (column: string) {
         return { header: column, width: 25 };
       });
-      let row;
       for (let y = 0; y < data.length; y++) {
         // make space for header with + 2
-        row = ws.getRow(y + 2);
+        let row = ws.getRow(y + 2);
         for (let x = 0; x < data[y].length; x++) {
           row.getCell(x + 1).value = data[y][x];
         }
@@ -68,14 +68,14 @@
       .writeBuffer({
         base64: true,
       })
-      .then(function (xls64) {
+      .then(function (xls64: Buffer) {
         // build anchor tag and attach file (works in chrome)
-        var a = document.createElement('a');
-        var data = new Blob([xls64], {
+        let a: HTMLAnchorElement = document.createElement('a');
+        let data: Blob = new Blob([xls64], {
           type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
         });
 
-        var url = URL.createObjectURL(data);
+        let url: string = URL.createObjectURL(data);
         a.href = url;
         a.download = 'flow.xlsx';
         document.body.appendChild(a);

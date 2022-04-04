@@ -1,20 +1,20 @@
-<script>
+<script lang="ts">
   import Text from './Text.svelte';
-  import { flows, selected } from './stores.js';
+  import { flows, selected } from './stores';
+  import { Flow, Box } from './types';
   import { onMount } from 'svelte';
   import { createEventDispatcher } from 'svelte';
 
   const dispatch = createEventDispatcher();
 
-  export let content;
-  export let children;
-  export let index;
-  export let level;
-  export let focus;
-  export let invert;
+  export let content: string;
+  export let children: Flow[];
+  export let index: number;
+  export let focus: boolean;
+  export let invert: boolean;
   $: path = [index];
 
-  let textarea;
+  let textarea: Text;
   function handleBlur() {
     if (focus) {
       focus = false;
@@ -25,16 +25,8 @@
       focus = true;
     }
   }
-  let lineColor;
-  $: {
-    if (focus) {
-      lineColor = 'var(--accent)';
-    } else {
-      lineColor = 'none';
-    }
-  }
 
-  function handleKeydown(e) {
+  function handleKeydown(e: KeyboardEvent) {
     if (e.key == 'Enter' || e.key == 'ArrowDown') {
       e.preventDefault();
       if (children.length > 0) {
@@ -43,7 +35,7 @@
       }
     }
   }
-  let hasSentEdit = false;
+  let hasSentEdit: boolean = false;
   function focusChange() {
     if (focus) {
       $flows[$selected].history.addFocus([...path]);
@@ -55,9 +47,8 @@
   }
   onMount(focusChange);
   $: focus, focusChange();
-  function handleBeforeinput(e) {
+  function handleBeforeinput(e: InputEvent) {
     if (!hasSentEdit) {
-      console.log('created pneding', path);
       $flows[$selected].history.addPending('edit', [...path], {
         lastContent: content,
         getNextContent: function () {
@@ -70,7 +61,7 @@
     }
     hasSentEdit = true;
   }
-  let palette = 'plain';
+  let palette: string = 'plain';
   $: {
     if (invert) {
       palette = 'accent-secondary';

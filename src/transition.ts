@@ -5,7 +5,7 @@ import { backOut } from 'svelte/easing';
 
 export const speed = 300;
 
-export function boxIn(node, { duration = speed }) {
+export function boxIn(node: HTMLElement, { duration = speed }) {
   const h = node.clientHeight;
   return {
     duration,
@@ -21,7 +21,7 @@ export function boxIn(node, { duration = speed }) {
     },
   };
 }
-export function boxOut(node, { duration = speed }) {
+export function boxOut(node: HTMLElement, { duration = speed }) {
   const h = node.clientHeight;
   return {
     duration,
@@ -36,7 +36,10 @@ export function boxOut(node, { duration = speed }) {
     },
   };
 }
-export function boxButtonIn(node, { delay = 0, duration = speed }) {
+export function boxButtonIn(
+  node: HTMLElement,
+  { delay = 0, duration = speed }
+) {
   return {
     delay,
     duration,
@@ -47,7 +50,7 @@ export function boxButtonIn(node, { delay = 0, duration = speed }) {
     },
   };
 }
-export function brIn(node, { delay = 0, duration = speed }) {
+export function brIn(node: HTMLElement, { delay = 0, duration = speed }) {
   return {
     delay,
     duration,
@@ -62,7 +65,7 @@ export function brIn(node, { delay = 0, duration = speed }) {
   };
 }
 
-export function brOut(node, { delay = 0, duration = speed }) {
+export function brOut(node: HTMLElement, { delay = 0, duration = speed }) {
   return {
     delay,
     duration,
@@ -76,7 +79,7 @@ export function brOut(node, { delay = 0, duration = speed }) {
   };
 }
 
-export function tabIn(node, { duration = speed }) {
+export function tabIn(node: HTMLElement, { duration = speed }) {
   const h = node.clientHeight;
   return {
     duration,
@@ -90,7 +93,7 @@ export function tabIn(node, { duration = speed }) {
     },
   };
 }
-export function flowIn(node, { delay = 300, duration = speed }) {
+export function flowIn(node: HTMLElement, { delay = 300, duration = speed }) {
   return {
     delay,
     duration,
@@ -103,7 +106,7 @@ export function flowIn(node, { delay = 300, duration = speed }) {
     },
   };
 }
-export function flowOut(node, { duration = speed }) {
+export function flowOut(node: HTMLElement, { duration = speed }) {
   return {
     duration,
     css: (t) => {
@@ -116,7 +119,10 @@ export function flowOut(node, { duration = speed }) {
   };
 }
 
-export function tooltipTransition(node, { delay = 0, duration = speed }) {
+export function tooltipTransition(
+  node: HTMLElement,
+  { delay = 0, duration = speed }
+) {
   return {
     delay,
     duration,
@@ -131,7 +137,10 @@ export function tooltipTransition(node, { delay = 0, duration = speed }) {
   };
 }
 
-export function popupTransition(node, { delay = 0, duration = speed }) {
+export function popupTransition(
+  node: HTMLElement,
+  { delay = 0, duration = speed }
+) {
   return {
     delay,
     duration,
