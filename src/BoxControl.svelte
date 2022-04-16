@@ -23,35 +23,42 @@
     setValidFocus();
   });
 
-  function deleteChild() {
+  async function deleteChild() {
     // cancel if disabled
     if (!validFocus) return;
     let parent: Box | Flow = boxFromPath(flow.lastFocus, 1);
     let target: Box = boxFromPath(flow.lastFocus);
-    let children: Box[] = [...parent.children];
+    let childrenClone: Box[] = [...parent.children];
     // if target isn't only child of first level
-    if (children.length > 1 || parent.level >= 1) {
+    if (childrenClone.length > 1 || parent.level >= 1) {
       // add to history
       $flows[$selected].history.add('delete', flow.lastFocus, {
-        box: children[target.index],
+        box: childrenClone[target.index],
       });
-      children.splice(target.index, 1);
+      // unfocus target
+      childrenClone[target.index].focus = false;
+      parent.children = [...childrenClone];
+      flow = flow;
+      await tick();
+
+      // delete target
+      childrenClone.splice(target.index, 1);
       // fix index
-      for (let i = target.index; i < children.length; i++) {
-        children[i].index = i;
+      for (let i = target.index; i < childrenClone.length; i++) {
+        childrenClone[i].index = i;
       }
       // focus parent when empty
-      if (children.length <= 0) {
+      if (childrenClone.length <= 0) {
         parent.focus = true;
         // focus last child when last child deleted
-      } else if (target.index >= children.length) {
-        children[children.length - 1].focus = true;
+      } else if (target.index >= childrenClone.length) {
+        childrenClone[childrenClone.length - 1].focus = true;
         // focus next child of deleted
       } else {
-        children[target.index].focus = true;
+        childrenClone[target.index].focus = true;
       }
 
-      parent.children = [...children];
+      parent.children = [...childrenClone];
       flow = flow;
     }
   }
@@ -61,17 +68,17 @@
     if (!validFocus) return;
     // if not at end of column
     let target: Box = boxFromPath(flow.lastFocus);
-    let children: Box[] = [...target.children];
+    let childrenClone: Box[] = [...target.children];
     if (target.level < flow.columns.length) {
-      children.splice(0, 0, newBox(0, target.level + 1, false));
+      childrenClone.splice(0, 0, newBox(0, target.level + 1, false));
       // fix index
-      for (let i = 0; i < children.length; i++) {
-        children[i].index = i;
+      for (let i = 0; i < childrenClone.length; i++) {
+        childrenClone[i].index = i;
       }
       // add to history
       $flows[$selected].history.add('add', [...flow.lastFocus, 0]);
 
-      target.children = [...children];
+      target.children = [...childrenClone];
       flow = flow;
     }
   }
@@ -81,15 +88,15 @@
     if (!validFocus) return;
     let parent: Flow | Box = boxFromPath(flow.lastFocus, 1);
     let target: Box = boxFromPath(flow.lastFocus);
-    let children: Box[] = [...parent.children];
-    children.splice(
+    let childrenClone: Box[] = [...parent.children];
+    childrenClone.splice(
       target.index + direction,
       0,
       newBox(target.index + direction, target.level, false)
     );
     // fix index
-    for (let i = target.index; i < children.length; i++) {
-      children[i].index = i;
+    for (let i = target.index; i < childrenClone.length; i++) {
+      childrenClone[i].index = i;
     }
     // add to history
     let newPath = [...flow.lastFocus];
@@ -100,7 +107,7 @@
       newPath[newPath.length - 1] += 1;
     }
     $flows[$selected].history.add('add', newPath);
-    parent.children = [...children];
+    parent.children = [...childrenClone];
     flow = flow;
   }
   function preventBlur(e) {

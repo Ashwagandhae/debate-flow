@@ -1,5 +1,6 @@
 <script lang="ts">
-  import { afterUpdate } from 'svelte';
+  import { afterUpdate, onDestroy, onMount } from 'svelte';
+  import { settings } from './settings';
 
   export let value: string;
   export let placeholder: string;
@@ -15,13 +16,20 @@
   let textarea: HTMLTextAreaElement;
 
   function autoHeight() {
-    textarea.value = textarea.value.replace(/\r?\n|\r/g, '');
-    textarea.style.height = '0px';
-    textarea.style.height = textarea.scrollHeight + 'px';
+    if (textarea) {
+      textarea.value = textarea.value.replace(/\r?\n|\r/g, '');
+      textarea.style.height = '0px';
+      textarea.style.height = textarea.scrollHeight + 'px';
+    }
   }
   afterUpdate(function () {
     autoHeight();
   });
+  onDestroy(
+    settings.subscribe(['fontSize'], function () {
+      autoHeight();
+    })
+  );
   export const focus = () => {
     textarea.focus();
   };

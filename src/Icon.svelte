@@ -77,10 +77,19 @@
 <circle cx="71.25" cy="80.25" r="6.25" stroke-width="10"/>
 <circle cx="71.25" cy="20.25" r="6.25" stroke-width="10"/>`,
     },
+    {
+      name: 'check',
+      svg: `<path d="M88.7817 29.2843L39.2842 78.7817L11 50.4975" stroke-width="10" stroke-linecap="round" stroke-linejoin="round"/>`,
+    },
   ];
-  let displayIcon = icons.find(
-    (icon: { name: string; svg: string }) => icon.name === name
-  );
+  let displayIcon: { name: string; svg: string };
+  function findIcon() {
+    displayIcon = icons.find(
+      (icon: { name: string; svg: string }) => icon.name === name
+    );
+  }
+  findIcon();
+  $: name, findIcon();
 </script>
 
 <svg

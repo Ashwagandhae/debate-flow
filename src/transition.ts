@@ -2,14 +2,13 @@ import { quadOut } from 'svelte/easing';
 import { quadIn } from 'svelte/easing';
 import { backIn } from 'svelte/easing';
 import { backOut } from 'svelte/easing';
+import { settings } from './settings';
 
-export const speed = 300;
-
-export function boxIn(node: HTMLElement, { duration = speed }) {
+export function boxIn(node: HTMLElement) {
   const h = node.clientHeight;
   return {
-    duration,
-    css: (t) => {
+    duration: settings.data.transitionSpeed.value,
+    css: (t: number) => {
       const eased = quadOut(t);
 
       return `
@@ -21,11 +20,11 @@ export function boxIn(node: HTMLElement, { duration = speed }) {
     },
   };
 }
-export function boxOut(node: HTMLElement, { duration = speed }) {
+export function boxOut(node: HTMLElement) {
   const h = node.clientHeight;
   return {
-    duration,
-    css: (t) => {
+    duration: settings.data.transitionSpeed.value,
+    css: (t: number) => {
       const eased = quadOut(t);
       return `
         height: ${eased * h}px;
@@ -36,25 +35,20 @@ export function boxOut(node: HTMLElement, { duration = speed }) {
     },
   };
 }
-export function boxButtonIn(
-  node: HTMLElement,
-  { delay = 0, duration = speed }
-) {
+export function boxButtonIn(node: HTMLElement) {
   return {
-    delay,
-    duration,
-    css: (t) => {
+    duration: settings.data.transitionSpeed.value,
+    css: (t: number) => {
       return `
         opacity:${t};
       `;
     },
   };
 }
-export function brIn(node: HTMLElement, { delay = 0, duration = speed }) {
+export function brIn(node: HTMLElement) {
   return {
-    delay,
-    duration,
-    css: (t) => {
+    duration: settings.data.transitionSpeed.value,
+    css: (t: number) => {
       const eased = quadOut(t);
 
       return `
@@ -65,11 +59,10 @@ export function brIn(node: HTMLElement, { delay = 0, duration = speed }) {
   };
 }
 
-export function brOut(node: HTMLElement, { delay = 0, duration = speed }) {
+export function brOut(node: HTMLElement) {
   return {
-    delay,
-    duration,
-    css: (t) => {
+    duration: settings.data.transitionSpeed.value,
+    css: (t: number) => {
       const eased = quadIn(t);
 
       return `
@@ -79,11 +72,11 @@ export function brOut(node: HTMLElement, { delay = 0, duration = speed }) {
   };
 }
 
-export function tabIn(node: HTMLElement, { duration = speed }) {
+export function tabIn(node: HTMLElement) {
   const h = node.clientHeight;
   return {
-    duration,
-    css: (t) => {
+    duration: settings.data.transitionSpeed.value,
+    css: (t: number) => {
       const eased = quadOut(t);
       return `
         height: ${h * eased}px;
@@ -93,11 +86,10 @@ export function tabIn(node: HTMLElement, { duration = speed }) {
     },
   };
 }
-export function flowIn(node: HTMLElement, { delay = 300, duration = speed }) {
+export function flowIn(node: HTMLElement) {
   return {
-    delay,
-    duration,
-    css: (t) => {
+    duration: settings.data.transitionSpeed.value,
+    css: (t: number) => {
       const eased = quadOut(t);
 
       return `
@@ -106,10 +98,10 @@ export function flowIn(node: HTMLElement, { delay = 300, duration = speed }) {
     },
   };
 }
-export function flowOut(node: HTMLElement, { duration = speed }) {
+export function flowOut(node: HTMLElement) {
   return {
-    duration,
-    css: (t) => {
+    duration: settings.data.transitionSpeed.value,
+    css: (t: number) => {
       const eased = quadOut(t);
 
       return `
@@ -119,14 +111,10 @@ export function flowOut(node: HTMLElement, { duration = speed }) {
   };
 }
 
-export function tooltipTransition(
-  node: HTMLElement,
-  { delay = 0, duration = speed }
-) {
+export function tooltipTransition(node: HTMLElement) {
   return {
-    delay,
-    duration,
-    css: (t) => {
+    duration: settings.data.transitionSpeed.value,
+    css: (t: number) => {
       const eased = quadOut(t);
 
       return `
@@ -137,18 +125,24 @@ export function tooltipTransition(
   };
 }
 
-export function popupTransition(
-  node: HTMLElement,
-  { delay = 0, duration = speed }
-) {
+export function popupTransition(node: HTMLElement) {
   return {
-    delay,
-    duration,
-    css: (t) => {
+    duration: settings.data.transitionSpeed.value,
+    css: (t: number) => {
       const eased = quadOut(t);
 
       return `
         transform: scale(${eased});
+        opacity: ${t};
+      `;
+    },
+  };
+}
+export function screenTransition(node: HTMLElement) {
+  return {
+    duration: settings.data.transitionSpeed.value,
+    css: (t: number) => {
+      return `
         opacity: ${t};
       `;
     },

@@ -1,7 +1,7 @@
 <script lang="ts">
   import Button from './Button.svelte';
 
-  export let closePopup;
+  export let closePopup: () => void;
 
   function openUploadDialog() {
     document.getElementById('uploadId').click();

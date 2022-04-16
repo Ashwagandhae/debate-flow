@@ -3,8 +3,15 @@
   import { popupTransition } from './transition';
   export let component: any;
   export let closeSelf: () => void;
+
+  function handleKeydown(e: KeyboardEvent) {
+    if (e.key === 'Escape') {
+      closeSelf();
+    }
+  }
 </script>
 
+<svelte:window on:keydown={handleKeydown} />
 <div class="top" transition:popupTransition>
   <div class="close">
     <Button icon="delete" tooltip="close" on:click={closeSelf} />
@@ -16,7 +23,7 @@
   .top {
     background: var(--background);
     display: block;
-    position: relative;
+    position: absolute;
     border-radius: var(--border-radius);
     overflow: hidden;
   }

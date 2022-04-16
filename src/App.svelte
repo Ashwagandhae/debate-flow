@@ -7,18 +7,79 @@
   import Popup from './Popup.svelte';
   import Downloader from './Downloader.svelte';
   import Uploader from './Uploader.svelte';
+  import Settings from './Settings.svelte';
   import Tab from './Tab.svelte';
-  import AddTab from './AddTab.svelte';
-  import { speed } from './transition';
-  import { fade } from 'svelte/transition';
-  import { flows, selected, boxFromPath, newFlow, History } from './stores';
+  import { screenTransition } from './transition';
+  import { onDestroy } from 'svelte';
+  import {
+    activeMouse,
+    flows,
+    selected,
+    boxFromPath,
+    newFlow,
+    History,
+  } from './stores';
+  import { settings } from './settings';
 
-  let dark: number = 1;
-  $: {
-    if (dark) {
-      window.document.body.classList.add('dark');
+  let colorThemeMediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
+  function updateColorTheme() {
+    if (settings.data.colorTheme.value == 0) {
+      document.body.classList.toggle('dark', colorThemeMediaQuery.matches);
     }
   }
+  // listen for changes in system settings
+  colorThemeMediaQuery.addEventListener('change', updateColorTheme);
+  // listen for changes in color theme setting, and unsubscribe onDestroy
+  onDestroy(
+    settings.subscribe(['colorTheme'], function (key: string) {
+      if (settings.data.colorTheme.value == 1) {
+        document.body.classList.remove('dark');
+      } else if (settings.data.colorTheme.value == 2) {
+        document.body.classList.add('dark');
+      } else {
+        updateColorTheme();
+      }
+    })
+  );
+  // listen for changes in cssVariables setting group, and unsubscribe onDestroy
+  let cssVarIndex: { [key: string]: { name: string; unit: string } } = {
+    accentHue: {
+      name: 'accent-hue',
+      unit: '',
+    },
+    accentSecondaryHue: {
+      name: 'accent-secondary-hue',
+      unit: '',
+    },
+    transitionSpeed: {
+      name: 'transition-speed',
+      unit: 'ms',
+    },
+    borderRadius: {
+      name: 'border-radius',
+      unit: 'px',
+    },
+    padding: {
+      name: 'padding',
+      unit: 'px',
+    },
+    fontSize: {
+      name: 'font-size',
+      unit: 'rem',
+    },
+    gap: {
+      name: 'gap',
+      unit: 'px',
+    },
+  };
+  onDestroy(
+    settings.subscribe(Object.keys(cssVarIndex), function (key: string) {
+      let name = cssVarIndex[key].name;
+      let value = settings.data[key].value;
+      let unit = cssVarIndex[key].unit;
+      document.body.style.setProperty(`--${name}`, `${value}${unit}`);
+    })
+  );
 
   function clickTab(index: number) {
     $selected = index;
@@ -47,7 +108,11 @@
     $selected = $flows.length - 1;
     $flows = $flows;
   }
+  function handleMouseMove(e: MouseEvent) {
+    $activeMouse = true;
+  }
   function handleKeydown(e: KeyboardEvent) {
+    $activeMouse = false;
     if (e.ctrlKey && e.shiftKey && e.key == 'N') {
       e.preventDefault();
       addFlow('aff');
@@ -70,16 +135,16 @@
 
     let reader = new FileReader();
     reader.onload = function (fileLoadedEvent) {
-      handleUpload(fileLoadedEvent.target.result);
+      handleUpload(fileLoadedEvent.target.result.toString());
     };
     reader.readAsText(file, 'UTF-8');
   }
   function readUpload() {
     let file = (<HTMLInputElement>document.getElementById('uploadId')).files[0];
 
-    let reader = new FileReader();
+    let reader: FileReader = new FileReader();
     reader.onload = function (fileLoadedEvent) {
-      handleUpload(fileLoadedEvent.target.result);
+      handleUpload(fileLoadedEvent.target.result.toString());
     };
     reader.readAsText(file, 'UTF-8');
   }
@@ -87,7 +152,7 @@
     e.preventDefault();
   }
 
-  function handleUpload(data) {
+  function handleUpload(data: string) {
     let rawFlows = JSON.parse(data);
     $flows = [];
     for (let flow of rawFlows) {
@@ -112,12 +177,12 @@
     false
   );
 
-  let popups = [];
-  function closePopup(index) {
+  let popups: (Uploader | Downloader | Settings)[] = [];
+  function closePopup(index: number) {
     popups.splice(index, 1);
     popups = popups;
   }
-  function openPopup(component) {
+  function openPopup(component: Uploader | Downloader | Settings) {
     popups.push(component);
     popups = popups;
   }
@@ -125,95 +190,102 @@
 
 <svelte:body
   on:keydown={handleKeydown}
+  on:mousemove={handleMouseMove}
   on:dragenter={preventDefault}
   on:drop={readUploadDragged} />
-{#if popups.length > 0}
-  <div
-    class="screen"
-    on:click|self={() => {
-      popups.length == 1 && closePopup(0);
-    }}
-    transition:fade={{ duration: speed }}
-  >
+<main class:activeMouse class="palette-plain">
+  {#if popups.length > 0}
     <div
-      class="popups"
+      class="screen"
       on:click|self={() => {
-        popups.length == 1 && closePopup(0);
+        closePopup(0);
       }}
+      transition:screenTransition
     >
-      {#each popups as popup, index}
-        <Popup component={popup} closeSelf={() => closePopup(index)} />
-      {/each}
-    </div>
-  </div>
-{/if}
-<input id="uploadId" type="file" hidden on:change={readUpload} />
-<main class="palette-plain" style={`--transition-speed: ${speed}ms;`}>
-  <div class="sidebar">
-    <div class="header">
-      <ButtonBar>
-        <Button icon="settings" tooltip="settings" />
-        <Button
-          icon="download"
-          on:click={() => openPopup(Downloader)}
-          disabled={$flows.length == 0}
-          disabledReason={'nothing to download'}
-          tooltip="download as file"
-        />
-        <Button
-          icon="upload"
-          on:click={() => openPopup(Uploader)}
-          tooltip="import file"
-        />
-      </ButtonBar>
-    </div>
-    <div class="tabs">
-      <ul>
-        {#each $flows as flow, index}
-          <Tab
-            on:click={() => clickTab(index)}
-            bind:flow={$flows[index]}
-            selected={index == $selected}
-          />
-        {/each}
-        <div class="add-tab">
-          <Button
-            text="on case"
-            palette="accent"
-            icon="add"
-            on:click={() => addFlow('aff')}
-            tooltip="create new oncase flow"
-          />
-          <Button
-            text="off case"
-            palette="accent-secondary"
-            icon="add"
-            on:click={() => addFlow('neg')}
-            tooltip="create new offcase flow"
-          />
-        </div>
-      </ul>
-    </div>
-  </div>
-  {#if $flows.length > 0}
-    <div class="title">
-      <Title
-        bind:content={$flows[$selected].content}
-        bind:children={$flows[$selected].children}
-        bind:index={$flows[$selected].index}
-        bind:focus={$flows[$selected].focus}
-        bind:invert={$flows[$selected].invert}
-      />
-    </div>
-    <div class="box-control">
-      <BoxControl bind:flow={$flows[$selected]} />
-    </div>
-    {#key $selected}
-      <div class="flow">
-        <Flow on:focusFlow={focusFlow} bind:root={$flows[$selected]} />
+      <div
+        class="popups"
+        on:click|self={() => {
+          closePopup(0);
+        }}
+      >
+        {#key popups}
+          <Popup component={popups[0]} closeSelf={() => closePopup(0)} />
+        {/key}
       </div>
-    {/key}
+    </div>
   {/if}
+  <input id="uploadId" type="file" hidden on:change={readUpload} />
+  <div class="grid">
+    <div class="sidebar">
+      <div class="header">
+        <ButtonBar>
+          <Button
+            icon="settings"
+            on:click={() => openPopup(Settings)}
+            tooltip="settings"
+          />
+          <Button
+            icon="download"
+            on:click={() => openPopup(Downloader)}
+            disabled={$flows.length == 0}
+            disabledReason={'nothing to download'}
+            tooltip="download as file"
+          />
+          <Button
+            icon="upload"
+            on:click={() => openPopup(Uploader)}
+            tooltip="import file"
+          />
+        </ButtonBar>
+      </div>
+      <div class="tabs">
+        <ul>
+          {#each $flows as flow, index}
+            <Tab
+              on:click={() => clickTab(index)}
+              bind:flow={$flows[index]}
+              selected={index == $selected}
+            />
+          {/each}
+          <div class="add-tab">
+            <Button
+              text="on case"
+              palette="accent"
+              icon="add"
+              on:click={() => addFlow('aff')}
+              tooltip="create new oncase flow"
+            />
+            <Button
+              text="off case"
+              palette="accent-secondary"
+              icon="add"
+              on:click={() => addFlow('neg')}
+              tooltip="create new offcase flow"
+            />
+          </div>
+        </ul>
+      </div>
+    </div>
+    {#if $flows.length > 0}
+      <div class="title">
+        <Title
+          bind:content={$flows[$selected].content}
+          bind:children={$flows[$selected].children}
+          bind:index={$flows[$selected].index}
+          bind:focus={$flows[$selected].focus}
+          bind:invert={$flows[$selected].invert}
+        />
+      </div>
+      <div class="box-control">
+        <BoxControl bind:flow={$flows[$selected]} />
+      </div>
+      {#key $selected}
+        <div class="flow">
+          <Flow on:focusFlow={focusFlow} bind:root={$flows[$selected]} />
+        </div>
+      {/key}
+    {/if}
+  </div>
 </main>
 
 <style>
@@ -231,7 +303,7 @@
     font-size: inherit;
     font-weight: inherit;
   }
-  main {
+  .grid {
     display: grid;
     gap: var(--gap);
     grid-template-areas:
@@ -242,9 +314,6 @@
     width: 100%;
     height: 100%;
     box-sizing: border-box;
-  }
-  main > div {
-    box-shadow: var(--box-shadow);
   }
   ul {
     padding: 0;
@@ -326,16 +395,18 @@
   .popups {
     width: 100vw;
     height: min-content;
-    display: grid;
-    gap: var(--gap);
-    grid-template-columns: auto auto auto;
-    grid-template-rows: auto;
+    display: flex;
     align-items: center;
     justify-content: center;
   }
   :global(h1) {
     font-weight: var(--font-weight);
-    font-size: 1.4em;
+    font-size: 1.5em;
+    margin: 0;
+  }
+  :global(h2) {
+    font-weight: var(--font-weight);
+    font-size: 1.2em;
     margin: 0;
   }
   :global(body) {
@@ -346,34 +417,33 @@
     font-size: var(--font-size);
     font-weight: var(--font-weight);
   }
-  :global(:root) {
+  :global(body) {
     --main-margin: 20px;
     --main-height: calc(100vh - var(--main-margin) * 2);
     --column-width: 160px;
-    --padding-small: 4px;
     --padding: 8px;
-    --padding-big: 16px;
+    --padding-small: calc(var(--padding) / 2);
+    --padding-big: calc(var(--padding) * 2);
     --title-height: calc(35px + var(--padding) * 2);
-    --gap: 12px;
     --view-height: calc(var(--main-height) - var(--title-height) - var(--gap));
-    --font-size: 0.9em;
+    --font-size: 0.9rem;
     --font-weight: 300;
     --font-weight-bold: 700;
     --font-family: 'Merriweather Sans', sans-serif;
     --border-radius: 12px;
-    --border-radius-small: 6px;
+    --border-radius-small: calc(var(--border-radius) / 2);
     --button-size: 20px;
-    --br-height: 4px;
-    --transition-speed: var(--transition-speed);
+    --gap: 12px;
+    --line-width: 4px;
   }
   /* background text color 
   accent
   secondary
   back indent active fade weak */
   :global(body) {
-    --background-back: hsl(0 0% 100%);
+    --background-back: hsl(0, 0%, 95%);
 
-    --background: hsl(0 0% 100%);
+    --background: hsl(0, 0%, 100%);
     --background-indent: hsl(0 0% 92%);
     --background-active: hsl(0 0% 84%);
 
@@ -381,35 +451,52 @@
     --background-secondary-indent: hsl(0 0% 89%);
     --background-secondary-active: hsl(0 0% 81%);
 
-    --background-accent-indent: hsl(192 80% 95%);
-    --background-accent-active: hsl(192 80% 90%);
+    --background-accent-indent: hsl(var(--accent-hue) 60% 92%);
+    --background-accent-active: hsl(var(--accent-hue) 70% 86%);
 
-    --background-accent-secondary-indent: hsl(26 80% 95%);
-    --background-accent-secondary-active: hsl(26 80% 90%);
+    --background-accent-secondary-indent: hsl(
+      var(--accent-secondary-hue),
+      60%,
+      92%
+    );
+    --background-accent-secondary-active: hsl(
+      var(--accent-secondary-hue),
+      70%,
+      86%
+    );
 
     --text: hsl(0 0% 30%);
     --text-select: hsl(0, 0%, 100%, 80%);
     --text-weak: hsl(0, 0%, 70%);
 
-    --text-accent: hsl(192, 80%, 30%);
-    --text-accent-select: hsl(192, 100%, 60%, 30%);
-    --text-accent-weak: hsl(192, 30%, 70%);
+    --text-accent: hsl(var(--accent-hue), 90%, 30%);
+    --text-accent-select: hsl(var(--accent-hue), 100%, 60%, 30%);
+    --text-accent-weak: hsl(var(--accent-hue), 30%, 70%);
 
-    --text-accent-secondary: hsl(26, 80%, 30%);
-    --text-accent-secondary-select: hsl(26, 100%, 60%, 30%);
-    --text-accent-secondary-weak: hsl(26, 30%, 70%);
+    --text-accent-secondary: hsl(var(--accent-secondary-hue), 90%, 30%);
+    --text-accent-secondary-select: hsl(
+      var(--accent-secondary-hue),
+      100%,
+      60%,
+      30%
+    );
+    --text-accent-secondary-weak: hsl(var(--accent-secondary-hue), 30%, 70%);
 
-    --color: hsl(0 0% 80%);
-    --color-fade: hsl(0 0% 90%);
+    --color: hsl(0 0% 70%);
+    --color-fade: hsl(0 0% 85%);
 
-    --color-accent: hsl(192, 60%, 80%);
-    --color-accent-fade: hsl(192, 70%, 90%);
+    --color-accent: hsl(var(--accent-hue), 80%, 70%);
+    --color-accent-fade: hsl(var(--accent-hue), 90%, 85%);
 
-    --color-accent-secondary: hsl(26, 60%, 80%);
-    --color-accent-secondary-fade: hsl(26, 70%, 90%);
+    --color-accent-secondary: hsl(var(--accent-secondary-hue), 80%, 70%);
+    --color-accent-secondary-fade: hsl(var(--accent-secondary-hue), 90%, 85%);
 
-    --screen-color: hsl(0 0% 0%/ 0.3);
-    --box-shadow: rgba(0, 0, 0, 0.15) 0px 0px 12px;
+    --color-screen: hsl(0 0% 0%/ 0.3);
+
+    --slider-lightness: 90%;
+    --slider-lightness-hover: 85%;
+    --slider-saturation: 80%;
+    --slider-switch-lightness: 70%;
   }
   :global(body.dark) {
     --background-back: hsl(0 0% 10%);
@@ -422,32 +509,48 @@
     --background-secondary-indent: hsl(0 0% 28%);
     --background-secondary-active: hsl(0 0% 32%);
 
-    --background-accent-indent: hsl(192 10% 24%);
-    --background-accent-active: hsl(192 20% 30%);
+    --background-accent-indent: hsl(var(--accent-hue) 10% 24%);
+    --background-accent-active: hsl(var(--accent-hue) 20% 30%);
 
-    --background-accent-secondary-indent: hsl(26 10% 24%);
-    --background-accent-secondary-active: hsl(26 20% 30%);
+    --background-accent-secondary-indent: hsl(
+      var(--accent-secondary-hue) 10% 24%
+    );
+    --background-accent-secondary-active: hsl(
+      var(--accent-secondary-hue) 20% 30%
+    );
 
     --text: hsl(0, 0%, 80%);
     --text-select: hsl(0, 0%, 100%, 30%);
-    --text-weak: hsl(0, 0%, 50%);
+    --text-weak: hsl(0, 0%, 40%);
 
-    --text-accent: hsl(192, 60%, 80%);
-    --text-accent-select: hsl(192, 80%, 60%, 30%);
-    --text-accent-weak: hsl(192, 15%, 50%);
+    --text-accent: hsl(var(--accent-hue), 60%, 80%);
+    --text-accent-select: hsl(var(--accent-hue), 80%, 60%, 30%);
+    --text-accent-weak: hsl(var(--accent-hue), 15%, 40%);
 
-    --text-accent-secondary: hsl(26, 60%, 80%);
-    --text-accent-secondary-select: hsl(26, 80%, 60%, 30%);
-    --text-accent-secondary-weak: hsl(26, 15%, 50%);
+    --text-accent-secondary: hsl(var(--accent-secondary-hue), 60%, 80%);
+    --text-accent-secondary-select: hsl(
+      var(--accent-secondary-hue),
+      80%,
+      60%,
+      30%
+    );
+    --text-accent-secondary-weak: hsl(var(--accent-secondary-hue), 15%, 40%);
 
-    --color-accent: hsl(192, 40%, 42%);
-    --color-accent-fade: hsl(192, 25%, 32%);
+    --color: hsl(0, 0%, 42%);
+    --color-fade: hsl(0, 0%, 32%);
 
-    --color-accent-secondary: hsl(26, 40%, 42%);
-    --color-accent-secondary-fade: hsl(26, 25%, 32%);
+    --color-accent: hsl(var(--accent-hue), 40%, 42%);
+    --color-accent-fade: hsl(var(--accent-hue), 25%, 32%);
+
+    --color-accent-secondary: hsl(var(--accent-secondary-hue), 40%, 42%);
+    --color-accent-secondary-fade: hsl(var(--accent-secondary-hue), 25%, 32%);
 
     --color-screen: hsl(0 0% 0%/ 0.4);
-    --box-shadow: none;
+
+    --slider-lightness: 24%;
+    --slider-lightness-hover: 30%;
+    --slider-saturation: 20%;
+    --slider-switch-lightness: 42%;
   }
   :global(.palette-plain) {
     --this-background: var(--background);
@@ -490,6 +593,7 @@
   :global(.palette-disabled) {
     --this-background-indent: var(--background);
     --this-background-active: var(--background);
+    --this-color: var(--color-fade);
     --this-text: var(--text-weak);
   }
 </style>

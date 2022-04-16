@@ -42,13 +42,13 @@
     </div>
     <div class="headers">
       {#each root.columns as column, index}
-        <h1
+        <div
           class={`header palette-${
             !!(index % 2) == root.invert ? 'accent' : 'accent-secondary'
           }`}
         >
           <Header {column} on:focusFlow />
-        </h1>
+        </div>
       {/each}
     </div>
     <div class="columns">

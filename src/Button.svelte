@@ -40,7 +40,7 @@
     display: flex;
     flex-direction: row;
     align-items: center;
-    gap: 5px;
+    gap: var(--padding-small);
 
     box-sizing: content-box;
     padding: var(--padding);

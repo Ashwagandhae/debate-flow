@@ -23,16 +23,30 @@
   function mouseMove() {
     if (tooltip) {
       let rect = element.getBoundingClientRect();
-      x = rect.left - tooltip.offsetWidth / 2 + rect.width / 2;
-      if (x < 4) {
-        x = 4;
-      } else if (x + tooltip.offsetWidth > window.innerWidth - 4) {
-        x = window.innerWidth - tooltip.offsetWidth - 4;
-      }
-      if (layout == 'bottom') {
-        y = rect.bottom + 4;
-      } else {
-        y = rect.top - tooltip.offsetHeight - 4;
+      if (layout == 'bottom' || layout == 'top') {
+        x = rect.left - tooltip.offsetWidth / 2 + rect.width / 2;
+        if (x < 4) {
+          x = 4;
+        } else if (x + tooltip.offsetWidth > window.innerWidth - 4) {
+          x = window.innerWidth - tooltip.offsetWidth - 4;
+        }
+        if (layout == 'bottom') {
+          y = rect.bottom + 4;
+        } else if (layout == 'top') {
+          y = rect.top - tooltip.offsetHeight - 4;
+        }
+      } else if (layout == 'left' || layout == 'right') {
+        y = rect.top - tooltip.offsetHeight / 2 + rect.height / 2;
+        if (y < 4) {
+          y = 4;
+        } else if (y + tooltip.offsetHeight > window.innerHeight - 4) {
+          y = window.innerHeight - tooltip.offsetHeight - 4;
+        }
+        if (layout == 'left') {
+          x = rect.left - tooltip.offsetWidth - 4;
+        } else if (layout == 'right') {
+          x = rect.right + 4;
+        }
       }
     }
   }
@@ -40,7 +54,7 @@
     await tick();
     mouseMove();
   }
-  $: content, shortcut, disabled, layout, onContentChanged();
+  $: tooltip, content, shortcut, disabled, layout, onContentChanged();
   function mouseLeave() {
     isHovered = false;
   }

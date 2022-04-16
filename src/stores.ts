@@ -1,6 +1,7 @@
 import { writable } from 'svelte/store';
 import { Box, Flow } from './types';
 
+export const activeMouse = writable(true);
 export const flows = writable([]);
 export let selected = writable(0);
 export const flowTypes = writable({

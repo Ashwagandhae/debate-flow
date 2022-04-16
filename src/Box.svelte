@@ -1,9 +1,9 @@
 <script lang="ts">
   import Text from './Text.svelte';
   import Icon from './Icon.svelte';
-  import { getContext, onMount } from 'svelte';
+  import { getContext, onMount, tick } from 'svelte';
   import { createEventDispatcher } from 'svelte';
-  import { flows, selected, newBox } from './stores';
+  import { activeMouse, flows, selected, newBox } from './stores';
   import { Box } from './types';
 
   import { boxIn, boxOut, boxButtonIn, brIn, brOut } from './transition';
@@ -37,10 +37,10 @@
   ) => void = () => {};
 
   const { getinvert } = getContext('invert');
-  let invert = getinvert();
+  let invert: boolean = getinvert();
 
   const { getColumnCount } = getContext('columnCount');
-  let columnCount = getColumnCount();
+  let columnCount: number = getColumnCount();
 
   let textarea: any = undefined;
 
@@ -179,7 +179,6 @@
   }
   function handleBeforeinput(e: InputEvent) {
     if (!hasSentEdit) {
-      console.log('created pneding', path);
       $flows[$selected].history.addPending('edit', [...path], {
         lastContent: content,
         getNextContent: function () {
@@ -218,7 +217,7 @@
       return false;
     }
   }
-  function deleteChild(childIndex: number) {
+  async function deleteChild(childIndex: number) {
     // if target isn't only child of first level
     if (children.length > 1 || level >= 1) {
       let childrenClone = [...children];
@@ -226,7 +225,12 @@
       $flows[$selected].history.add('delete', [...path, childIndex], {
         box: childrenClone[childIndex],
       });
+      // unfocus target
       childrenClone[childIndex].focus = false;
+      children = [...childrenClone];
+      await tick();
+
+      // delete target
       childrenClone.splice(childIndex, 1);
       // fix childIndex
       for (let i = 0; i < childrenClone.length; i++) {
@@ -298,6 +302,7 @@
   class:empty={children.length == 0}
   class:focus
   class:childFocus
+  class:activeMouse={$activeMouse}
   class:highlight={childFocus || focus}
   in:boxIn|local
   out:boxOut|local
@@ -389,7 +394,6 @@
     height: auto;
     overflow: visible;
     align-items: start;
-    color: var(--color);
   }
 
   .content {
@@ -406,10 +410,10 @@
   }
 
   .childFocus > .content,
-  .content:hover {
+  .activeMouse .content:hover {
     background: var(--this-background-indent);
   }
-  .focus > .content {
+  :is(.focus, .activeMouse.focus) > .content {
     background: var(--this-background-active);
   }
   .content.left {
@@ -432,25 +436,21 @@
   .line {
     z-index: -1;
   }
-  .top.highlight > .content > .barcontainer > .line,
-  .content:hover > .barcontainer > .line {
-    z-index: 2;
-  }
   .line {
     content: '';
     display: block;
     background-color: var(--this-background-indent);
-    height: var(--br-height);
+    height: var(--line-width);
     margin-left: var(--padding);
     width: calc(var(--column-width) - var(--padding) * 2);
     border-radius: var(--border-radius-small);
-    margin-top: calc(-0.5 * var(--br-height));
+    margin-top: calc(-0.5 * var(--line-width));
     position: absolute;
     transition: width var(--transition-speed), margin var(--transition-speed),
       background var(--transition-speed);
   }
   .line.below {
-    margin-top: calc(-0.5 * var(--br-height));
+    margin-top: calc(-0.5 * var(--line-width));
   }
   .line.left {
     width: calc(var(--column-width) - var(--padding));
@@ -462,17 +462,19 @@
     border-radius: 0 3px 3px 0;
   }
   .line.left.right,
-  .line:hover {
+  .activeMouse .line:hover {
     width: calc(var(--column-width));
     border-radius: 0;
     margin-left: 0;
   }
-
   .childFocus > .content > .barcontainer > .line,
-  .content:hover > .barcontainer > .line {
+  .activeMouse .content:hover > .barcontainer > .line {
+    z-index: 2;
+
     background-color: var(--this-color-fade);
   }
-  .focus > .content > .barcontainer > .line {
+  :is(.focus, .focus.activeMouse) > .content > .barcontainer > .line {
+    z-index: 3;
     background-color: var(--this-color);
   }
 
@@ -493,24 +495,22 @@
     position: absolute;
     transform: translateX(var(--column-width));
     border-radius: var(--border-radius);
-    --color: var(--color-weak);
     padding: var(--padding);
-    margin: calc(var(--br-height) / 2) var(--padding) 0 var(--padding);
+    margin: calc(var(--line-width) / 2) var(--padding) 0 var(--padding);
     width: calc(var(--column-width) - var(--padding) * 2);
     background-color: var(--this-background);
     box-sizing: border-box;
     height: calc(1em + var(--padding) * 2);
   }
   .focus > .content > .add,
-  .add:hover {
+  .activeMouse .add:hover {
     opacity: 1;
   }
-  .add:hover {
+  .activeMouse .add:hover {
     background-color: var(--this-background-indent);
-    --color: inherit;
   }
-  .add:active {
-    transition: none;
+  .add:active,
+  .activeMouse .add:active {
     background-color: var(--this-background-active);
   }
 </style>

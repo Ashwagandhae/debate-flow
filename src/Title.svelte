@@ -88,7 +88,7 @@
 
 <style>
   .top {
-    font-size: calc(var(--title-height) * 0.5);
+    font-size: 25px;
     display: flex;
     flex-direction: row;
     box-sizing: border-box;
@@ -99,8 +99,9 @@
     padding: 0 var(--padding);
     border-radius: var(--border-radius);
     color: var(--this-text);
+    transition: background var(--transition-speed);
   }
   .content.focus {
-    background-color: var(--this-background-indent);
+    background-color: var(--this-background-active);
   }
 </style>
