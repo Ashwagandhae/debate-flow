@@ -54,7 +54,7 @@
     width: clamp(400px, 60vw, 2000px);
     height: clamp(400px, 80vh, 1000px);
     display: grid;
-    grid-template-columns: max(150px, 20%) 1fr;
+    grid-template-columns: calc(max(150px, 20%) + var(--padding-big)) 1fr;
   }
   .outline {
     width: 100%;
@@ -66,6 +66,7 @@
     align-items: left;
     gap: var(--padding);
     background-color: var(--background-secondary);
+    overflow: scroll;
   }
   .outline button {
     border: none;
