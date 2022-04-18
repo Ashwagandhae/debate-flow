@@ -1,9 +1,17 @@
 <script lang="ts">
-  import Icon from './Icon.svelte';
+  import Text from './Text.svelte';
+  import { createEventDispatcher } from 'svelte';
   export let name: string;
   export let value: number;
   export let auto: number;
-  export let detail: { options: string[] };
+
+  const dispatch = createEventDispatcher();
+
+  export let detail: {
+    options: string[];
+    customOption?: boolean;
+    customOptionValue?: string;
+  };
 
   $: palette = auto == value ? 'accent-secondary' : 'accent';
 </script>
@@ -32,11 +40,33 @@
             {option}
           </p>
           {#if index == auto}
-            <p class="default">default</p>
+            <p class="option-info">default</p>
           {/if}
         </li>
       </label>
     {/each}
+    {#if detail.customOption}
+      <label>
+        <input
+          type="radio"
+          bind:group={value}
+          {name}
+          checked={value == detail.options.length}
+          value={detail.options.length}
+        />
+        <li>
+          <Text
+            placeholder="custom"
+            nowrap={true}
+            bind:value={detail.customOptionValue}
+            on:input={() => dispatch('forceUpdate')}
+          />
+          {#if detail.customOptionValue != ''}
+            <p class="option-info">custom</p>
+          {/if}
+        </li>
+      </label>
+    {/if}
   </ul>
 </div>
 
@@ -119,13 +149,13 @@
   input:checked + li {
     color: var(--this-text);
   }
-  .default {
+  .option-info {
     opacity: 0;
     margin-left: auto;
     color: var(--this-text-weak);
     transition: opacity var(--transition-speed);
   }
-  li:hover > .default {
+  li:hover > .option-info {
     opacity: 1;
   }
 </style>

@@ -3,7 +3,7 @@
   import { settings } from './settings';
 
   export let value: string;
-  export let placeholder: string;
+  export let placeholder: string = '';
   export let nowrap: boolean = false;
   let whiteSpaceCss: string;
   $: {
@@ -40,6 +40,7 @@
   bind:this={textarea}
   on:load={autoHeight}
   on:input={autoHeight}
+  on:input
   on:beforeinput
   on:keydown
   on:focus
@@ -63,7 +64,7 @@
     height: calc(1em + var(--padding) * 2 + 6px);
 
     background: none;
-    padding: var(--padding);
+    padding: 0;
     border: none;
     border-radius: 0;
     font-size: inherit;

@@ -1,7 +1,6 @@
 <script lang="ts">
-  import Icon from './Icon.svelte';
-  export let value: boolean = true;
-  export let auto: boolean = true;
+  export let value: number = 1;
+  export let auto: number = 1;
 
   let palette: string;
   $: if (value) {
@@ -13,10 +12,12 @@
   } else {
     palette = 'plain';
   }
+  let booleanValue = value ? true : false;
+  $: value = booleanValue ? 1 : 0;
 </script>
 
 <label class={`palette-${palette}`}>
-  <input type="checkbox" bind:checked={value} />
+  <input type="checkbox" bind:checked={booleanValue} />
   <div class="background">
     <div class="switch" />
   </div>

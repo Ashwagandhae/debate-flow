@@ -329,15 +329,17 @@
         <!-- <Overlay background={lineColor} /> -->
       </div>
 
-      <Text
-        on:keydown={handleKeydown}
-        on:beforeinput={handleBeforeinput}
-        on:blur={handleBlur}
-        on:focus={handleFocus}
-        bind:value={content}
-        bind:this={textarea}
-        {placeholder}
-      />
+      <div class="text">
+        <Text
+          on:keydown={handleKeydown}
+          on:beforeinput={handleBeforeinput}
+          on:blur={handleBlur}
+          on:focus={handleFocus}
+          bind:value={content}
+          bind:this={textarea}
+          {placeholder}
+        />
+      </div>
       <div
         class="line below"
         in:brIn|local
@@ -407,6 +409,10 @@
     position: relative;
     border-radius: var(--border-radius-small);
     color: var(--this-text);
+  }
+  .text {
+    padding: var(--padding);
+    position: relative;
   }
 
   .childFocus > .content,

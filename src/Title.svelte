@@ -96,7 +96,7 @@
   }
   .content {
     width: 100%;
-    padding: 0 var(--padding);
+    padding: var(--padding) var(--padding);
     border-radius: var(--border-radius);
     color: var(--this-text);
     transition: background var(--transition-speed);

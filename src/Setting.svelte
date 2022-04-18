@@ -11,7 +11,7 @@
 
   let value = setting.value;
 
-  function setValue(value: number | boolean) {
+  function setValue(value: number) {
     settings.setValue(key, value);
     value = setting.value;
   }
@@ -62,6 +62,7 @@
       bind:value
       auto={setting.auto}
       detail={setting.detail}
+      on:forceUpdate={() => setValue(value)}
     />
   {/if}
   {#if setting.type == 'slider'}

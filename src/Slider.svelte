@@ -43,7 +43,8 @@
       class="switch"
       style={`
       left: calc(var(--padding-small) + ${
-        (Math.min(value, detail.max) - detail.min) / (detail.max - detail.min)
+        (Math.max(Math.min(value, detail.max), detail.min) - detail.min) /
+        (detail.max - detail.min)
       } * (100% - var(--button-size) - var(--padding-small) * 2));
       transition: left ${drag ? '0' : 'var(--transition-speed)'}
       , background var(--transition-speed);`}

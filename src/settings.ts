@@ -1,8 +1,8 @@
 type ToggleSetting = {
   name: string;
   type: 'toggle';
-  value: boolean;
-  auto: boolean;
+  value: number;
+  auto: number;
   detail: null;
 };
 type RadioSetting = {
@@ -12,6 +12,8 @@ type RadioSetting = {
   auto: number;
   detail: {
     options: string[];
+    customOption?: boolean;
+    customOptionValue?: string;
   };
 };
 type SliderSetting = {
@@ -34,7 +36,7 @@ class Settings {
     this.data = settings;
     this.loadFromLocalStorage();
   }
-  setValue(key: string, value: number | boolean): void {
+  setValue(key: string, value: number): void {
     this.data[key].value = value;
     if (this.callbacks[key]) {
       for (let callback of this.callbacks[key]) {
@@ -62,7 +64,7 @@ class Settings {
     };
   }
   saveToLocalStorage() {
-    let jsonData: { [key: string]: number | boolean } = {};
+    let jsonData: { [key: string]: number } = {};
     for (var key in this.data) {
       if (this.data[key].value != this.data[key].auto) {
         jsonData[key] = this.data[key].value;
@@ -143,6 +145,28 @@ export let settings: Settings = new Settings({
       min: 0.2,
       max: 2,
       step: 0.01,
+    },
+  },
+  fontWeight: {
+    name: 'Font weight',
+    type: 'slider',
+    value: 300,
+    auto: 300,
+    detail: {
+      min: 100,
+      max: 900,
+      step: 50,
+    },
+  },
+  fontFamily: {
+    name: 'Font',
+    type: 'radio',
+    value: 0,
+    auto: 0,
+    detail: {
+      options: ['Merriweather Sans', 'Helvetica', 'Georgia', 'Courier New'],
+      customOption: true,
+      customOptionValue: '',
     },
   },
   borderRadius: {

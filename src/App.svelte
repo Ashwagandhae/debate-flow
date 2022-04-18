@@ -10,7 +10,8 @@
   import Settings from './Settings.svelte';
   import Tab from './Tab.svelte';
   import { screenTransition } from './transition';
-  import { onDestroy } from 'svelte';
+  import { onDestroy, SvelteComponent } from 'svelte';
+
   import {
     activeMouse,
     flows,
@@ -67,6 +68,10 @@
       name: 'font-size',
       unit: 'rem',
     },
+    fontWeight: {
+      name: 'font-weight',
+      unit: '',
+    },
     gap: {
       name: 'gap',
       unit: 'px',
@@ -78,6 +83,33 @@
       let value = settings.data[key].value;
       let unit = cssVarIndex[key].unit;
       document.body.style.setProperty(`--${name}`, `${value}${unit}`);
+    })
+  );
+  onDestroy(
+    settings.subscribe(['fontFamily'], function (key: string) {
+      let setting = settings.data.fontFamily;
+      if (setting.type != 'radio') return;
+      let index = setting.value;
+      let chosenFont: string;
+      if (
+        setting.detail.customOption &&
+        setting.detail.options.length == index
+      ) {
+        chosenFont = setting.detail.customOptionValue;
+      } else if (setting.detail.options[index]) {
+        chosenFont = setting.detail.options[index];
+      }
+      if (chosenFont) {
+        document.body.style.setProperty(
+          '--font-family',
+          `'${chosenFont}', 'Merriweather Sans', sans-serif`
+        );
+      } else {
+        document.body.style.setProperty(
+          '--font-family',
+          `'Merriweather Sans', sans-serif`
+        );
+      }
     })
   );
 
@@ -182,10 +214,14 @@
     popups.splice(index, 1);
     popups = popups;
   }
-  function openPopup(component: Uploader | Downloader | Settings) {
+  function openPopup(component: any) {
     popups.push(component);
     popups = popups;
   }
+  // todos:
+  // debate style settings
+  // add tooltip command for create flow buttons
+  // add settings shortcut
 </script>
 
 <svelte:body
@@ -427,9 +463,9 @@
     --title-height: calc(35px + var(--padding) * 2);
     --view-height: calc(var(--main-height) - var(--title-height) - var(--gap));
     --font-size: 0.9rem;
-    --font-weight: 300;
     --font-weight-bold: 700;
     --font-family: 'Merriweather Sans', sans-serif;
+    --font-weight: 300;
     --border-radius: 12px;
     --border-radius-small: calc(var(--border-radius) / 2);
     --button-size: 20px;

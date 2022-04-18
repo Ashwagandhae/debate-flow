@@ -4,7 +4,7 @@ import { backIn } from 'svelte/easing';
 import { backOut } from 'svelte/easing';
 import { settings } from './settings';
 
-export function boxIn(node: HTMLElement) {
+export function boxIn(node: HTMLElement, _: { delay?: number }) {
   const h = node.clientHeight;
   return {
     duration: settings.data.transitionSpeed.value,
@@ -12,7 +12,7 @@ export function boxIn(node: HTMLElement) {
       const eased = quadOut(t);
 
       return `
-        height: ${eased * h}px;
+        height: calc(${eased * h}px - var(--padding) * 2);
         overflow: visible;
         clip-path: inset(${(1 - eased) * h - 2}px 0 -${h}px 0);
         transform: translateY(${(1 - eased) * -h}px);
@@ -20,7 +20,7 @@ export function boxIn(node: HTMLElement) {
     },
   };
 }
-export function boxOut(node: HTMLElement) {
+export function boxOut(node: HTMLElement, _: { delay?: number }) {
   const h = node.clientHeight;
   return {
     duration: settings.data.transitionSpeed.value,
@@ -35,7 +35,7 @@ export function boxOut(node: HTMLElement) {
     },
   };
 }
-export function boxButtonIn(node: HTMLElement) {
+export function boxButtonIn(node: HTMLElement, _: { delay?: number }) {
   return {
     duration: settings.data.transitionSpeed.value,
     css: (t: number) => {
@@ -45,7 +45,7 @@ export function boxButtonIn(node: HTMLElement) {
     },
   };
 }
-export function brIn(node: HTMLElement) {
+export function brIn(node: HTMLElement, _: { delay?: number }) {
   return {
     duration: settings.data.transitionSpeed.value,
     css: (t: number) => {
@@ -59,7 +59,7 @@ export function brIn(node: HTMLElement) {
   };
 }
 
-export function brOut(node: HTMLElement) {
+export function brOut(node: HTMLElement, _: { delay?: number }) {
   return {
     duration: settings.data.transitionSpeed.value,
     css: (t: number) => {
@@ -72,7 +72,7 @@ export function brOut(node: HTMLElement) {
   };
 }
 
-export function tabIn(node: HTMLElement) {
+export function tabIn(node: HTMLElement, _: { delay?: number }) {
   const h = node.clientHeight;
   return {
     duration: settings.data.transitionSpeed.value,
@@ -86,7 +86,7 @@ export function tabIn(node: HTMLElement) {
     },
   };
 }
-export function flowIn(node: HTMLElement) {
+export function flowIn(node: HTMLElement, _: { delay?: number }) {
   return {
     duration: settings.data.transitionSpeed.value,
     css: (t: number) => {
@@ -98,7 +98,7 @@ export function flowIn(node: HTMLElement) {
     },
   };
 }
-export function flowOut(node: HTMLElement) {
+export function flowOut(node: HTMLElement, _: { delay?: number }) {
   return {
     duration: settings.data.transitionSpeed.value,
     css: (t: number) => {
@@ -111,7 +111,7 @@ export function flowOut(node: HTMLElement) {
   };
 }
 
-export function tooltipTransition(node: HTMLElement) {
+export function tooltipTransition(node: HTMLElement, _: { delay?: number }) {
   return {
     duration: settings.data.transitionSpeed.value,
     css: (t: number) => {
@@ -125,7 +125,7 @@ export function tooltipTransition(node: HTMLElement) {
   };
 }
 
-export function popupTransition(node: HTMLElement) {
+export function popupTransition(node: HTMLElement, _: { delay?: number }) {
   return {
     duration: settings.data.transitionSpeed.value,
     css: (t: number) => {
@@ -138,7 +138,7 @@ export function popupTransition(node: HTMLElement) {
     },
   };
 }
-export function screenTransition(node: HTMLElement) {
+export function screenTransition(node: HTMLElement, _: { delay?: number }) {
   return {
     duration: settings.data.transitionSpeed.value,
     css: (t: number) => {
