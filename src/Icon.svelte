@@ -105,6 +105,6 @@
   svg {
     display: block;
     margin: auto;
-    stroke: var(--this-text);
+    stroke: currentColor;
   }
 </style>

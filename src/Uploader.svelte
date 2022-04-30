@@ -5,6 +5,7 @@
 
   function openUploadDialog() {
     document.getElementById('uploadId').click();
+    closePopup();
   }
 </script>
 

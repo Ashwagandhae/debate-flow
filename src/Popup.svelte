@@ -1,6 +1,6 @@
 <script lang="ts">
   import Button from './Button.svelte';
-  import { popupTransition } from './transition';
+  import { popupIn, popupOut } from './transition';
   export let component: any;
   export let closeSelf: () => void;
 
@@ -12,7 +12,7 @@
 </script>
 
 <svelte:window on:keydown={handleKeydown} />
-<div class="top" transition:popupTransition>
+<div class="top" in:popupIn out:popupOut>
   <div class="close">
     <Button icon="delete" tooltip="close" on:click={closeSelf} />
   </div>

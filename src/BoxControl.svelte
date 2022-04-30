@@ -32,7 +32,7 @@
     // if target isn't only child of first level
     if (childrenClone.length > 1 || parent.level >= 1) {
       // add to history
-      $flows[$selected].history.add('delete', flow.lastFocus, {
+      flow.history.add('delete', flow.lastFocus, {
         box: childrenClone[target.index],
       });
       // unfocus target
@@ -76,7 +76,7 @@
         childrenClone[i].index = i;
       }
       // add to history
-      $flows[$selected].history.add('add', [...flow.lastFocus, 0]);
+      flow.history.add('add', [...flow.lastFocus, 0]);
 
       target.children = [...childrenClone];
       flow = flow;
@@ -106,7 +106,7 @@
     } else {
       newPath[newPath.length - 1] += 1;
     }
-    $flows[$selected].history.add('add', newPath);
+    flow.history.add('add', newPath);
     parent.children = [...childrenClone];
     flow = flow;
   }
@@ -120,17 +120,16 @@
     <ButtonBar>
       <Button
         icon="undo"
-        disabled={$flows[$selected].history.index == -1}
-        on:click={() => $flows[$selected].history.undo()}
+        disabled={flow.history.index == -1}
+        on:click={() => flow.history.undo()}
         tooltip="undo"
         shortcut={['cmd', 'z']}
         disabledReason="nothing to undo"
       />
       <Button
-        disabled={$flows[$selected].history.index ==
-          $flows[$selected].history.data.length - 1}
+        disabled={flow.history.index == flow.history.data.length - 1}
         icon="redo"
-        on:click={() => $flows[$selected].history.redo()}
+        on:click={() => flow.history.redo()}
         tooltip="redo"
         shortcut={['cmd', 'shift', 'z']}
         disabledReason="nothing to redo"

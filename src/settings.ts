@@ -1,26 +1,24 @@
-type ToggleSetting = {
+type SettingBasic = {
   name: string;
-  type: 'toggle';
   value: number;
   auto: number;
+  type: string;
+  info?: string;
+};
+type ToggleSetting = SettingBasic & {
+  type: 'toggle';
   detail: null;
 };
-type RadioSetting = {
-  name: string;
+type RadioSetting = SettingBasic & {
   type: 'radio';
-  value: number;
-  auto: number;
   detail: {
     options: string[];
     customOption?: boolean;
     customOptionValue?: string;
   };
 };
-type SliderSetting = {
-  name: string;
+type SliderSetting = SettingBasic & {
   type: 'slider';
-  value: number;
-  auto: number;
   detail: {
     min: number;
     max: number;
@@ -92,13 +90,34 @@ class Settings {
   }
 }
 export let settings: Settings = new Settings({
+  debateStyle: {
+    name: 'Debate Style',
+    type: 'radio',
+    value: 0,
+    auto: 0,
+    detail: {
+      options: ['Policy', 'Public forum', 'Lincoln douglass'],
+    },
+    info: "Already created flows won't be affected by this setting",
+  },
   colorTheme: {
     name: 'Color theme',
     type: 'radio',
     value: 0,
     auto: 0,
     detail: {
-      options: ['System Default', 'Light theme', 'Dark theme'],
+      options: ['System default', 'Light theme', 'Dark theme'],
+    },
+  },
+  columnWidth: {
+    name: 'Column width',
+    type: 'slider',
+    value: 150,
+    auto: 150,
+    detail: {
+      min: 50,
+      max: 300,
+      step: 1,
     },
   },
   accentHue: {
@@ -112,6 +131,7 @@ export let settings: Settings = new Settings({
       step: 1,
       hue: true,
     },
+    info: 'This color will be used for aff',
   },
   accentSecondaryHue: {
     name: 'Secondary color hue',
@@ -124,6 +144,7 @@ export let settings: Settings = new Settings({
       step: 1,
       hue: true,
     },
+    info: 'This color will be used for neg',
   },
   transitionSpeed: {
     name: 'Transition duration',
@@ -168,6 +189,7 @@ export let settings: Settings = new Settings({
       customOption: true,
       customOptionValue: '',
     },
+    info: 'Type in a custom font name if it is installed on your computer',
   },
   borderRadius: {
     name: 'Border radius',

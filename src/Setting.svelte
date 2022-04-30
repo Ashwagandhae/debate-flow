@@ -52,8 +52,12 @@
         on:click={resetValue}
       />
     </div>
+
     {#if setting.type == 'toggle'}
       <Toggle bind:value auto={setting.auto} />
+    {/if}
+    {#if setting.info}
+      <p>{setting.info}</p>
     {/if}
   </span>
   {#if setting.type == 'radio'}
@@ -86,6 +90,18 @@
     align-items: center;
     padding-bottom: var(--padding-big);
     height: 100%;
+  }
+  .above > h1 {
+    width: max-content;
+    white-space: nowrap;
+  }
+  .above > p {
+    color: var(--this-text-weak);
+    opacity: 0;
+    transition: opacity var(--transition-speed);
+  }
+  .top:hover .above > p {
+    opacity: 1;
   }
   .hidden {
     color: var(--this-text-weak);

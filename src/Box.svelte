@@ -1,12 +1,13 @@
 <script lang="ts">
   import Text from './Text.svelte';
   import Icon from './Icon.svelte';
-  import { getContext, onMount, tick } from 'svelte';
+  import { getContext, onMount, tick, onDestroy } from 'svelte';
   import { createEventDispatcher } from 'svelte';
   import { activeMouse, flows, selected, newBox } from './stores';
   import { Box } from './types';
 
   import { boxIn, boxOut, boxButtonIn, brIn, brOut } from './transition';
+  import { settings } from './settings';
 
   const dispatch = createEventDispatcher();
 
@@ -507,6 +508,7 @@
     background-color: var(--this-background);
     box-sizing: border-box;
     height: calc(1em + var(--padding) * 2);
+    color: var(--this-text);
   }
   .focus > .content > .add,
   .activeMouse .add:hover {

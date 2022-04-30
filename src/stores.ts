@@ -1,28 +1,47 @@
 import { writable } from 'svelte/store';
 import { Box, Flow } from './types';
+import { settings } from './settings';
 
 export const activeMouse = writable(true);
 export const flows = writable([]);
 export let selected = writable(0);
-export const flowTypes = writable({
-  aff: {
-    columns: ['1AC', '1NC', '2AC', '2NC/1NR', '1AR', '2NR', '2AR'],
-    invert: false,
+let debateStyles = {
+  policy: {
+    aff: {
+      columns: ['1AC', '1NC', '2AC', '2NC/1NR', '1AR', '2NR', '2AR'],
+      invert: false,
+    },
+    neg: {
+      columns: ['1NC', '2AC', '2NC/1NR', '1AR', '2NR', '2AR'],
+      invert: true,
+    },
   },
-  neg: {
-    columns: ['1NC', '2AC', '2NC/1NR', '1AR', '2NR', '2AR'],
-    invert: true,
+  publicForum: {
+    aff: {
+      columns: ['1AC', '1NC', '2AC', '2NC', 'AS', 'NS', 'AFF', 'NFF'],
+      invert: false,
+    },
+    neg: {
+      columns: ['1NC', '2AC', '2NC', 'AS', 'NS', 'AFF', 'NFF'],
+      invert: true,
+    },
   },
-});
+  lincolnDouglas: {
+    aff: {
+      columns: ['AC', 'NC', '1AR', '1NR', '2AR'],
+      invert: false,
+    },
+    neg: {
+      columns: ['NC', '1AR', '1NR', '2AR'],
+      invert: true,
+    },
+  },
+};
+let debateStyleIndex = ['policy', 'publicForum', 'lincolnDouglas'];
 
 let $flows: Flow[];
 flows.subscribe((value) => {
   $flows = value;
-});
-
-let $flowTypes: { [key: string]: { columns: string[]; invert: boolean } };
-flowTypes.subscribe((value) => {
-  $flowTypes = value;
 });
 
 export function newBox(index: number, level: number, focus: boolean) {
@@ -35,14 +54,16 @@ export function newBox(index: number, level: number, focus: boolean) {
   };
 }
 export function newFlow(index: number, type: string) {
+  let currentDebateStyle =
+    debateStyles[debateStyleIndex[settings.data.debateStyle.value]];
   return <Flow>{
     content: '',
     level: 0,
-    columns: $flowTypes[type].columns,
-    invert: $flowTypes[type].invert,
+    columns: currentDebateStyle[type].columns,
+    invert: currentDebateStyle[type].invert,
     focus: true,
     index: index,
-    lastFocus: undefined,
+    lastFocus: [index],
     children: [newBox(0, 1, false)],
     history: new History(),
   };
@@ -51,7 +72,10 @@ export function newFlow(index: number, type: string) {
 export function boxFromPath(path: number[], scope: number = 0): Flow | Box {
   let ret: Flow | Box = $flows[path[0]];
   for (let i = 1; i < path.length - scope; i++) {
-    ret = ret.children[path[i]];
+    ret = ret?.children[path[i]];
+    if (!ret) {
+      return null;
+    }
   }
 
   return ret;

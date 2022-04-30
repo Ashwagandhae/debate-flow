@@ -1,5 +1,7 @@
 <script lang="ts">
   import Text from './Text.svelte';
+  import Button from './Button.svelte';
+  import ButtonBar from './ButtonBar.svelte';
   import { flows, selected } from './stores';
   import { Flow, Box } from './types';
   import { onMount } from 'svelte';
@@ -12,6 +14,7 @@
   export let index: number;
   export let focus: boolean;
   export let invert: boolean;
+  export let deleteSelf: () => void = () => {};
   $: path = [index];
 
   let textarea: Text;
@@ -40,6 +43,8 @@
     if (focus) {
       $flows[$selected].history.addFocus([...path]);
       dispatch('saveFocus', path);
+      $flows[$selected].lastFocus = [...path];
+      $flows[$selected] = $flows[$selected];
       textarea && textarea.focus();
     } else {
       hasSentEdit = false;
@@ -71,18 +76,23 @@
   }
 </script>
 
-<div class={`top palette-${palette}`} class:invert>
-  <div class="content" class:focus>
-    <Text
-      on:blur={handleBlur}
-      on:focus={handleFocus}
-      on:keydown={handleKeydown}
-      on:beforeinput={handleBeforeinput}
-      bind:value={content}
-      bind:this={textarea}
-      nowrap
-      placeholder="type name here"
-    />
+<div class={`top`} class:invert>
+  <div class={`content palette-${palette}`}>
+    <div class="text" class:focus>
+      <Text
+        on:blur={handleBlur}
+        on:focus={handleFocus}
+        on:keydown={handleKeydown}
+        on:beforeinput={handleBeforeinput}
+        bind:value={content}
+        bind:this={textarea}
+        nowrap
+        placeholder="type name here"
+      />
+    </div>
+    <ButtonBar>
+      <Button on:click={deleteSelf} icon="delete" tooltip="delete flow" />
+    </ButtonBar>
   </div>
 </div>
 
@@ -96,12 +106,20 @@
   }
   .content {
     width: 100%;
+    color: var(--this-text);
+    display: flex;
+    flex-direction: row;
+    gap: var(--padding);
+    padding-right: var(--padding);
+  }
+  .text {
     padding: var(--padding) var(--padding);
     border-radius: var(--border-radius);
-    color: var(--this-text);
-    transition: background var(--transition-speed);
+
+    width: 100%;
   }
-  .content.focus {
+  .text.focus {
     background-color: var(--this-background-active);
+    transition: background var(--transition-speed);
   }
 </style>

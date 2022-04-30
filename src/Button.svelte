@@ -6,11 +6,11 @@
   export let text: string = null;
   export let tooltip: string = null;
   export let disabled: boolean | string = false;
-  export let palette: string = 'plain';
   export let shortcut: string[] = null;
+  export let palette: string = null;
   export let disabledReason: string = 'disabled';
   export let tooltipLayout: string = 'bottom';
-  function preventBlur(e) {
+  function preventBlur(e: MouseEvent) {
     e.preventDefault();
   }
 </script>
@@ -22,7 +22,7 @@
   layout={tooltipLayout}
 >
   <button
-    class={`top palette-${disabled ? 'disabled' : palette}`}
+    class={`top ${palette ? 'palette-' + palette : ''}`}
     class:disabled
     on:click
     on:mousedown={preventBlur}
@@ -56,6 +56,9 @@
     font-weight: var(--font-weight);
     color: var(--this-text);
     transition: background var(--transition-speed);
+  }
+  .top.disabled {
+    color: var(--this-text-weak);
   }
   p {
     display: block;

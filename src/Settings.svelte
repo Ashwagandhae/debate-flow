@@ -51,8 +51,8 @@
 
 <style>
   .top {
-    width: clamp(400px, 60vw, 2000px);
-    height: clamp(400px, 80vh, 1000px);
+    width: clamp(500px, 80vw, 3000px);
+    height: clamp(300px, 90vh, 2000px);
     display: grid;
     grid-template-columns: calc(max(150px, 20%) + var(--padding-big)) 1fr;
   }

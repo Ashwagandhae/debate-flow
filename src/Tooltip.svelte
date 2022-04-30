@@ -111,6 +111,7 @@
     position: fixed;
     white-space: nowrap;
     z-index: 10000;
+    font-size: var(--font-size);
     box-shadow: var(--box-shadow);
   }
   .disabled {

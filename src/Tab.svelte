@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { tabIn } from './transition';
+  import { tabIn, tabOut } from './transition';
   import { Flow } from './types';
 
   export let flow: Flow;
@@ -15,7 +15,12 @@
   }
 </script>
 
-<div class={`top palette-${palette}`} in:tabIn class:invert={flow.invert}>
+<div
+  class={`top palette-${palette}`}
+  in:tabIn
+  out:tabOut
+  class:invert={flow.invert}
+>
   <button class:selected class:empty={flow.content.length == 0} on:click>
     {#if flow.content}
       {flow.content}
@@ -29,6 +34,7 @@
   .top {
     margin-bottom: var(--padding);
     border-radius: var(--border-radius-small);
+    flex: 1;
   }
   button {
     border: none;
@@ -42,6 +48,7 @@
     overflow-wrap: break-word;
     transition: background var(--transition-speed);
     font-weight: var(--font-weight);
+    margin-bottom: var(--padding);
   }
   button.empty {
     color: var(--this-text-weak);

@@ -15,7 +15,7 @@
   }
   let textarea: HTMLTextAreaElement;
 
-  function autoHeight() {
+  export function autoHeight() {
     if (textarea) {
       textarea.value = textarea.value.replace(/\r?\n|\r/g, '');
       textarea.style.height = '0px';
@@ -25,11 +25,7 @@
   afterUpdate(function () {
     autoHeight();
   });
-  onDestroy(
-    settings.subscribe(['fontSize'], function () {
-      autoHeight();
-    })
-  );
+  onDestroy(settings.subscribe(['fontSize'], autoHeight));
   export const focus = () => {
     textarea.focus();
   };

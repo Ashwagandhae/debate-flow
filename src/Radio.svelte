@@ -60,6 +60,7 @@
             nowrap={true}
             bind:value={detail.customOptionValue}
             on:input={() => dispatch('forceUpdate')}
+            on:focus={() => (value = detail.options.length)}
           />
           {#if detail.customOptionValue != ''}
             <p class="option-info">custom</p>

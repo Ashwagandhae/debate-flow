@@ -80,6 +80,22 @@ export function tabIn(node: HTMLElement, _: { delay?: number }) {
       const eased = quadOut(t);
       return `
         height: ${h * eased}px;
+        margin-bottom: calc(${eased} * var(--padding));
+        overflow: hidden;
+        transform: translateX(${-100 * (1 - eased)}%);
+      `;
+    },
+  };
+}
+export function tabOut(node: HTMLElement, _: { delay?: number }) {
+  const h = node.clientHeight;
+  return {
+    duration: settings.data.transitionSpeed.value,
+    css: (t: number) => {
+      const eased = quadOut(t);
+      return `
+        height: ${h * eased}px;
+        margin-bottom: calc(${eased} * var(--padding));
         overflow: hidden;
         transform: translateX(${-100 * (1 - eased)}%);
       `;
@@ -125,7 +141,20 @@ export function tooltipTransition(node: HTMLElement, _: { delay?: number }) {
   };
 }
 
-export function popupTransition(node: HTMLElement, _: { delay?: number }) {
+export function popupIn(node: HTMLElement, _: { delay?: number }) {
+  return {
+    duration: settings.data.transitionSpeed.value,
+    css: (t: number) => {
+      const eased = quadOut(t);
+
+      return `
+        transform: scale(${eased});
+        opacity: ${t};
+      `;
+    },
+  };
+}
+export function popupOut(node: HTMLElement, _: { delay?: number }) {
   return {
     duration: settings.data.transitionSpeed.value,
     css: (t: number) => {

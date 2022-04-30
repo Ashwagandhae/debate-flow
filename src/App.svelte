@@ -10,7 +10,7 @@
   import Settings from './Settings.svelte';
   import Tab from './Tab.svelte';
   import { screenTransition } from './transition';
-  import { onDestroy, SvelteComponent } from 'svelte';
+  import { onDestroy, tick } from 'svelte';
 
   import {
     activeMouse,
@@ -55,6 +55,10 @@
     transitionSpeed: {
       name: 'transition-speed',
       unit: 'ms',
+    },
+    columnWidth: {
+      name: 'column-width',
+      unit: 'px',
     },
     borderRadius: {
       name: 'border-radius',
@@ -123,15 +127,21 @@
     if (lastFocus) {
       lastFocus.focus = true;
     } else {
-      $flows[$selected].children[0].focus = true;
+      $flows[$selected].focus = true;
     }
     $flows = $flows;
   }
   function blurFlow() {
-    let lastFocus =
-      $flows[$selected]?.lastFocus && boxFromPath($flows[$selected]?.lastFocus);
-    if (lastFocus) {
+    if ($flows.length > 0) {
+      let lastFocus =
+        $flows[$selected]?.lastFocus &&
+        boxFromPath($flows[$selected]?.lastFocus);
+      if (!lastFocus) {
+        lastFocus = $flows[$selected];
+      }
       lastFocus.focus = false;
+      lastFocus = lastFocus;
+      (document.activeElement as HTMLElement).blur();
     }
   }
   function addFlow(type: string) {
@@ -139,6 +149,19 @@
     $flows.push(newFlow($flows.length, type));
     $selected = $flows.length - 1;
     $flows = $flows;
+  }
+  async function deleteFlow(index: number) {
+    blurFlow();
+    $flows.splice(index, 1);
+    if (index == 0) {
+      $selected = 0;
+    } else {
+      $selected = index - 1;
+    }
+    $flows = $flows;
+    if ($flows.length > 0) {
+      focusFlow();
+    }
   }
   function handleMouseMove(e: MouseEvent) {
     $activeMouse = true;
@@ -165,7 +188,7 @@
     e.preventDefault();
     let file = e.dataTransfer.files[0];
 
-    let reader = new FileReader();
+    let reader: FileReader = new FileReader();
     reader.onload = function (fileLoadedEvent) {
       handleUpload(fileLoadedEvent.target.result.toString());
     };
@@ -219,9 +242,14 @@
     popups = popups;
   }
   // todos:
-  // debate style settings
+  // add delete flow ability
   // add tooltip command for create flow buttons
-  // add settings shortcut
+  // add changes you made may not be saved
+  // add settings shortcut (cmd ,)
+  // add temp hide settings button
+  // add command f
+  // add capitalization
+  // add set up
 </script>
 
 <svelte:body
@@ -285,37 +313,38 @@
           {/each}
           <div class="add-tab">
             <Button
-              text="on case"
+              text="aff"
               palette="accent"
               icon="add"
               on:click={() => addFlow('aff')}
-              tooltip="create new oncase flow"
+              tooltip="create new aff flow"
             />
             <Button
-              text="off case"
+              text="neg"
               palette="accent-secondary"
               icon="add"
               on:click={() => addFlow('neg')}
-              tooltip="create new offcase flow"
+              tooltip="create new neg flow"
             />
           </div>
         </ul>
       </div>
     </div>
-    {#if $flows.length > 0}
-      <div class="title">
-        <Title
-          bind:content={$flows[$selected].content}
-          bind:children={$flows[$selected].children}
-          bind:index={$flows[$selected].index}
-          bind:focus={$flows[$selected].focus}
-          bind:invert={$flows[$selected].invert}
-        />
-      </div>
-      <div class="box-control">
-        <BoxControl bind:flow={$flows[$selected]} />
-      </div>
+    {#if $flows.length > 0 && $flows[$selected]}
       {#key $selected}
+        <div class="title">
+          <Title
+            bind:content={$flows[$selected].content}
+            bind:children={$flows[$selected].children}
+            bind:index={$flows[$selected].index}
+            bind:focus={$flows[$selected].focus}
+            bind:invert={$flows[$selected].invert}
+            deleteSelf={() => deleteFlow($selected)}
+          />
+        </div>
+        <div class="box-control">
+          <BoxControl bind:flow={$flows[$selected]} />
+        </div>
         <div class="flow">
           <Flow on:focusFlow={focusFlow} bind:root={$flows[$selected]} />
         </div>
@@ -381,8 +410,9 @@
 
   .add-tab {
     display: flex;
-    flex-wrap: wrap;
-    gap: var(--padding);
+    /* flex-wrap: wrap; */
+    /* justify-content: center; */
+    align-items: stretch;
   }
   .title {
     background: var(--background);
@@ -483,7 +513,7 @@
     --background-indent: hsl(0 0% 92%);
     --background-active: hsl(0 0% 84%);
 
-    --background-secondary: hsl(0 0% 97%);
+    --background-secondary: hsl(0 0% 98%);
     --background-secondary-indent: hsl(0 0% 89%);
     --background-secondary-active: hsl(0 0% 81%);
 
@@ -527,12 +557,12 @@
     --color-accent-secondary: hsl(var(--accent-secondary-hue), 80%, 70%);
     --color-accent-secondary-fade: hsl(var(--accent-secondary-hue), 90%, 85%);
 
-    --color-screen: hsl(0 0% 0%/ 0.3);
-
     --slider-lightness: 90%;
     --slider-lightness-hover: 85%;
     --slider-saturation: 80%;
     --slider-switch-lightness: 70%;
+
+    --color-screen: hsl(0 0% 0%/ 0.3);
   }
   :global(body.dark) {
     --background-back: hsl(0 0% 10%);
@@ -557,11 +587,11 @@
 
     --text: hsl(0, 0%, 80%);
     --text-select: hsl(0, 0%, 100%, 30%);
-    --text-weak: hsl(0, 0%, 40%);
+    --text-weak: hsl(0, 0%, 50%);
 
     --text-accent: hsl(var(--accent-hue), 60%, 80%);
     --text-accent-select: hsl(var(--accent-hue), 80%, 60%, 30%);
-    --text-accent-weak: hsl(var(--accent-hue), 15%, 40%);
+    --text-accent-weak: hsl(var(--accent-hue), 15%, 50%);
 
     --text-accent-secondary: hsl(var(--accent-secondary-hue), 60%, 80%);
     --text-accent-secondary-select: hsl(
@@ -570,7 +600,7 @@
       60%,
       30%
     );
-    --text-accent-secondary-weak: hsl(var(--accent-secondary-hue), 15%, 40%);
+    --text-accent-secondary-weak: hsl(var(--accent-secondary-hue), 15%, 50%);
 
     --color: hsl(0, 0%, 42%);
     --color-fade: hsl(0, 0%, 32%);
@@ -581,12 +611,12 @@
     --color-accent-secondary: hsl(var(--accent-secondary-hue), 40%, 42%);
     --color-accent-secondary-fade: hsl(var(--accent-secondary-hue), 25%, 32%);
 
-    --color-screen: hsl(0 0% 0%/ 0.4);
-
     --slider-lightness: 24%;
     --slider-lightness-hover: 30%;
     --slider-saturation: 20%;
     --slider-switch-lightness: 42%;
+
+    --color-screen: hsl(0 0% 0%/ 0.4);
   }
   :global(.palette-plain) {
     --this-background: var(--background);
