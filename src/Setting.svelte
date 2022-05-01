@@ -9,9 +9,9 @@
   export let setting: Setting;
   export let key: string;
 
-  let value = setting.value;
+  let value: any = setting.value;
 
-  function setValue(value: number) {
+  function setValue(value: any) {
     settings.setValue(key, value);
     value = setting.value;
   }

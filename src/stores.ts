@@ -5,6 +5,7 @@ import { settings } from './settings';
 export const activeMouse = writable(true);
 export const flows = writable([]);
 export let selected = writable(0);
+export let changesSaved = writable(false);
 let debateStyles = {
   policy: {
     aff: {
@@ -101,6 +102,7 @@ export class History {
     return this.data[this.index];
   }
   add(type: string, path: number[], other?: any) {
+    changesSaved.set(false);
     this.resolveAllPending();
     let action: Action = {
       type: type,
@@ -116,6 +118,7 @@ export class History {
     this.index = this.data.length - 1;
   }
   addPending(type: string, path: number[], other?: any) {
+    changesSaved.set(false);
     this.data = this.data.slice(0, this.index + 1);
     this.data.push({
       type: type,

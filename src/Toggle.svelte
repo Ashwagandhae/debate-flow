@@ -1,6 +1,6 @@
 <script lang="ts">
-  export let value: number = 1;
-  export let auto: number = 1;
+  export let value: boolean = true;
+  export let auto: boolean = true;
 
   let palette: string;
   $: if (value) {
@@ -12,12 +12,10 @@
   } else {
     palette = 'plain';
   }
-  let booleanValue = value ? true : false;
-  $: value = booleanValue ? 1 : 0;
 </script>
 
 <label class={`palette-${palette}`}>
-  <input type="checkbox" bind:checked={booleanValue} />
+  <input type="checkbox" bind:checked={value} />
   <div class="background">
     <div class="switch" />
   </div>

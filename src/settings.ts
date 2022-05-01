@@ -1,16 +1,19 @@
 type SettingBasic = {
   name: string;
-  value: number;
-  auto: number;
+  value: any;
+  auto: any;
   type: string;
   info?: string;
 };
 type ToggleSetting = SettingBasic & {
   type: 'toggle';
-  detail: null;
+  value: boolean;
+  auto: boolean;
 };
 type RadioSetting = SettingBasic & {
   type: 'radio';
+  value: number;
+  auto: number;
   detail: {
     options: string[];
     customOption?: boolean;
@@ -19,6 +22,8 @@ type RadioSetting = SettingBasic & {
 };
 type SliderSetting = SettingBasic & {
   type: 'slider';
+  value: number;
+  auto: number;
   detail: {
     min: number;
     max: number;
@@ -34,7 +39,7 @@ class Settings {
     this.data = settings;
     this.loadFromLocalStorage();
   }
-  setValue(key: string, value: number): void {
+  setValue(key: string, value: any): void {
     this.data[key].value = value;
     if (this.callbacks[key]) {
       for (let callback of this.callbacks[key]) {
@@ -156,6 +161,12 @@ export let settings: Settings = new Settings({
       max: 1000,
       step: 1,
     },
+  },
+  useTooltips: {
+    name: 'Use tooltips',
+    type: 'toggle',
+    value: true,
+    auto: true,
   },
   fontSize: {
     name: 'Font size',

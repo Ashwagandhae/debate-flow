@@ -11,7 +11,6 @@
   import Tab from './Tab.svelte';
   import { screenTransition } from './transition';
   import { onDestroy, tick } from 'svelte';
-
   import {
     activeMouse,
     flows,
@@ -19,6 +18,7 @@
     boxFromPath,
     newFlow,
     History,
+    changesSaved,
   } from './stores';
   import { settings } from './settings';
 
@@ -170,10 +170,10 @@
     $activeMouse = false;
     if (e.ctrlKey && e.shiftKey && e.key == 'N') {
       e.preventDefault();
-      addFlow('aff');
+      addFlow('neg');
     } else if (e.ctrlKey && e.key == 'n') {
       e.preventDefault();
-      addFlow('neg');
+      addFlow('aff');
     }
     if (e.metaKey && e.shiftKey && e.key == 'z') {
       e.preventDefault();
@@ -241,15 +241,20 @@
     popups.push(component);
     popups = popups;
   }
+  // changes you made may not be saved
+  window.addEventListener('beforeunload', function (e) {
+    if ($flows.length > 0 && !$changesSaved) {
+      let confirmationMessage = 'Are you sure you want to leave?';
+      (e || window.event).returnValue = confirmationMessage; // Gecko + IE
+      return confirmationMessage; // Gecko + Webkit, Safari, Chrome etc.
+    }
+  });
   // todos:
-  // add delete flow ability
-  // add tooltip command for create flow buttons
-  // add changes you made may not be saved
-  // add settings shortcut (cmd ,)
+  // add set up
   // add temp hide settings button
   // add command f
   // add capitalization
-  // add set up
+  // add settings shortcut (cmd ,)
 </script>
 
 <svelte:body
@@ -318,6 +323,7 @@
               icon="add"
               on:click={() => addFlow('aff')}
               tooltip="create new aff flow"
+              shortcut={['control', 'n']}
             />
             <Button
               text="neg"
@@ -325,6 +331,7 @@
               icon="add"
               on:click={() => addFlow('neg')}
               tooltip="create new neg flow"
+              shortcut={['control', 'shift', 'n']}
             />
           </div>
         </ul>

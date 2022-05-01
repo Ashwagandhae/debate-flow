@@ -123,7 +123,7 @@
         disabled={flow.history.index == -1}
         on:click={() => flow.history.undo()}
         tooltip="undo"
-        shortcut={['cmd', 'z']}
+        shortcut={['command', 'z']}
         disabledReason="nothing to undo"
       />
       <Button
@@ -131,7 +131,7 @@
         icon="redo"
         on:click={() => flow.history.redo()}
         tooltip="redo"
-        shortcut={['cmd', 'shift', 'z']}
+        shortcut={['command', 'shift', 'z']}
         disabledReason="nothing to redo"
       />
       <Button
@@ -140,7 +140,7 @@
         disabled={!validFocus}
         {disabledReason}
         tooltip="add response"
-        shortcut={['shift', 'enter']}
+        shortcut={['shift', 'return']}
       />
       <Button
         icon="addUp"
@@ -155,7 +155,7 @@
         disabled={!validFocus}
         {disabledReason}
         tooltip="add arguement below"
-        shortcut={['enter']}
+        shortcut={['return']}
       />
       <Button
         icon="delete"

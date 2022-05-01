@@ -1,7 +1,8 @@
 <script lang="ts">
   import { tooltipTransition } from './transition';
   import Shortcut from './Shortcut.svelte';
-  import { tick } from 'svelte';
+  import { tick, onDestroy } from 'svelte';
+  import { settings } from './settings';
 
   export let content: string;
   export let shortcut: string[];
@@ -15,6 +16,14 @@
     offsetWidth: number;
     offsetHeight: number;
   };
+
+  let useTooltips = true;
+
+  onDestroy(
+    settings.subscribe(['useTooltips'], function () {
+      useTooltips = settings.data.useTooltips.value;
+    })
+  );
 
   function mouseOver() {
     isHovered = true;
@@ -60,7 +69,7 @@
   }
 </script>
 
-{#if content}
+{#if content && useTooltips}
   <div
     class="element"
     on:mouseover={mouseOver}
