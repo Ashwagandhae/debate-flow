@@ -93,6 +93,25 @@ class Settings {
       this.setValue(key, this.data[key].auto);
     }
   }
+  randomize() {
+    for (var key in this.data) {
+      let setting = this.data[key];
+      if (setting.type == 'slider') {
+        this.setValue(
+          key,
+          setting.detail.min +
+            Math.random() * (setting.detail.max - setting.detail.min)
+        );
+      } else if (setting.type == 'radio') {
+        this.setValue(
+          key,
+          Math.floor(Math.random() * setting.detail.options.length)
+        );
+      } else if (setting.type == 'toggle') {
+        this.setValue(key, Math.random() < 0.5);
+      }
+    }
+  }
 }
 export let settings: Settings = new Settings({
   debateStyle: {

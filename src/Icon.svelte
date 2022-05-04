@@ -81,6 +81,12 @@
       name: 'check',
       svg: `<path d="M88.7817 29.2843L39.2842 78.7817L11 50.4975" stroke-width="10" stroke-linecap="round" stroke-linejoin="round"/>`,
     },
+    {
+      name: 'dots',
+      svg: `<circle cx="26.25" cy="50.25" r="5.625" stroke-width="11.25"/>
+<circle cx="71.25" cy="80.25" r="5.625" stroke-width="11.25"/>
+<circle cx="71.25" cy="20.25" r="5.625" stroke-width="11.25"/>`,
+    },
   ];
   let displayIcon: { name: string; svg: string };
   function findIcon() {

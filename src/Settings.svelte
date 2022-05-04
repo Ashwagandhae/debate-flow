@@ -1,6 +1,7 @@
 <script lang="ts">
   import Setting from './Setting.svelte';
   import Button from './Button.svelte';
+  import ButtonBar from './ButtonBar.svelte';
   import { settings } from './settings';
   import { onDestroy } from 'svelte';
 
@@ -29,11 +30,19 @@
   </div>
   <div class="content">
     <section class="controls">
-      <Button
-        icon="delete"
-        text="reset all settings"
-        on:click={() => settings.resetToAuto()}
-      />
+      <ButtonBar>
+        <Button
+          icon="delete"
+          text="reset all settings"
+          on:click={() => settings.resetToAuto()}
+        />
+        <Button
+          icon="dots"
+          text="randomize settings"
+          tooltip="why would you click this"
+          on:click={() => settings.randomize()}
+        />
+      </ButtonBar>
     </section>
     <section class="settings">
       <ul>
