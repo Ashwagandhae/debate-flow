@@ -1,9 +1,10 @@
 import { writable } from 'svelte/store';
+import type { Writable } from 'svelte/store';
 import { Box, Flow } from './types';
 import { settings } from './settings';
 
 export const activeMouse = writable(true);
-export const flows = writable([]);
+export let flows: Writable<Flow[]> = writable([]);
 export let selected = writable(0);
 export let changesSaved = writable(false);
 let debateStyles = {
@@ -23,7 +24,7 @@ let debateStyles = {
       invert: false,
     },
     neg: {
-      columns: ['1NC', '2AC', '2NC', 'AS', 'NS', 'AFF', 'NFF'],
+      columns: ['1NC', '1AC', '2NC', '2AC', 'AS', 'NS', 'AFF', 'NFF'],
       invert: true,
     },
   },
@@ -75,7 +76,7 @@ export function boxFromPath(path: number[], scope: number = 0): Flow | Box {
   for (let i = 1; i < path.length - scope; i++) {
     ret = ret?.children[path[i]];
     if (!ret) {
-      return null;
+      throw new Error('Invalid path');
     }
   }
 
@@ -84,19 +85,19 @@ export function boxFromPath(path: number[], scope: number = 0): Flow | Box {
 type Action = {
   type: string;
   path: number[];
-  lastFocus: number[];
-  nextFocus: number[];
+  lastFocus: number[] | null;
+  nextFocus: number[] | null;
   pending: boolean;
   other: any;
 };
 export class History {
   index: number;
   data: Action[];
-  lastFocus: number[];
+  lastFocus: number[] | null;
   constructor() {
     this.index = -1;
     this.data = [];
-    this.lastFocus = undefined;
+    this.lastFocus = null;
   }
   lastAction() {
     return this.data[this.index];
@@ -104,11 +105,12 @@ export class History {
   add(type: string, path: number[], other?: any) {
     changesSaved.set(false);
     this.resolveAllPending();
+    if (this.lastFocus == null) return;
     let action: Action = {
       type: type,
       path: path,
-      lastFocus: [...this.lastFocus],
-      nextFocus: undefined,
+      lastFocus: this.lastFocus == null ? null : [...this.lastFocus],
+      nextFocus: null,
       other: other,
       pending: false,
     };
@@ -123,8 +125,8 @@ export class History {
     this.data.push({
       type: type,
       path: path,
-      lastFocus: undefined,
-      nextFocus: undefined,
+      lastFocus: null,
+      nextFocus: null,
       other: other,
       pending: true,
     });
@@ -132,6 +134,7 @@ export class History {
   }
   resolveAllPending() {
     let actionHappened: boolean = false;
+    let tempData: (null | Action)[] = [...this.data];
     for (let i = 0; i < this.data.length; i++) {
       let pendingAction = this.data[i];
       if (pendingAction.pending) {
@@ -154,16 +157,16 @@ export class History {
         }
         if (shouldAdd) {
           actionHappened = true;
-          this.data[i] = action;
+          tempData[i] = action;
         } else {
-          this.data[i] = null;
+          tempData[i] = null;
           if (this.index >= i) {
             this.index -= 1;
           }
         }
       }
     }
-    this.data = this.data.filter((el) => el != null);
+    this.data = tempData.filter((el) => el != null) as Action[];
     if (actionHappened) {
       console.log('resolving all pending');
     }
