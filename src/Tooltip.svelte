@@ -90,7 +90,7 @@
       if (!$tooltipState.claimed) {
         $tooltipState.open = false;
       }
-    }, 200);
+    }, 300);
   }
 </script>
 
