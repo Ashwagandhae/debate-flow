@@ -78,7 +78,8 @@
     height: var(--button-size);
     background-color: var(--this-background-indent);
     border-radius: var(--border-radius);
-    transition: background var(--transition-speed);
+    transition: background var(--transition-speed),
+      background-image var(--transition-speed);
     margin: calc(var(--padding-small)) 0;
   }
   label.small {
@@ -111,13 +112,13 @@
   .top.hue:hover label {
     background-image: linear-gradient(
       to right,
-      hsl(360, var(--slider-saturation), var(--slider-lightness)),
-      hsl(60, var(--slider-saturation), var(--slider-lightness)),
-      hsl(120, var(--slider-saturation), var(--slider-lightness)),
-      hsl(180, var(--slider-saturation), var(--slider-lightness)),
-      hsl(240, var(--slider-saturation), var(--slider-lightness)),
-      hsl(300, var(--slider-saturation), var(--slider-lightness)),
-      hsl(360, var(--slider-saturation), var(--slider-lightness))
+      hsl(360, var(--slider-saturation), var(--slider-lightness-hover)),
+      hsl(60, var(--slider-saturation), var(--slider-lightness-hover)),
+      hsl(120, var(--slider-saturation), var(--slider-lightness-hover)),
+      hsl(180, var(--slider-saturation), var(--slider-lightness-hover)),
+      hsl(240, var(--slider-saturation), var(--slider-lightness-hover)),
+      hsl(300, var(--slider-saturation), var(--slider-lightness-hover)),
+      hsl(360, var(--slider-saturation), var(--slider-lightness-hover))
     );
   }
   .top.hue:hover label.small {

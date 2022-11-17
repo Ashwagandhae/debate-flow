@@ -4,7 +4,7 @@ import { backIn } from 'svelte/easing';
 import { backOut } from 'svelte/easing';
 import { settings } from './settings';
 
-export function boxIn(node: HTMLElement, _: { delay?: number }) {
+export function boxIn(node: HTMLElement) {
   const h = node.clientHeight;
   return {
     duration: settings.data.transitionSpeed.value,
@@ -20,7 +20,7 @@ export function boxIn(node: HTMLElement, _: { delay?: number }) {
     },
   };
 }
-export function boxOut(node: HTMLElement, _: { delay?: number }) {
+export function boxOut(node: HTMLElement) {
   const h = node.clientHeight;
   return {
     duration: settings.data.transitionSpeed.value,
@@ -35,7 +35,7 @@ export function boxOut(node: HTMLElement, _: { delay?: number }) {
     },
   };
 }
-export function boxButtonIn(node: HTMLElement, _: { delay?: number }) {
+export function boxButtonIn(node: HTMLElement) {
   return {
     duration: settings.data.transitionSpeed.value,
     css: (t: number) => {
@@ -45,7 +45,7 @@ export function boxButtonIn(node: HTMLElement, _: { delay?: number }) {
     },
   };
 }
-export function brIn(node: HTMLElement, _: { delay?: number }) {
+export function brIn(node: HTMLElement) {
   return {
     duration: settings.data.transitionSpeed.value,
     css: (t: number) => {
@@ -59,7 +59,7 @@ export function brIn(node: HTMLElement, _: { delay?: number }) {
   };
 }
 
-export function brOut(node: HTMLElement, _: { delay?: number }) {
+export function brOut(node: HTMLElement) {
   return {
     duration: settings.data.transitionSpeed.value,
     css: (t: number) => {
@@ -72,7 +72,7 @@ export function brOut(node: HTMLElement, _: { delay?: number }) {
   };
 }
 
-export function tabIn(node: HTMLElement, _: { delay?: number }) {
+export function tab(node: HTMLElement) {
   const h = node.clientHeight;
   return {
     duration: settings.data.transitionSpeed.value,
@@ -81,13 +81,13 @@ export function tabIn(node: HTMLElement, _: { delay?: number }) {
       return `
         height: ${h * eased}px;
         margin-bottom: calc(${eased} * var(--padding));
-        overflow: hidden;
-        transform: translateX(${-100 * (1 - eased)}%);
+        transform: scale(${eased});
+        opacity: ${eased};
       `;
     },
   };
 }
-export function tabOut(node: HTMLElement, _: { delay?: number }) {
+export function tabList(node: HTMLElement) {
   const h = node.clientHeight;
   return {
     duration: settings.data.transitionSpeed.value,
@@ -95,14 +95,14 @@ export function tabOut(node: HTMLElement, _: { delay?: number }) {
       const eased = quadOut(t);
       return `
         height: ${h * eased}px;
-        margin-bottom: calc(${eased} * var(--padding));
-        overflow: hidden;
-        transform: translateX(${-100 * (1 - eased)}%);
+        transform: scale(${eased});
+        opacity: ${eased};
       `;
     },
   };
 }
-export function flowIn(node: HTMLElement, _: { delay?: number }) {
+
+export function flowIn(node: HTMLElement) {
   return {
     duration: settings.data.transitionSpeed.value,
     css: (t: number) => {
@@ -114,7 +114,7 @@ export function flowIn(node: HTMLElement, _: { delay?: number }) {
     },
   };
 }
-export function flowOut(node: HTMLElement, _: { delay?: number }) {
+export function flowOut(node: HTMLElement) {
   return {
     duration: settings.data.transitionSpeed.value,
     css: (t: number) => {
@@ -127,7 +127,7 @@ export function flowOut(node: HTMLElement, _: { delay?: number }) {
   };
 }
 
-export function tooltipTransition(node: HTMLElement, _: { delay?: number }) {
+export function tooltipTransition(node: HTMLElement) {
   return {
     duration: settings.data.transitionSpeed.value,
     css: (t: number) => {
@@ -141,7 +141,7 @@ export function tooltipTransition(node: HTMLElement, _: { delay?: number }) {
   };
 }
 
-export function popupIn(node: HTMLElement, _: { delay?: number }) {
+export function popupIn(node: HTMLElement) {
   return {
     duration: settings.data.transitionSpeed.value,
     css: (t: number) => {
@@ -154,7 +154,7 @@ export function popupIn(node: HTMLElement, _: { delay?: number }) {
     },
   };
 }
-export function popupOut(node: HTMLElement, _: { delay?: number }) {
+export function popupOut(node: HTMLElement) {
   return {
     duration: settings.data.transitionSpeed.value,
     css: (t: number) => {
@@ -167,7 +167,7 @@ export function popupOut(node: HTMLElement, _: { delay?: number }) {
     },
   };
 }
-export function screenTransition(node: HTMLElement, _: { delay?: number }) {
+export function screenTransition(node: HTMLElement) {
   return {
     duration: settings.data.transitionSpeed.value,
     css: (t: number) => {

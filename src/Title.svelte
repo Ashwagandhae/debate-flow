@@ -10,7 +10,7 @@
   const dispatch = createEventDispatcher();
 
   export let content: string;
-  export let children: Flow[];
+  export let children: Box[];
   export let index: number;
   export let focus: boolean;
   export let invert: boolean;
@@ -33,8 +33,14 @@
     if (e.key == 'Enter' || e.key == 'ArrowDown') {
       e.preventDefault();
       if (children.length > 0) {
-        children[0].focus = true;
-        focus = false;
+        // focus on first non-empty child
+        for (let child of children) {
+          if (!child.empty) {
+            child.focus = true;
+            focus = false;
+            break;
+          }
+        }
       }
     }
   }

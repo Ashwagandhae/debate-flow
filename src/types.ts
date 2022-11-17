@@ -8,6 +8,7 @@ export type Flow = {
   lastFocus: number[];
   children: Box[];
   history: any;
+  id: number;
 };
 export type Box = {
   content: string;
@@ -15,4 +16,5 @@ export type Box = {
   index: number;
   level: number;
   focus: boolean;
+  empty?: boolean;
 };

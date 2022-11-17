@@ -2,6 +2,7 @@
   import Button from './Button.svelte';
   import { popupIn, popupOut } from './transition';
   export let component: any;
+  export let props: any = {};
   export let closeSelf: () => void;
 
   function handleKeydown(e: KeyboardEvent) {
@@ -16,7 +17,7 @@
   <div class="close">
     <Button icon="delete" tooltip="close" on:click={closeSelf} />
   </div>
-  <svelte:component this={component} closePopup={closeSelf} />
+  <svelte:component this={component} closePopup={closeSelf} {...props} />
 </div>
 
 <style>

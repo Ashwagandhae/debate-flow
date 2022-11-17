@@ -7,6 +7,10 @@ export const activeMouse = writable(true);
 export let flows: Writable<Flow[]> = writable([]);
 export let selected = writable(0);
 export let changesSaved = writable(false);
+export let tooltipState = writable({
+  open: false,
+  claimed: false,
+});
 let debateStyles = {
   policy: {
     aff: {
@@ -55,10 +59,17 @@ export function newBox(index: number, level: number, focus: boolean) {
     focus: focus,
   };
 }
-export function newFlow(index: number, type: string) {
+export function newFlow(index: number, type: string): Flow {
   let currentDebateStyle =
     debateStyles[debateStyleIndex[settings.data.debateStyle.value]];
-  return <Flow>{
+  // get new id
+  let id = 0;
+  for (let i = 0; i < $flows.length; i++) {
+    if ($flows[i].id >= id) {
+      id = $flows[i].id + 1;
+    }
+  }
+  return {
     content: '',
     level: 0,
     columns: currentDebateStyle[type].columns,
@@ -68,15 +79,19 @@ export function newFlow(index: number, type: string) {
     lastFocus: [index],
     children: [newBox(0, 1, false)],
     history: new History(),
+    id: id,
   };
 }
 
-export function boxFromPath(path: number[], scope: number = 0): Flow | Box {
+export function boxFromPath(
+  path: number[],
+  scope: number = 0
+): Flow | Box | null {
   let ret: Flow | Box = $flows[path[0]];
   for (let i = 1; i < path.length - scope; i++) {
     ret = ret?.children[path[i]];
-    if (!ret) {
-      throw new Error('Invalid path');
+    if (ret == undefined) {
+      return null;
     }
   }
 
@@ -181,7 +196,10 @@ export class History {
   }
   undoAction(action: Action) {
     console.log('undo', this.index, this.data);
-    let parent: Flow | Box = boxFromPath(action.path, 1);
+    let parent: Flow | Box | null = boxFromPath(action.path, 1);
+    if (parent == null) {
+      throw new Error('parent is null');
+    }
     let childIndex: number = action.path[action.path.length - 1];
     let children: Box[] = [...parent.children];
     // do opposite of action
@@ -200,8 +218,11 @@ export class History {
   }
   redoAction(action: Action) {
     console.log('redo', this.index, this.data);
-    let parent: Flow | Box = boxFromPath(action.path, 1);
+    let parent: Flow | Box | null = boxFromPath(action.path, 1);
     let childIndex: number = action.path[action.path.length - 1];
+    if (parent == null) {
+      throw new Error('parent is null');
+    }
     let children: Box[] = [...parent.children];
     // do opposite of action
     if (action.type == 'add') {
@@ -223,7 +244,9 @@ export class History {
   }
   focus(path) {
     let box = boxFromPath(path);
-    box.focus = true;
+    if (box != undefined) {
+      box.focus = true;
+    }
   }
   undo() {
     // resolve any pending changes if not in history

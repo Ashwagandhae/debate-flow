@@ -31,21 +31,27 @@
     let wb: Workbook = new Workbook();
     for (let flow of $flows) {
       let data: string[][] = [];
+
       function childToData(box: Box, x: number, y: number) {
+        let height = 0;
+        for (let child of box.children) {
+          height += childToData(child, x + 1, y + height);
+        }
+        // acutally add it to data
         while (!data[y]) {
-          let row: string[] = [];
-          for (let i = 0; i < flow.columns.length; i++) {
-            row.push('');
-          }
+          // make list of empty strings of length flow.columns.length
+          let row: string[] = Array.from(
+            { length: flow.columns.length },
+            () => ''
+          );
           data.push(row);
         }
         // exclude root
         if (x >= 0) {
           data[y][x] = box.content;
         }
-        box.children.forEach(function (child, index) {
-          childToData(child, x + 1, y + index);
-        });
+        // return 1 height if no children
+        return Math.max(1, height);
       }
       childToData(flow, -1, 0);
 
@@ -61,16 +67,39 @@
         // make space for header with + 2
         let row = ws.getRow(y + 2);
         for (let x = 0; x < data[y].length; x++) {
-          row.getCell(x + 1).value = data[y][x];
+          // light red
+          let fill = 'FFFFCCCC';
+          // darker red
+          let border = 'FFFF9999';
+
+          if ((x % 2 == 0 && !flow.invert) || (x % 2 == 1 && flow.invert)) {
+            // light blue
+            fill = 'FFCCE5FF';
+            // darker blue
+            border = 'FF99CCFF';
+          }
+          let cell = row.getCell(x + 1);
+          cell.value = data[y][x];
+
+          cell.fill = {
+            type: 'pattern',
+            pattern: 'solid',
+            fgColor: { argb: fill },
+          };
+          cell.border = {
+            top: { style: 'thin', color: { argb: border } },
+            left: { style: 'thin', color: { argb: border } },
+            bottom: { style: 'thin', color: { argb: border } },
+            right: { style: 'thin', color: { argb: border } },
+          };
+          cell.alignment = { wrapText: true };
         }
       }
       // bold headers
       ws.getRow(1).font = { bold: true };
     }
     wb.xlsx
-      .writeBuffer({
-        base64: true,
-      })
+      .writeBuffer()
       .then(function (xls64: Buffer) {
         // build anchor tag and attach file (works in chrome)
         let a: HTMLAnchorElement = document.createElement('a');

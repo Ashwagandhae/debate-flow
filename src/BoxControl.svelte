@@ -14,7 +14,7 @@
     // wait until its actually done updating
     await tick();
     if (flow.lastFocus && flow.lastFocus.length > 1) {
-      let box: Flow | Box = boxFromPath(flow.lastFocus);
+      let box: Flow | Box | null = boxFromPath(flow.lastFocus);
       validFocus = box?.focus;
     }
   }
@@ -26,8 +26,8 @@
   async function deleteChild() {
     // cancel if disabled
     if (!validFocus) return;
-    let parent: Box | Flow = boxFromPath(flow.lastFocus, 1);
-    let target: Box = boxFromPath(flow.lastFocus);
+    let parent: Box | Flow | null = boxFromPath(flow.lastFocus, 1);
+    let target: Box | null = boxFromPath(flow.lastFocus);
     let childrenClone: Box[] = [...parent.children];
     // if target isn't only child of first level
     if (childrenClone.length > 1 || parent.level >= 1) {
@@ -67,7 +67,7 @@
     // cancel if disabled
     if (!validFocus) return;
     // if not at end of column
-    let target: Box = boxFromPath(flow.lastFocus);
+    let target: Box | null = boxFromPath(flow.lastFocus);
     let childrenClone: Box[] = [...target.children];
     if (target.level < flow.columns.length) {
       childrenClone.splice(0, 0, newBox(0, target.level + 1, false));
@@ -86,8 +86,8 @@
   function addSibling(direction) {
     // cancel if disabled
     if (!validFocus) return;
-    let parent: Flow | Box = boxFromPath(flow.lastFocus, 1);
-    let target: Box = boxFromPath(flow.lastFocus);
+    let parent: Flow | Box | null = boxFromPath(flow.lastFocus, 1);
+    let target: Box | null = boxFromPath(flow.lastFocus);
     let childrenClone: Box[] = [...parent.children];
     childrenClone.splice(
       target.index + direction,

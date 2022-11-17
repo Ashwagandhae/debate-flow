@@ -7,8 +7,11 @@
   import Popup from './Popup.svelte';
   import Downloader from './Downloader.svelte';
   import Uploader from './Uploader.svelte';
+  import Error from './Error.svelte';
   import Settings from './Settings.svelte';
+  import SortableList from './SortableList.svelte';
   import Tab from './Tab.svelte';
+  import type { Flow as IFlow } from './types';
   import { screenTransition } from './transition';
   import { onDestroy, tick } from 'svelte';
   import {
@@ -21,6 +24,7 @@
     changesSaved,
   } from './stores';
   import { settings } from './settings';
+  import { flip } from 'svelte/animate';
 
   let colorThemeMediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
   function updateColorTheme() {
@@ -186,13 +190,21 @@
 
   function readUploadDragged(e: DragEvent) {
     e.preventDefault();
-    let file = e.dataTransfer.files[0];
+    let file = e?.dataTransfer?.files[0];
+    if (file == undefined) {
+      return;
+    }
 
     let reader: FileReader = new FileReader();
     reader.onload = function (fileLoadedEvent) {
       handleUpload(fileLoadedEvent.target.result.toString());
     };
-    reader.readAsText(file, 'UTF-8');
+    // check if can readAsText
+    if (file.type == 'text/plain') {
+      reader.readAsText(file, 'UTF-8');
+    } else if (file.type == 'application/json') {
+      reader.readAsText(file, 'UTF-8');
+    }
   }
   function readUpload() {
     let file = (<HTMLInputElement>document.getElementById('uploadId')).files[0];
@@ -207,13 +219,21 @@
     e.preventDefault();
   }
 
-  function handleUpload(data: string) {
-    let rawFlows = JSON.parse(data);
-    $flows = [];
-    for (let flow of rawFlows) {
-      flow.history = new History();
-      // add to flows
-      $flows.push(flow);
+  async function handleUpload(data: string) {
+    let rawFlows: unknown[], newFlows: IFlow[];
+    try {
+      rawFlows = JSON.parse(data);
+      newFlows = rawFlows.map((flow: any) => {
+        flow.history = new History();
+        return flow;
+      });
+    } catch (e) {
+      openPopup(Error, {
+        props: { message: 'Invalid file' },
+      });
+    }
+    if (newFlows != undefined) {
+      $flows = newFlows;
     }
   }
 
@@ -232,13 +252,16 @@
     false
   );
 
-  let popups: (Uploader | Downloader | Settings)[] = [];
+  let popups: {
+    component: Uploader | Downloader | Settings | Error;
+    props: any;
+  }[] = [];
   function closePopup(index: number) {
     popups.splice(index, 1);
     popups = popups;
   }
-  function openPopup(component: any) {
-    popups.push(component);
+  function openPopup(component: any, { props = {} } = {}) {
+    popups.push({ component, props });
     popups = popups;
   }
   // changes you made may not be saved
@@ -249,19 +272,36 @@
       return confirmationMessage; // Gecko + Webkit, Safari, Chrome etc.
     }
   });
+
+  function handleSort(e: { detail: { from: number; to: number } }) {
+    let { from, to } = e.detail;
+    let selectedId = $flows[$selected].id;
+    let newFlows = [...$flows];
+    // add to to if needed
+    if (from > to) {
+      to += 1;
+    }
+    console.log(to, from);
+    let flow = newFlows.splice(from, 1)[0];
+    newFlows.splice(to, 0, flow);
+
+    $flows = newFlows;
+    $selected = $flows.findIndex((flow) => flow.id == selectedId);
+  }
+
   // todos:
   // add set up
   // add temp hide settings button
   // add command f
   // add capitalization
-  // add settings shortcut (cmd ,)
 </script>
 
 <svelte:body
   on:keydown={handleKeydown}
   on:mousemove={handleMouseMove}
   on:dragenter={preventDefault}
-  on:drop={readUploadDragged} />
+  on:drop={readUploadDragged}
+/>
 <main class:activeMouse class="palette-plain">
   {#if popups.length > 0}
     <div
@@ -278,7 +318,11 @@
         }}
       >
         {#key popups}
-          <Popup component={popups[0]} closeSelf={() => closePopup(0)} />
+          <Popup
+            component={popups[0].component}
+            closeSelf={() => closePopup(0)}
+            props={popups[0].props}
+          />
         {/key}
       </div>
     </div>
@@ -309,13 +353,20 @@
       </div>
       <div class="tabs">
         <ul>
-          {#each $flows as flow, index}
+          <SortableList list={$flows} key="id" on:sort={handleSort} let:index>
             <Tab
               on:click={() => clickTab(index)}
               bind:flow={$flows[index]}
               selected={index == $selected}
             />
-          {/each}
+          </SortableList>
+          <!-- {#each $flows as flow, index}
+            <Tab
+              on:click={() => clickTab(index)}
+              bind:flow={$flows[index]}
+              selected={index == $selected}
+            />
+          {/each} -->
           <div class="add-tab">
             <Button
               text="aff"
@@ -410,6 +461,7 @@
     overflow-y: auto;
     height: var(--main-height);
     box-sizing: border-box;
+    position: relative;
   }
   .tabs > ul {
     padding-bottom: calc(var(--view-height) * 0.6);
@@ -417,6 +469,7 @@
 
   .add-tab {
     display: flex;
+    position: relative;
     /* flex-wrap: wrap; */
     /* justify-content: center; */
     align-items: stretch;
@@ -541,6 +594,7 @@
     --text: hsl(0 0% 30%);
     --text-select: hsl(0, 0%, 100%, 80%);
     --text-weak: hsl(0, 0%, 70%);
+    --text-error: hsl(0, 90%, 60%);
 
     --text-accent: hsl(var(--accent-hue), 90%, 30%);
     --text-accent-select: hsl(var(--accent-hue), 100%, 60%, 30%);
@@ -564,10 +618,10 @@
     --color-accent-secondary: hsl(var(--accent-secondary-hue), 80%, 70%);
     --color-accent-secondary-fade: hsl(var(--accent-secondary-hue), 90%, 85%);
 
-    --slider-lightness: 90%;
-    --slider-lightness-hover: 85%;
-    --slider-saturation: 80%;
-    --slider-switch-lightness: 70%;
+    --slider-lightness: 85%;
+    --slider-lightness-hover: 80%;
+    --slider-saturation: 90%;
+    --slider-switch-lightness: 60%;
 
     --color-screen: hsl(0 0% 0%/ 0.3);
   }
@@ -595,6 +649,7 @@
     --text: hsl(0, 0%, 80%);
     --text-select: hsl(0, 0%, 100%, 30%);
     --text-weak: hsl(0, 0%, 50%);
+    --text-error: hsl(0, 100%, 70%);
 
     --text-accent: hsl(var(--accent-hue), 60%, 80%);
     --text-accent-select: hsl(var(--accent-hue), 80%, 60%, 30%);

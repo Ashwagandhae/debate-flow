@@ -12,6 +12,7 @@
   const dispatch = createEventDispatcher();
 
   export let root = false;
+  export let parentIsEmpty = false;
 
   export let content: string = '';
   export let children: Box[];
@@ -19,6 +20,7 @@
   export let level: number;
   export let focus: boolean = false;
   export let parentPath: number[] = [];
+  export let empty: boolean = false;
 
   $: path = [...parentPath, index];
 
@@ -37,10 +39,10 @@
     isFocused: boolean
   ) => void = () => {};
 
-  const { getinvert } = getContext('invert');
-  let invert: boolean = getinvert();
+  const getInvert: () => boolean = getContext('invert');
+  let invert: boolean = getInvert();
 
-  const { getColumnCount } = getContext('columnCount');
+  const getColumnCount: () => number = getContext('columnCount');
   let columnCount: number = getColumnCount();
 
   let textarea: any = undefined;
@@ -221,6 +223,11 @@
   async function deleteChild(childIndex: number) {
     // if target isn't only child of first level
     if (children.length > 1 || level >= 1) {
+      // delete self if empty
+      if (empty && children.length == 1) {
+        deleteSelf(index);
+        return;
+      }
       let childrenClone = [...children];
       // add to history
       $flows[$selected].history.add('delete', [...path, childIndex], {
@@ -248,6 +255,7 @@
       } else if (childIndex == 0) {
         focusChild(0, 0);
       }
+
       return true;
     } else {
       focusChild(0, 0);
@@ -265,20 +273,30 @@
     if (newChildIndex >= children.length) {
       // if has grandchild
       if (children[children.length - 1].children.length > 0) {
-        // focus on first grandchild
-        children[children.length - 1].children[0].focus = true;
+        // focus on first grandchild that isn't empty
+        let grandChild = children[children.length - 1].children[0];
+        grandChild.focus = true;
       } else {
         // stay focused
         children[childIndex].focus = true;
       }
     } else {
-      // focus on new
-      children[newChildIndex].focus = true;
+      // if is empty, skip
+      if (children[newChildIndex].empty && direction != 0) {
+        focusChild(newChildIndex, direction);
+      } else {
+        // focus on child
+        children[newChildIndex].focus = true;
+      }
     }
     children = children;
   }
   function focusSelf() {
-    focus = true;
+    if (empty) {
+      focusParent();
+    } else {
+      focus = true;
+    }
   }
   let palette: string;
   $: {
@@ -300,7 +318,8 @@
 
 <div
   class={`top palette-${palette}`}
-  class:empty={children.length == 0}
+  class:childless={children.length == 0}
+  class:empty
   class:focus
   class:childFocus
   class:activeMouse={$activeMouse}
@@ -308,65 +327,69 @@
   in:boxIn|local
   out:boxOut|local
 >
-  <div
-    class="content"
-    class:root
-    style={`--this-background: ${backgroundColor}`}
-    class:left={children.length > 0}
-    class:right={index == 0 && level > 1}
-  >
-    <div class="barcontainer">
-      <div
-        class="line above"
-        class:left={children.length > 0}
-        class:right={index == 0 && level > 1}
-        in:brIn|local
-        out:brOut|local
-        on:click={() => {
-          addSibling(index, 0) && focusSibling(index, 0);
-        }}
-        on:mousedown={preventBlur}
-      >
-        <!-- <Overlay background={lineColor} /> -->
-      </div>
+  {#if empty}
+    <div class="content" />
+  {:else}
+    <div
+      class="content"
+      class:root
+      style={`--this-background: ${backgroundColor}`}
+      class:left={children.length > 0}
+      class:right={index == 0 && level > 1 && !parentIsEmpty}
+    >
+      <div class="barcontainer">
+        <div
+          class="line above"
+          class:left={children.length > 0}
+          class:right={index == 0 && level > 1 && !parentIsEmpty}
+          in:brIn|local
+          out:brOut|local
+          on:click={() => {
+            addSibling(index, 0) && focusSibling(index, 0);
+          }}
+          on:mousedown={preventBlur}
+        >
+          <!-- <Overlay background={lineColor} /> -->
+        </div>
 
-      <div class="text">
-        <Text
-          on:keydown={handleKeydown}
-          on:beforeinput={handleBeforeinput}
-          on:blur={handleBlur}
-          on:focus={handleFocus}
-          bind:value={content}
-          bind:this={textarea}
-          {placeholder}
-        />
+        <div class="text">
+          <Text
+            on:keydown={handleKeydown}
+            on:beforeinput={handleBeforeinput}
+            on:blur={handleBlur}
+            on:focus={handleFocus}
+            bind:value={content}
+            bind:this={textarea}
+            {placeholder}
+          />
+        </div>
+        <div
+          class="line below"
+          in:brIn|local
+          out:brOut|local
+          on:click={() => {
+            addSibling(index, 1) && focusSibling(index, 1);
+          }}
+          on:mousedown={preventBlur}
+        >
+          <!-- <Overlay background={lineColor} /> -->
+        </div>
       </div>
-      <div
-        class="line below"
-        in:brIn|local
-        out:brOut|local
-        on:click={() => {
-          addSibling(index, 1) && focusSibling(index, 1);
-        }}
-        on:mousedown={preventBlur}
-      >
-        <!-- <Overlay background={lineColor} /> -->
-      </div>
+      {#if children.length == 0 && level < columnCount}
+        <button
+          class={`add palette-${outsidePalette}`}
+          on:click={() => {
+            addChild(0, 0);
+            focusChild(0, 0);
+          }}
+          on:mousedown={preventBlur}
+          in:boxButtonIn|local
+        >
+          <Icon name="add" />
+        </button>
+      {/if}
     </div>
-    {#if children.length == 0 && level < columnCount}
-      <button
-        class={`add palette-${outsidePalette}`}
-        on:click={() => {
-          addChild(0, 0);
-          focusChild(0, 0);
-        }}
-        on:mousedown={preventBlur}
-        in:boxButtonIn|local
-      >
-        <Icon name="add" />
-      </button>
-    {/if}
-  </div>
+  {/if}
 
   <ul class="children">
     {#each children as child, childIndex (child)}
@@ -376,12 +399,14 @@
         bind:index={child.index}
         bind:level={child.level}
         bind:focus={child.focus}
+        bind:empty={child.empty}
         addSibling={addChild}
         deleteSelf={deleteChild}
         focusSibling={focusChild}
         focusParent={focusSelf}
         dispatchSelfFocus={onChildFocus}
         parentPath={path}
+        parentIsEmpty={empty}
         on:saveFocus
       />
     {/each}
@@ -411,6 +436,12 @@
     border-radius: var(--border-radius-small);
     color: var(--this-text);
   }
+
+  .empty > .content {
+    pointer-events: none;
+    height: 10px;
+    opacity: 0;
+  }
   .text {
     padding: var(--padding);
     position: relative;
@@ -434,7 +465,7 @@
   .content.left.right {
     border-radius: 0 0 var(--border-radius-small) var(--border-radius-small);
   }
-  .empty .content {
+  .childless .content {
     width: max-content;
   }
   .root.content {

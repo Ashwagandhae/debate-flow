@@ -3,6 +3,7 @@
   import Shortcut from './Shortcut.svelte';
   import { tick, onDestroy } from 'svelte';
   import { settings } from './settings';
+  import { tooltipState } from './stores';
 
   export let content: string;
   export let shortcut: string[];
@@ -24,10 +25,24 @@
       useTooltips = settings.data.useTooltips.value;
     })
   );
-
-  function mouseOver() {
+  let openTimeout: NodeJS.Timeout = null;
+  async function openTooltip() {
     isHovered = true;
     mouseMove();
+    await tick();
+    $tooltipState.open = true;
+  }
+  function mouseOver() {
+    if (!isHovered) {
+      $tooltipState.claimed = true;
+      if ($tooltipState.open) {
+        openTooltip();
+      } else {
+        if (openTimeout == null) {
+          openTimeout = setTimeout(openTooltip, 1000);
+        }
+      }
+    }
   }
   function mouseMove() {
     if (tooltip) {
@@ -65,7 +80,17 @@
   }
   $: tooltip, content, shortcut, disabled, layout, onContentChanged();
   function mouseLeave() {
+    if (openTimeout != null) {
+      clearTimeout(openTimeout);
+      openTimeout = null;
+    }
+    $tooltipState.claimed = false;
     isHovered = false;
+    setTimeout(function () {
+      if (!$tooltipState.claimed) {
+        $tooltipState.open = false;
+      }
+    }, 200);
   }
 </script>
 

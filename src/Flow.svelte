@@ -2,24 +2,64 @@
   import Box from './Box.svelte';
   import Header from './Header.svelte';
   import { Flow } from './types';
+  import { Box as IBox } from './types';
 
   import { setContext } from 'svelte';
 
   export let root: Flow;
-  setContext('invert', {
-    getinvert: () => {
-      return root.invert;
-    },
+  setContext('invert', () => {
+    return root.invert;
   });
-  setContext('columnCount', {
-    getColumnCount: () => {
-      return root.columns.length;
-    },
+  setContext('columnCount', () => {
+    return root.columns.length;
   });
 
   function saveFocus(e: { detail: number[] }) {
     root.lastFocus = e.detail;
     root = root;
+  }
+  function addEmpty(column: number) {
+    let parent: Flow = root;
+    let childIndex: number = 0;
+    let children: IBox[] = [...parent.children];
+
+    let parentBox = {
+      content: '',
+      children: [],
+      index: 0,
+      level: 1,
+      focus: false,
+      empty: true,
+    };
+    if (column == 0) {
+      parentBox.focus = true;
+      parentBox.empty = false;
+    } else {
+      let newBox = parentBox;
+
+      for (let i = 0; i < column; i++) {
+        newBox.children = [
+          {
+            content: '',
+            children: [],
+            index: 0,
+            level: i + 2,
+            // only the last box in the column is not empty
+            focus: i == column - 1,
+            empty: i != column - 1,
+          },
+        ];
+        newBox = newBox.children[0];
+      }
+    }
+
+    children.splice(0, 0, parentBox);
+    // fix index
+    for (let i = childIndex; i < children.length; i++) {
+      children[i].index = i;
+    }
+    parent.children = [...children];
+    root = parent;
   }
 </script>
 
@@ -47,7 +87,7 @@
             !!(index % 2) == root.invert ? 'accent' : 'accent-secondary'
           }`}
         >
-          <Header {column} on:focusFlow />
+          <Header {column} on:focusFlow addEmpty={() => addEmpty(index)} />
         </div>
       {/each}
     </div>
@@ -94,7 +134,7 @@
     display: flex;
     flex-direction: row;
     width: auto;
-    z-index: 2;
+    z-index: 3;
     height: 2.4em;
     transform: translateX(-100%);
     background: var(--background);
@@ -121,16 +161,7 @@
     border-radius: var(--border-radius);
     background-color: var(--this-background);
   }
-  .column:nth-child(even),
-  .header:nth-child(even) {
-    /* background-color: var(--this-background);
-    color: var(--this-accent-text); */
-  }
-  .column:nth-child(odd),
-  .header:nth-child(odd) {
-    /* background: var(--this-background-secondary);
-    color: var(--this-accent-secondary-text); */
-  }
+
   .content {
     padding-bottom: calc(var(--view-height) * 0.6);
     padding-top: calc(2.4em + var(--padding));
