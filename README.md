@@ -1,10 +1,10 @@
-# Debate flow app
+# Debate flow
 
-[Click here for working link](https://ashwagandhae.github.io/debate-flow/)
+[Try it out here](https://ashwagandhae.github.io/debate-flow/)
 
 ## Description
 
-Even though typing is faster, most people flow on paper because spreadsheets are bad. No more!
+In competitive debate, people take notes on "flows," pieces of paper divided into columns to keep track of arguements in rounds. Because of Google Sheets and Microsoft Excel's frustrating flowing experience, most debaters still use paper. Debate flow aims to solve this problem, creating an easy-to-use interface that combines the flexibility of paper with the typing-speed of spreadsheets. 
 
 ## Credits
 
