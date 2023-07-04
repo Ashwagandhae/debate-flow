@@ -2,6 +2,11 @@
 	import './global.css';
 	import { settings } from '$lib/models/settings';
 
+	import { dev } from '$app/environment';
+	import { inject } from '@vercel/analytics';
+
+	inject({ mode: dev ? 'development' : 'production' });
+
 	const colorThemeMediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
 	if (colorThemeMediaQuery.matches) {
 		document.body.classList.add('dark');

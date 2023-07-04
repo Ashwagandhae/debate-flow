@@ -1,7 +1,9 @@
 import { c as create_ssr_component } from "../../chunks/ssr.js";
 import { s as settings } from "../../chunks/settings.js";
+import { inject } from "@vercel/analytics";
 const global = "";
 const Layout = create_ssr_component(($$result, $$props, $$bindings, slots) => {
+  inject({ mode: "production" });
   const colorThemeMediaQuery = window.matchMedia("(prefers-color-scheme: dark)");
   if (colorThemeMediaQuery.matches) {
     document.body.classList.add("dark");
