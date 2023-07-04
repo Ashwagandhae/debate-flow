@@ -47,9 +47,6 @@
 			translateX: [10, 0],
 			easing: 'easeInOutSine',
 			duration: 500,
-			begin: () => {
-				dragTab.classList.remove('hover');
-			}
 		});
 		timeline.add({
 			targets: dragTab,

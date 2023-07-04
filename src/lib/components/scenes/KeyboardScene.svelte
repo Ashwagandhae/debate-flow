@@ -13,20 +13,7 @@
 		});
 		let children = Array.from(shortcuts.children);
 
-		// show each shortcut one by one
-		timeline.add({
-			targets: children,
-			opacity: [0, 1],
-			duration: 250,
-			delay: anime.stagger(500),
-			translateY: [20, 0],
-			rotate: [-15, 0],
-			scale: [0.8, 1],
-			easing: 'easeInOutSine'
-		});
-		timeline.add({
-			duration: 2000
-		});
+		
 		// hide each one by one
 		timeline.add({
 			targets: children,
@@ -39,6 +26,20 @@
 		});
 		timeline.add({
 			duration: 1000
+		});
+    // show each shortcut one by one
+		timeline.add({
+			targets: children,
+			opacity: [0, 1],
+			duration: 250,
+			delay: anime.stagger(500),
+			translateY: [20, 0],
+			rotate: [-15, 0],
+			scale: [0.8, 1],
+			easing: 'easeInOutSine'
+		});
+		timeline.add({
+			duration: 2000
 		});
 	});
 </script>

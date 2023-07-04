@@ -33,8 +33,11 @@
 </script>
 
 <div class="top" bind:this={element} class:show>
-	<div class="visual">
-		<svelte:component this={component} bind:timeline />
+	<div class='visualWrapper'>
+
+		<div class="visual">
+			<svelte:component this={component} bind:timeline />
+		</div>
 	</div>
 	<div class="text">
 		<h2>{title}</h2>
@@ -44,11 +47,10 @@
 
 <style>
 	.top {
-		display: flex;
-		flex-direction: row;
-		align-items: center;
+		display: grid;
+		grid-template-columns: var(--height) 1fr;
 		gap: var(--padding);
-		height: var(--height);
+		min-height: var(--height);
 		--height: 320px;
 		opacity: 0;
 		transform: translateY(50px);
@@ -59,7 +61,10 @@
 		transform: translateY(0);
 	}
 	.top:nth-child(odd) {
-		flex-direction: row-reverse;
+		grid-template-columns: 1fr var(--height);
+	}
+	.top:nth-child(odd) > .visualWrapper {
+		order: 2;
 	}
 	.top > div {
 		border-radius: var(--radius);
@@ -67,11 +72,16 @@
 		border-radius: var(--border-radius);
 		box-sizing: border-box;
 	}
-	.visual {
+	.visualWrapper {
 		flex-basis: var(--height);
+		width: var(--height);
+		display: flex;
+		align-items: center;
+		justify-content: center;
+	}
+	.visual {
 		height: var(--height);
-		flex-grow: 0;
-		flex-shrink: 0;
+		width: var(--height);
 		box-sizing: border-box;
 		transition: box-shadow var(--transition-speed) ease-in-out;
 	}
@@ -79,7 +89,7 @@
 	.text {
 		padding: 3rem;
 		height: 100%;
-		width: max-content;
+		width: 100%;
 		display: flex;
 		flex-direction: column;
 		justify-content: center;
@@ -94,5 +104,26 @@
 		margin: 0;
 		font-size: 1.25rem;
 		line-height: 2;
+	}
+	@media(max-width: 800px) {
+		h2 {
+			font-size: 1.5rem;
+		}
+		p {
+			font-size: 1rem;
+		}
+		.top, .top:nth-child(odd)  {
+			grid-template-columns: 100%;
+			grid-template-rows: var(--height) 1fr;
+
+			height: auto;
+			width: 100%;
+		}
+
+		.visualWrapper, .top:nth-child(odd) > .visualWrapper {
+			width: 100%;
+			order: 0;
+		}
+
 	}
 </style>

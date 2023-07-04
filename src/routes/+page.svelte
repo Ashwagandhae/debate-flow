@@ -15,42 +15,42 @@
 			<h1>Debate Flow</h1>
 			<a href="./app">
 				<button class="tryit">
-					Try it out<Icon name="arrowRight" size="4rem" />
+					Try it<Icon name="arrowRight" size="4rem" />
 				</button>
 			</a>
 		</section>
 		<section class="benefits">
 			<Benefit
-				title="Arguement Spacing"
-				detail="Arguements now make space for responses so you don't run out room. "
+				title="Super Spacing"
+				detail="Stop guessing how many responses your opponent will make - arguments will automatically move out of the way."
 				component={SpacingScene}
 			/>
 			<Benefit
-				title="Flow Organization"
-				detail="Organize and rearrange your flows with tabs. They are color-coded and can be renamed to whatever you want."
+				title="Awesome Organization"
+				detail="Organize and rearrange your flows with with color-coded and renamable tabs. "
 				component={TabScene}
 			/>
 			<Benefit
-				title="Easily Convertable"
-				detail="Convert your flow to a excel file with the click of a button, or save it as a custom JSON file to edit later."
+				title="Simple Sharing"
+				detail="Convert your flow to a excel file with the click of a button, or save it as JSON file to edit later."
 				component={ConvertScene}
 			/>
 			<Benefit
-				title="Keyboard Centric"
-				detail="No more clicking - use the arrow keys and shortcuts to edit your flow."
+				title="Minimal Mousing"
+				detail="Use the arrow keys and keyboard shortcuts to edit your flow, and leave your mouse alone."
 				component={KeyboardScene}
 			/>
 			<Benefit
-				title="Customization"
-				detail="Change the font, accent colors, spacing, and more to make your flow look exactly how you want it to."
+				title="Cosmic Customization"
+				detail="Change the color theme, font, accent colors, spacing, and more to personalize your flow."
 				component={SettingsScene}
 			/>
 		</section>
 		<section class="tryagain">
-			<h1>Convinced?</h1>
+			<h2>Free and open-source!</h2>
 			<a href="./app">
 				<button class="tryit">
-					Try it out<Icon name="arrowRight" size="4rem" />
+					Try it<Icon name="arrowRight" size="4rem" />
 				</button>
 			</a>
 		</section>
@@ -96,6 +96,10 @@
 
 	h1 {
 		font-size: 5rem;
+		font-weight: var(--font-weight-bold);
+	}
+	h2 {
+		font-size: 3rem;
 		font-weight: var(--font-weight-bold);
 	}
 	a {
@@ -152,5 +156,31 @@
 		border-radius: var(--border-radius);
 		background: var(--background);
 		box-sizing: border-box;
+	}
+	@media(max-width: 700px) {
+		h1 {
+			font-size: 3rem;
+		}
+		h2 {
+			font-size: 2rem;
+		}
+		.tryit {
+			font-size: 2rem;
+		}
+		article {
+			width: calc(100vw - 2rem);
+		}
+		section.title {
+			flex-direction: column;
+			padding: 1rem;
+			gap: 3rem;
+		}
+
+		section.tryagain {
+			flex-direction: column;
+			padding: 1rem;
+			gap: 3rem;
+		}
+
 	}
 </style>
