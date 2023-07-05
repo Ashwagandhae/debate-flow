@@ -47,7 +47,7 @@
 			/>
 		</section>
 		<section class="tryagain">
-			<h2>Free and open-source!</h2>
+			<h2>It's free!</h2>
 			<a href="./app">
 				<button class="tryit">
 					Try it<Icon name="arrowRight" size="4rem" />
@@ -157,7 +157,7 @@
 		background: var(--background);
 		box-sizing: border-box;
 	}
-	@media(max-width: 700px) {
+	@media (max-width: 700px) {
 		h1 {
 			font-size: 3rem;
 		}
@@ -181,6 +181,5 @@
 			padding: 1rem;
 			gap: 3rem;
 		}
-
 	}
 </style>
