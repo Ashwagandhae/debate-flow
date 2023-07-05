@@ -7,18 +7,31 @@
 	import ConvertScene from '$lib/components/scenes/ConvertScene.svelte';
 	import KeyboardScene from '$lib/components/scenes/KeyboardScene.svelte';
 	import SettingsScene from '$lib/components/scenes/SettingsScene.svelte';
+	import Flower from '$lib/components/scenes/Flower.svelte';
+	let hover = false;
 </script>
 
 <main>
 	<article>
 		<section class="title">
-			<h1>Debate Flow</h1>
-			<a href="./app">
-				<button class="tryit">
-					Try it<Icon name="arrowRight" size="4rem" />
-				</button>
+			<div class="words">
+				<h1>Flower</h1>
+				<p>Debate flowing app</p>
+			</div>
+			<a href="./app" class="flowerholder">
+				<Flower {hover} />
+				<button
+					on:mouseenter={() => (hover = true)}
+					on:mouseover={() => (hover = true)}
+					on:focus={() => (hover = true)}
+					on:mouseleave={() => (hover = false)}
+					class="tryit">Try it</button
+				>
 			</a>
 		</section>
+		<div class="why">
+			<Icon name="arrowDown" size="3rem" />
+		</div>
 		<section class="benefits">
 			<Benefit
 				title="Super Spacing"
@@ -46,16 +59,16 @@
 				component={SettingsScene}
 			/>
 		</section>
-		<section class="tryagain">
-			<h2>It's free!</h2>
-			<a href="./app">
+		<a href="./app">
+			<section class="tryagain">
 				<button class="tryit">
 					Try it<Icon name="arrowRight" size="4rem" />
 				</button>
-			</a>
-		</section>
+			</section>
+		</a>
 		<section class="footer">
-			<a href="https://github.com/Ashwagandhae/debate-flow" target="_blank">Source Code</a>
+			<a href="https://github.com/Ashwagandhae/debate-flow" target="_blank">Source Code on Github</a
+			>
 		</section>
 	</article>
 </main>
@@ -77,7 +90,7 @@
 		height: auto;
 		padding: var(--padding);
 		box-sizing: border-box;
-		padding: 40vh 0 50vh 0;
+		padding: 10rem 0 0 0;
 		gap: var(--padding);
 	}
 
@@ -88,43 +101,63 @@
 		justify-content: space-between;
 		padding: 3rem;
 		width: 100%;
-		height: auto;
+		height: 30rem;
 		border-radius: var(--border-radius);
-		background: var(--background);
 		box-sizing: border-box;
+	}
+	div.why {
+		display: flex;
+		flex-direction: row;
+		align-items: center;
+		justify-content: center;
+		width: 100%;
+		height: auto;
+		padding: 4rem 0;
+		color: var(--text-weak);
+	}
+
+	div.words {
+		z-index: 1000;
+		width: 100%;
+		height: auto;
+		font-size: 2rem;
+
+		/* padding: 0 3rem; */
 	}
 
 	h1 {
 		font-size: 5rem;
 		font-weight: var(--font-weight-bold);
 	}
-	h2 {
-		font-size: 3rem;
-		font-weight: var(--font-weight-bold);
-	}
+
 	a {
 		display: block;
 		color: inherit;
 		text-decoration: none;
 	}
+	.flowerholder {
+		display: flex;
+		flex-direction: row;
+		align-items: center;
+		justify-content: center;
+		width: 100%;
+		height: auto;
+	}
 	button.tryit {
 		font-size: 3rem;
 		font-weight: var(--font-weight-bold);
-		padding: 2rem;
+		padding: 3rem;
 
 		color: inherit;
 		display: flex;
 		flex-direction: row;
 		align-items: center;
-		background-color: var(--background-accent-indent);
 		border: none;
 		border-radius: calc(var(--border-radius));
-		transition: background-color var(--transition-speed) ease-in-out;
+		background: transparent;
 		gap: 1rem;
 	}
-	button.tryit:hover {
-		background-color: var(--background-accent-active);
-	}
+
 	section.benefits {
 		display: flex;
 		flex-direction: column;
@@ -136,25 +169,30 @@
 		display: flex;
 		flex-direction: row;
 		align-items: center;
-		justify-content: space-between;
+		justify-content: center;
 
 		width: 100%;
 		height: auto;
 		border-radius: var(--border-radius);
-		background: var(--background);
 		box-sizing: border-box;
-		padding: 3rem;
+		background: var(--background);
+		transition: background var(--transition-speed) ease-in-out;
+	}
+	.tryagain .tryit {
+		height: 100%;
+	}
+	.tryagain:hover {
+		background: var(--background-accent-active);
 	}
 	section.footer {
 		display: flex;
 		flex-direction: row;
 		align-items: center;
 		justify-content: center;
-		padding: 1rem;
+		padding: 20rem 1rem 1rem 1rem;
 		width: 100%;
 		height: auto;
 		border-radius: var(--border-radius);
-		background: var(--background);
 		box-sizing: border-box;
 	}
 	@media (max-width: 700px) {
