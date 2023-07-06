@@ -37,7 +37,7 @@ body {
 	font-weight: var(--font-weight);
 }
 body {
-	--main-margin: 20px;
+	--main-margin: var(--gap);
 	--main-height: calc(100vh - var(--main-margin) * 2);
 	--column-width: 160px;
 	--padding: 8px;

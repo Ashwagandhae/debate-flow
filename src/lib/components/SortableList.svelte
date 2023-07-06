@@ -99,7 +99,7 @@
 			height += element.children[i].scrollHeight;
 		}
 		if (element == null) return;
-		element.style.height = `calc(${height}px + var(--padding) * ${list.length})`;
+		element.style.height = `calc(${height}px)`;
 	}
 	onMount(() => {
 		changeHeight(true);

@@ -26,7 +26,7 @@
 
 <style>
 	.top {
-		margin-bottom: var(--padding);
+		padding-bottom: var(--padding);
 		border-radius: var(--border-radius-small);
 		flex: 1;
 	}
@@ -42,7 +42,6 @@
 		overflow-wrap: break-word;
 		transition: background var(--transition-speed), transform var(--transition-speed) ease;
 		font-weight: var(--font-weight);
-		margin-bottom: var(--padding);
 	}
 	button.empty {
 		color: var(--this-text-weak);

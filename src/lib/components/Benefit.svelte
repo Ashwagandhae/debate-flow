@@ -7,9 +7,9 @@
 	export let component: ConstructorOfATypedSvelteComponent;
 	let timeline: anime.AnimeTimelineInstance;
 
-	let observer: IntersectionObserver;
 	let element: HTMLElement;
 	let show = false;
+	let observer: IntersectionObserver;
 
 	onMount(() => {
 		observer = new IntersectionObserver(
@@ -33,8 +33,7 @@
 </script>
 
 <div class="top" bind:this={element} class:show>
-	<div class='visualWrapper'>
-
+	<div class="visualWrapper">
 		<div class="visual">
 			<svelte:component this={component} bind:timeline />
 		</div>
@@ -105,14 +104,15 @@
 		font-size: 1.25rem;
 		line-height: 2;
 	}
-	@media(max-width: 800px) {
+	@media (max-width: 800px) {
 		h2 {
 			font-size: 1.5rem;
 		}
 		p {
 			font-size: 1rem;
 		}
-		.top, .top:nth-child(odd)  {
+		.top,
+		.top:nth-child(odd) {
 			grid-template-columns: 100%;
 			grid-template-rows: var(--height) 1fr;
 
@@ -120,10 +120,10 @@
 			width: 100%;
 		}
 
-		.visualWrapper, .top:nth-child(odd) > .visualWrapper {
+		.visualWrapper,
+		.top:nth-child(odd) > .visualWrapper {
 			width: 100%;
 			order: 0;
 		}
-
 	}
 </style>

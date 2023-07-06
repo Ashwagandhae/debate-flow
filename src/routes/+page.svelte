@@ -25,6 +25,8 @@
 					on:mouseover={() => (hover = true)}
 					on:focus={() => (hover = true)}
 					on:mouseleave={() => (hover = false)}
+					on:mouseout={() => (hover = false)}
+					on:blur={() => (hover = false)}
 					class="tryit">Try it</button
 				>
 			</a>
@@ -39,13 +41,13 @@
 				component={SpacingScene}
 			/>
 			<Benefit
-				title="Awesome Organization"
-				detail="Organize and rearrange your flows with with color-coded and renamable tabs. "
+				title="Optimal Organization"
+				detail="Organize and rearrange your flows quickly with with color-coded and renamable tabs. "
 				component={TabScene}
 			/>
 			<Benefit
 				title="Simple Sharing"
-				detail="Convert your flow to a excel file with the click of a button, or save it as JSON file to edit later."
+				detail="Convert your flow to a Excel file with the click of a button, or save it as JSON file to edit later."
 				component={ConvertScene}
 			/>
 			<Benefit
@@ -54,8 +56,8 @@
 				component={KeyboardScene}
 			/>
 			<Benefit
-				title="Cosmic Customization"
-				detail="Change the color theme, font, accent colors, spacing, and more to personalize your flow."
+				title="Percise Personalization"
+				detail="Change the color theme, font, accent colors, spacing, and more to customize your flow."
 				component={SettingsScene}
 			/>
 		</section>
@@ -74,6 +76,13 @@
 </main>
 
 <style>
+	:global(body) {
+		width: 100vw;
+		height: 100vh;
+		margin: 0;
+		padding: 0;
+		overflow-y: scroll;
+	}
 	main {
 		display: flex;
 		flex-direction: column;
@@ -81,6 +90,8 @@
 
 		height: auto;
 		box-sizing: border-box;
+		position: relative;
+		overflow-x: hidden;
 	}
 	article {
 		display: flex;
@@ -180,6 +191,7 @@
 	}
 	.tryagain .tryit {
 		height: 100%;
+		padding: 3rem;
 	}
 	.tryagain:hover {
 		background: var(--background-accent-active);
@@ -199,9 +211,12 @@
 		h1 {
 			font-size: 3rem;
 		}
-		h2 {
-			font-size: 2rem;
+		.words {
+			display: flex;
+			flex-direction: column;
+			align-items: center;
 		}
+
 		.tryit {
 			font-size: 2rem;
 		}
@@ -218,6 +233,9 @@
 			flex-direction: column;
 			padding: 1rem;
 			gap: 3rem;
+		}
+		.tryagain .tryit {
+			padding: 1rem;
 		}
 	}
 </style>

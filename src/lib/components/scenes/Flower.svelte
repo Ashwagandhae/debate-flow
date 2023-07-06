@@ -49,20 +49,18 @@
 			},
 			'-=1000'
 		);
-		timeline.add({ duration: 2000 });
-
-		anime({
-			targets: petalsEl,
-			easing: 'linear',
-			duration: 60000,
-			rotate: 360,
-			loop: true
-		});
+		timeline.add({ duration: 1000 });
 	});
 	export let hover = false;
+
+	$: if (timeline) {
+		if (hover) {
+		} else {
+		}
+	}
 </script>
 
-<div class="top" class:hover role="article">
+<div class="top" class:hover role="img">
 	<div class="petals" bind:this={petalsEl}>
 		<div class="petal" style="transform: rotate(0deg)" />
 		<div class="petal" style="transform: rotate(72deg)" />
@@ -80,7 +78,23 @@
 		transform-origin: 0 0;
 		position: absolute;
 		z-index: -1;
+		animation: rotate 40s linear infinite;
+		scale: 1;
+		transition: scale var(--transition-speed) ease-in-out;
+		pointer-events: none;
 	}
+	@keyframes rotate {
+		from {
+			rotate: 0deg;
+		}
+		to {
+			rotate: 360deg;
+		}
+	}
+	.top.hover {
+		scale: 1.1;
+	}
+
 	.petal {
 		width: 8rem;
 		height: 17rem;
