@@ -95,4 +95,8 @@
 	});
 </script>
 
+<svelte:head>
+	<title>Flower: Debate Flowing App</title>
+	<meta name="description" content="A webapp for flowing in debate." />
+</svelte:head>
 <slot />

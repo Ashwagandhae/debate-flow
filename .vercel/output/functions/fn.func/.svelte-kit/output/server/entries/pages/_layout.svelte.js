@@ -58,7 +58,7 @@ const Layout = create_ssr_component(($$result, $$props, $$bindings, slots) => {
     const unit = cssVarIndex[key].unit;
     document.body.style.setProperty(`--${name}`, `${value}${unit}`);
   });
-  return `${slots.default ? slots.default({}) : ``}`;
+  return `${$$result.head += `<!-- HEAD_svelte-18lrh3p_START -->${$$result.title = `<title>Flower: Debate Flowing App</title>`, ""}<meta name="description" content="A webapp for flowing in debate."><!-- HEAD_svelte-18lrh3p_END -->`, ""} ${slots.default ? slots.default({}) : ``}`;
 });
 export {
   Layout as default
