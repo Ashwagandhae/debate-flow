@@ -13,6 +13,9 @@ textarea {
 	font-size: inherit;
 	font-weight: inherit;
 }
+button {
+	margin: 0;
+}
 
 h1 {
 	font-weight: var(--font-weight);

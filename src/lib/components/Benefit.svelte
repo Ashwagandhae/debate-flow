@@ -77,6 +77,7 @@
 		display: flex;
 		align-items: center;
 		justify-content: center;
+		height: auto;
 	}
 	.visual {
 		height: var(--height);
@@ -87,12 +88,12 @@
 
 	.text {
 		padding: 3rem;
-		height: 100%;
 		width: 100%;
 		display: flex;
 		flex-direction: column;
 		justify-content: center;
 		gap: 2rem;
+		height: auto;
 	}
 	h2 {
 		margin: 0;

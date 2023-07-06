@@ -1,5 +1,4 @@
 <script lang="ts">
-	import { onMount } from 'svelte';
 	import Benefit from '$lib/components/Benefit.svelte';
 	import Icon from '$lib/components/Icon.svelte';
 	import SpacingScene from '$lib/components/scenes/SpacingScene.svelte';
@@ -8,6 +7,7 @@
 	import KeyboardScene from '$lib/components/scenes/KeyboardScene.svelte';
 	import SettingsScene from '$lib/components/scenes/SettingsScene.svelte';
 	import Flower from '$lib/components/scenes/Flower.svelte';
+
 	let hover = false;
 </script>
 
