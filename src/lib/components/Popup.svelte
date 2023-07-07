@@ -3,6 +3,7 @@
 	import { popupIn, popupOut } from '../models/transition';
 	export let component: any;
 	export let props: any = {};
+	export let title: string;
 	export let closeSelf: () => void;
 
 	function handleKeydown(e: KeyboardEvent) {
@@ -14,8 +15,8 @@
 
 <svelte:window on:keydown={handleKeydown} />
 <div class="top" in:popupIn|global out:popupOut|global>
-	<div class="close">
-		<Button icon="delete" tooltip="close" on:click={closeSelf} />
+	<div class="upper">
+		<Button icon="delete" tooltip="close" on:click={closeSelf} /><span>{title}</span>
 	</div>
 	<svelte:component this={component} closePopup={closeSelf} {...props} />
 </div>
@@ -28,7 +29,12 @@
 		border-radius: var(--border-radius);
 		overflow: hidden;
 	}
-	.close {
+	.upper {
 		position: absolute;
+		display: flex;
+		align-items: center;
+		flex-direction: row;
+		gap: var(--padding-small);
+		font-weight: bold;
 	}
 </style>

@@ -1,8 +1,11 @@
 <script lang="ts">
 	import Icon from './Icon.svelte';
+	import Tooltip from './Tooltip.svelte';
 	import { onMount } from 'svelte';
 	import { settings } from '$lib/models/settings';
-	import { fade } from 'svelte/transition';
+	import { tutorialStep } from '$lib/models/stores';
+	import { tutorialSpan, tutorialBlock } from '$lib/models/transition';
+	import Button from './Button.svelte';
 
 	let transitionSpeed: number = settings.data['transitionSpeed'].value as number;
 
@@ -11,58 +14,132 @@
 			transitionSpeed = settings.data[key].value as number;
 		});
 	});
-
-	let delay = transitionSpeed * 2;
+	$: delay = 600;
+	let tutorialEnd = 7;
 </script>
 
-<div class="top">
-	<div class="instruction" in:fade|global={{ duration: transitionSpeed, delay: 0 }}>
-		<Icon name="arrowLeft" />
-		<p>
-			click to go <span class="primary">home</span>, go to <span class="primary">settings</span>,
-			and to <span class="secondary">download/upload</span>
-		</p>
-	</div>
-	<div class="instruction" in:fade|global={{ duration: transitionSpeed, delay }}>
-		<Icon name="arrowLeft" />
-		<p>
-			click to create a new flow on <span class="primary">aff</span> or
-			<span class="secondary">neg</span>
-		</p>
-	</div>
-	<div class="tips" in:fade|global={{ duration: transitionSpeed, delay: delay * 2 }}>
-		<h1>Tips</h1>
-		<div class="instruction" in:fade|global={{ duration: transitionSpeed, delay: delay * 3 }}>
-			<Icon name="dots" />
-			<p><span class="primary">hover</span> over buttons to see what they do</p>
-		</div>
-		<div class="instruction" in:fade|global={{ duration: transitionSpeed, delay: delay * 4 }}>
-			<Icon name="undo" />
+<button
+	class="top"
+	on:click={() => {
+		if ($tutorialStep < tutorialEnd) {
+			$tutorialStep += 1;
+		}
+	}}
+>
+	{#if $tutorialStep > 0}
+		<div class="instruction" in:tutorialBlock>
+			<Icon name="arrowLeft" />
 			<p>
-				use <span class="secondary">undo</span> and
-				<span class="secondary">redo</span> if you make a mistake
+				<span>
+					click to go <span class="primary">home</span>,
+				</span>
+				{#if $tutorialStep > 1}
+					<span in:tutorialSpan>
+						to open <span class="primary">settings</span>,
+					</span>
+				{/if}
+				{#if $tutorialStep > 2}
+					<span in:tutorialSpan>
+						and to <span class="secondary">download/upload</span>
+					</span>
+				{/if}
 			</p>
 		</div>
-		<div class="instruction" in:fade|global={{ duration: transitionSpeed, delay: delay * 5 }}>
-			<Icon name="settings" />
+	{/if}
+	{#if $tutorialStep > 3}
+		<div class="instruction" in:tutorialBlock>
+			<Icon name="arrowLeft" />
 			<p>
-				click on <span class="primary">settings</span> to customize
+				<span>
+					click to create a new flow on <span class="primary">aff</span>
+				</span>
+				{#if $tutorialStep > 4}
+					<span in:tutorialSpan>
+						or <span class="secondary">neg</span>
+					</span>
+				{/if}
 			</p>
 		</div>
-	</div>
-</div>
+	{/if}
+	{#if $tutorialStep > 5}
+		<div class="tipsWrapper">
+			<div class="tips" in:tutorialBlock>
+				<h1>Tips</h1>
+				<div class="instruction" in:tutorialSpan={{ delay: delay }}>
+					<Icon name="dots" />
+					<p>
+						<Tooltip content="yes like this" inline>
+							<span class="primary">hover</span>
+						</Tooltip>
+						over buttons to see what they do
+					</p>
+				</div>
+				<div class="instruction" in:tutorialSpan={{ delay: delay * 2 }}>
+					<Icon name="undo" />
+					<p>
+						use <span class="secondary">undo</span> and
+						<span class="secondary">redo</span> if you make a mistake
+					</p>
+				</div>
+				<div class="instruction" in:tutorialSpan={{ delay: delay * 3 }}>
+					<Icon name="arrowUp" />
+					<p>
+						use the <span class="primary">arrow keys</span> to move around
+					</p>
+				</div>
+				<div class="instruction" in:tutorialSpan={{ delay: delay * 4 }}>
+					<Icon name="settings" />
+					<p>
+						click on <span class="primary">settings</span> to customize
+					</p>
+				</div>
+			</div>
+		</div>
+	{/if}
+	{#if $tutorialStep >= tutorialEnd}
+		<div class="instruction continue">
+			<Icon name="check" />
+			<p>tutorial done</p>
+			<Button
+				icon="undo"
+				text="reset"
+				tooltip="reset tutorial"
+				on:click={(event) => {
+					event.stopPropagation();
+					$tutorialStep = 0;
+				}}
+			/>
+		</div>
+	{:else if $tutorialStep == 0}
+		<div class="instruction continue start">
+			<Icon name="add" />
+			<p>click in this box to start tutorial</p>
+		</div>
+	{:else}
+		<div class="instruction continue">
+			<Icon name="add" />
+			<p>click to continue ({$tutorialStep}/{tutorialEnd})</p>
+		</div>
+	{/if}
+</button>
 
 <style>
 	.top {
+		padding: 0;
+		margin: 0;
+		border: none;
+		background: none;
 		height: 100%;
 		width: 100%;
+		color: inherit;
+		text-align: left;
+
 		border-radius: var(--border-radius);
 		background-color: var(--background);
 		padding: var(--padding);
 		box-sizing: border-box;
 		display: flex;
 		flex-direction: column;
-		gap: var(--padding);
 	}
 	.instruction {
 		display: flex;
@@ -71,7 +148,7 @@
 		gap: var(--padding-small);
 
 		box-sizing: content-box;
-		padding: var(--padding);
+		padding: var(--padding) var(--padding) calc(var(--padding) * 2) var(--padding);
 		width: max-content;
 		min-width: var(--button-size);
 		height: var(--button-size);
@@ -84,6 +161,9 @@
 		font-weight: var(--font-weight);
 		color: var(--this-text);
 		transition: background var(--transition-speed);
+	}
+	.instruction:last-child {
+		padding-bottom: var(--padding);
 	}
 	p {
 		display: block;
@@ -99,8 +179,22 @@
 		display: flex;
 		flex-direction: column;
 		padding: var(--padding);
+		padding-bottom: var(--padding);
 		background: var(--background-indent);
 		border-radius: var(--border-radius);
 		width: min-content;
+	}
+	.tipsWrapper {
+		padding-bottom: var(--padding);
+	}
+	.continue {
+		color: var(--text-weak);
+	}
+	.continue p {
+		color: var(--text-weak);
+	}
+	.continue.start,
+	.continue.start p {
+		color: var(--text);
 	}
 </style>

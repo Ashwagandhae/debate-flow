@@ -6,9 +6,10 @@
 	import { tooltipState } from '$lib/models/stores';
 
 	export let content: string | null;
-	export let shortcut: string[] | null;
+	export let shortcut: string[] | null = null;
 	export let disabled: boolean | string = false;
 	export let layout: string = 'bottom';
+	export let inline: boolean = false;
 	let isHovered: boolean = false;
 	let x: number = 0;
 	let y: number = 0;
@@ -39,7 +40,7 @@
 				openTooltip();
 			} else {
 				if (openTimeout == null) {
-					openTimeout = setTimeout(openTooltip, 1000);
+					openTimeout = setTimeout(openTooltip, 0);
 				}
 			}
 		}
@@ -97,6 +98,7 @@
 {#if content != null && useTooltips}
 	<div
 		class="element"
+		class:inline
 		on:mouseover={mouseOver}
 		on:focus={mouseOver}
 		on:mouseleave={mouseLeave}
@@ -137,6 +139,9 @@
 		width: min-content;
 		height: min-content;
 	}
+	.element.inline {
+		display: inline-block;
+	}
 	.tooltip {
 		border: none;
 		padding: var(--padding);
@@ -148,6 +153,9 @@
 		z-index: 10000;
 		font-size: var(--font-size);
 		box-shadow: var(--box-shadow);
+		display: flex;
+		flex-direction: column;
+		gap: var(--padding-small);
 	}
 	.disabled {
 		color: var(--text-weak);

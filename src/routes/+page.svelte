@@ -42,7 +42,7 @@
 			/>
 			<Benefit
 				title="Optimal Organization"
-				detail="Organize and rearrange your flows quickly with with color-coded and renamable tabs. "
+				detail="Organize and rearrange your flow sheets quickly with with color-coded and renamable tabs. "
 				component={TabScene}
 			/>
 			<Benefit

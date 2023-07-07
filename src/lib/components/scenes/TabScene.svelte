@@ -7,15 +7,15 @@
 
 	let dragTab: HTMLElement;
 	let aboveTabs: HTMLElement;
-	let hackEl: HTMLElement;
 
 	onMount(() => {
 		timeline = anime.timeline({
 			loop: true,
 			autoplay: false
 		});
-		let height = hackEl.clientHeight;
-		let otherHeight = height * 3;
+		let height = () => dragTab.clientHeight;
+
+		let otherHeight = () => aboveTabs.clientHeight;
 		timeline.add({
 			targets: dragTab,
 			translateX: [0, 10],
@@ -29,7 +29,7 @@
 		let children = Array.from(aboveTabs.children);
 		timeline.add({
 			targets: children,
-			translateY: [0, -height],
+			translateY: [0, () => -1 * height()],
 			easing: 'easeInOutSine',
 			duration: 500,
 			delay: anime.stagger(100)
@@ -46,7 +46,7 @@
 			targets: dragTab,
 			translateX: [10, 0],
 			easing: 'easeInOutSine',
-			duration: 500,
+			duration: 500
 		});
 		timeline.add({
 			targets: dragTab,
@@ -71,7 +71,7 @@
 		timeline.add(
 			{
 				targets: children,
-				translateY: [-height, 0],
+				translateY: [() => -1 * height(), 0],
 				easing: 'easeInOutSine',
 				duration: 500,
 				delay: anime.stagger(100)
@@ -102,7 +102,6 @@
 	<div class="palette-accent-secondary">
 		<FakeTab text="CP Space Elevator" />
 	</div>
-	<div bind:this={hackEl} class="hack" />
 </div>
 
 <style>
@@ -119,10 +118,5 @@
 	}
 	.dragTab {
 		z-index: 1000;
-	}
-	.hack {
-		position: fixed;
-		pointer-events: none;
-		height: calc(var(--padding) * 3 + var(--font-size) * 1.25);
 	}
 </style>

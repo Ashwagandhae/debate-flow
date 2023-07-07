@@ -1,35 +1,12 @@
 <script lang="ts">
+	import { keyDict } from '$lib/models/shortcut';
 	export let keys: string[];
-	let keyDict: {
-		[key: string]: string;
-	} = {
-		commandControl: '⌘/⌃',
-		command: '⌘',
-		shift: '⇧',
-		option: '⌥',
-		control: '⌃',
-		up: '↑',
-		down: '↓',
-		left: '←',
-		right: '→',
-		escape: '⎋',
-		return: '↵',
-		space: '␣',
-		delete: '⌫',
-		backspace: '⌦',
-		tab: '⇥',
-		home: '⇱',
-		end: '⇲',
-		pageup: '⇞',
-		pagedown: '⇟',
-		insert: '⌤'
-	};
 </script>
 
 <span class="top">
 	{#each keys as key, index}
 		{#if key in keyDict}
-			<kbd class="modifier">{keyDict[key]}</kbd>
+			<kbd class="modifier" class:big={keyDict[key].length == 1}>{keyDict[key]}</kbd>
 		{:else}
 			<kbd class="key">{key.toUpperCase()}</kbd>
 		{/if}
@@ -56,9 +33,13 @@
 		align-items: center;
 	}
 	.key {
-		font-size: 0.8em;
+		font-size: 1em;
 	}
 	.modifier {
+		font-size: 0.8em;
+	}
+
+	.modifier.big {
 		font-size: 1em;
 	}
 </style>

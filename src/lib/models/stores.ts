@@ -3,6 +3,7 @@ import type { Writable } from 'svelte/store';
 import type { Box, Flow } from './types';
 import { settings } from '$lib/models/settings';
 
+export const tutorialStep = writable(0);
 export const activeMouse = writable(true);
 export const flows: Writable<Flow[]> = writable([]);
 export const selected = writable(0);

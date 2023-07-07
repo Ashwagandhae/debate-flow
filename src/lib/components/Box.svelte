@@ -140,7 +140,8 @@
 		shift: {
 			Enter: new keyDown(() => {
 				addChild(0, 0) && focusChild(0, 0);
-			})
+			}),
+			Tab: new keyDown(() => focusSibling(index, -1))
 		},
 		other: {
 			Enter: new keyDown(() => {
@@ -156,6 +157,7 @@
 
 			ArrowUp: new keyDown(() => focusSibling(index, -1)),
 			ArrowDown: new keyDown(() => focusSibling(index, 1)),
+			Tab: new keyDown(() => focusSibling(index, 1)),
 			ArrowLeft: new keyDown(() => focusParent()),
 			ArrowRight: new keyDown(() => {
 				if (children.length > 0) {

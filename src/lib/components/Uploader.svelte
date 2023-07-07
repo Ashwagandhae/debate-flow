@@ -23,7 +23,7 @@
 <style>
 	.top {
 		padding: var(--padding-big);
-		padding-top: calc(var(--button-size) + var(--padding));
+		padding-top: calc(var(--button-size) + var(--padding) * 2);
 		width: clamp(300px, 20vw, 400px);
 		height: min-content;
 		display: flex;

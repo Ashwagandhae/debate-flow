@@ -167,14 +167,14 @@
 	section {
 		width: 100%;
 		padding: var(--padding-big);
-		padding-top: calc(var(--button-size) + var(--padding));
+		padding-top: calc(var(--button-size) + var(--padding) * 2);
 		box-sizing: border-box;
 		display: flex;
 		flex-direction: column;
 		align-items: center;
 		gap: var(--padding);
 	}
-	.xlsx {
+	.json {
 		background: var(--background-secondary);
 	}
 </style>

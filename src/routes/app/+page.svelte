@@ -11,6 +11,7 @@
 	import Settings from '$lib/components/Settings.svelte';
 	import SortableList from '$lib/components/SortableList.svelte';
 	import Tutorial from '$lib/components/Tutorial.svelte';
+	import TutorialHighlight from '$lib/components/TutorialHighlight.svelte';
 	import Tab from '$lib/components/Tab.svelte';
 	import type { Flow as IFlow } from '$lib/models/types';
 	import { screenTransition } from '$lib/models/transition';
@@ -164,7 +165,7 @@
 				return flow;
 			});
 		} catch (e) {
-			openPopup(Error, {
+			openPopup(Error, 'File Error', {
 				props: { message: 'Invalid file' }
 			});
 		}
@@ -175,14 +176,15 @@
 
 	let popups: {
 		component: Uploader | Downloader | Settings | Error;
+		title: string;
 		props: any;
 	}[] = [];
 	function closePopup(index: number) {
 		popups.splice(index, 1);
 		popups = popups;
 	}
-	function openPopup(component: any, { props = {} } = {}) {
-		popups.push({ component, props });
+	function openPopup(component: any, title: string, { props = {} } = {}) {
+		popups.push({ component, props, title });
 		popups = popups;
 	}
 
@@ -237,6 +239,7 @@
 					<Popup
 						component={popups[0].component}
 						closeSelf={() => closePopup(0)}
+						title={popups[0].title}
 						props={popups[0].props}
 					/>
 				{/key}
@@ -248,16 +251,32 @@
 		<div class="sidebar">
 			<div class="header">
 				<ButtonBar>
-					<Button icon="home" link="/" tooltip="go home" />
-					<Button icon="settings" on:click={() => openPopup(Settings)} tooltip="settings" />
-					<Button
-						icon="download"
-						on:click={() => openPopup(Downloader)}
-						disabled={$flows.length == 0}
-						disabledReason={'nothing to download'}
-						tooltip="download as file"
-					/>
-					<Button icon="upload" on:click={() => openPopup(Uploader)} tooltip="import file" />
+					<TutorialHighlight showOn={1}>
+						<Button icon="home" link="/" tooltip="go home" />
+					</TutorialHighlight>
+					<TutorialHighlight showOn={2}>
+						<Button
+							icon="settings"
+							on:click={() => openPopup(Settings, 'Settings')}
+							tooltip="settings"
+						/>
+					</TutorialHighlight>
+					<TutorialHighlight showOn={3}>
+						<Button
+							icon="download"
+							on:click={() => openPopup(Downloader, 'Download')}
+							disabled={$flows.length == 0}
+							disabledReason={'nothing to download'}
+							tooltip="download as file"
+						/>
+					</TutorialHighlight>
+					<TutorialHighlight showOn={3}>
+						<Button
+							icon="upload"
+							on:click={() => openPopup(Uploader, 'Upload')}
+							tooltip="import file"
+						/>
+					</TutorialHighlight>
 				</ButtonBar>
 			</div>
 			<div class="tabs">
@@ -271,22 +290,26 @@
 					</SortableList>
 
 					<div class="add-tab">
-						<Button
-							text="aff"
-							palette="accent"
-							icon="add"
-							on:click={() => addFlow('aff')}
-							tooltip="create new aff flow"
-							shortcut={['control', 'n']}
-						/>
-						<Button
-							text="neg"
-							palette="accent-secondary"
-							icon="add"
-							on:click={() => addFlow('neg')}
-							tooltip="create new neg flow"
-							shortcut={['control', 'shift', 'n']}
-						/>
+						<TutorialHighlight showOn={4}>
+							<Button
+								text="aff"
+								palette="accent"
+								icon="add"
+								on:click={() => addFlow('aff')}
+								tooltip="create new aff flow"
+								shortcut={['control', 'n']}
+							/>
+						</TutorialHighlight>
+						<TutorialHighlight showOn={5}>
+							<Button
+								text="neg"
+								palette="accent-secondary"
+								icon="add"
+								on:click={() => addFlow('neg')}
+								tooltip="create new neg flow"
+								shortcut={['control', 'shift', 'n']}
+							/>
+						</TutorialHighlight>
 					</div>
 				</ul>
 			</div>
@@ -325,7 +348,7 @@
 		grid-template-areas:
 			'sidebar title box-control'
 			'sidebar flow flow';
-		grid-template-columns: 184px 1fr auto;
+		grid-template-columns: var(--sidebar-width) 1fr auto;
 		padding: var(--main-margin);
 		width: 100%;
 		height: 100%;
@@ -333,7 +356,7 @@
 	}
 	.grid.tutorialMode {
 		grid-template-areas: 'sidebar tutorial';
-		grid-template-columns: 184px auto;
+		grid-template-columns: var(--sidebar-width) auto;
 	}
 	ul {
 		padding: 0;

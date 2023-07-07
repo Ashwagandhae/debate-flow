@@ -27,6 +27,8 @@
 		transition: background var(--transition-speed), transform var(--transition-speed) ease;
 		font-weight: var(--font-weight);
 		background-color: var(--this-background-indent);
+		box-sizing: border-box;
+		height: calc(var(--button-size) + var(--padding) * 2);
 
 		width: var(--tab-width);
 	}

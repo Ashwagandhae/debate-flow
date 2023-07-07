@@ -190,3 +190,37 @@ export function screenTransition(_node: HTMLElement) {
 		}
 	};
 }
+
+export function tutorialSpan(_node: HTMLElement, { delay }: { delay?: number } = { delay: 0 }) {
+	return {
+		delay,
+		duration: settings.data.transitionSpeed.value as number,
+		css: (t: number) => {
+			return `
+        opacity: ${t};
+      `;
+		}
+	};
+}
+
+export function tutorialBlock(node: HTMLElement, { delay }: { delay?: number } = { delay: 0 }) {
+	const style = getComputedStyle(node);
+	const paddingTop = parseInt(style.getPropertyValue('padding-top'));
+	const paddingBottom = parseInt(style.getPropertyValue('padding-bottom'));
+	const h = node.clientHeight - paddingTop - paddingBottom;
+	console.log(h, paddingTop, paddingBottom);
+	return {
+		delay,
+		duration: settings.data.transitionSpeed.value as number,
+		css: (t: number) => {
+			const eased = quadOut(t);
+			return `
+        opacity: ${t};
+				height: ${eased * h}px;
+				padding-top: ${eased * paddingTop}px;
+				padding-bottom: ${eased * paddingBottom}px;
+				scale: ${eased};
+      `;
+		}
+	};
+}

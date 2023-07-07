@@ -57,6 +57,10 @@ body {
 	--button-size: 20px;
 	--gap: 8px;
 	--line-width: 4px;
+	--sidebar-width: max(
+		180px,
+		calc(var(--button-size) * 4 + var(--padding) * 3 * 3 + var(--padding) * 2 * 2)
+	);
 }
 /* background text color 
 accent
