@@ -15,7 +15,7 @@
 	export let focus: boolean;
 	export let invert: boolean;
 	export let deleteSelf: () => void = () => {};
-	$: path = [index];
+	$: path = [];
 
 	let textarea: Text;
 	function handleBlur() {
@@ -49,8 +49,6 @@
 		if (focus) {
 			$flows[$selected].history.addFocus([...path]);
 			dispatch('saveFocus', path);
-			$flows[$selected].lastFocus = [...path];
-			$flows[$selected] = $flows[$selected];
 			textarea && textarea.focus();
 		} else {
 			hasSentEdit = false;

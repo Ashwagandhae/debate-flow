@@ -21,7 +21,7 @@
 	export let parentPath: number[] = [];
 	export let empty: boolean = false;
 
-	$: path = [...parentPath, index];
+	$: path = root ? [] : [...parentPath, index];
 
 	export let addSibling: (childIndex: number, direction: number) => boolean = () => false;
 	export let deleteSelf: (childIndex: number) => void = () => {};
@@ -134,9 +134,15 @@
 		}
 	}
 	const keyDowns: {
+		alt: { [key: string]: keyDown };
 		shift: { [key: string]: keyDown };
 		other: { [key: string]: keyDown };
 	} = {
+		alt: {
+			Enter: new keyDown(() => {
+				addSibling(index, 0) && focusSibling(index, 0);
+			})
+		},
 		shift: {
 			Enter: new keyDown(() => {
 				addChild(0, 0) && focusChild(0, 0);
@@ -151,8 +157,8 @@
 				() => {
 					deleteSelf(index);
 				},
-				// only delete if content is empty
-				() => content.length == 0
+				// only delete if content is empty and there are no children
+				() => content.length == 0 && children.length == 0
 			),
 
 			ArrowUp: new keyDown(() => focusSibling(index, -1)),
@@ -171,6 +177,8 @@
 	function handleKeydown(e: KeyboardEvent) {
 		if (e.shiftKey && keyDowns.shift[e.key]) {
 			keyDowns.shift[e.key].handle(e);
+		} else if (e.altKey && keyDowns.alt[e.key]) {
+			keyDowns.alt[e.key].handle(e);
 		} else if (keyDowns.other[e.key]) {
 			keyDowns.other[e.key].handle(e);
 		}

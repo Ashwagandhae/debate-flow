@@ -61,7 +61,8 @@
 		focusFlow();
 	}
 	function focusFlow() {
-		let lastFocus = $flows[$selected]?.lastFocus && boxFromPath($flows[$selected]?.lastFocus);
+		let lastFocus =
+			$flows[$selected]?.lastFocus && boxFromPath($flows[$selected], $flows[$selected]?.lastFocus);
 		if (lastFocus) {
 			lastFocus.focus = true;
 		} else {
@@ -71,7 +72,9 @@
 	}
 	function blurFlow() {
 		if ($flows.length > 0) {
-			let lastFocus = $flows[$selected]?.lastFocus && boxFromPath($flows[$selected]?.lastFocus);
+			let lastFocus =
+				$flows[$selected]?.lastFocus &&
+				boxFromPath($flows[$selected], $flows[$selected]?.lastFocus);
 			if (!lastFocus) {
 				lastFocus = $flows[$selected];
 			}
@@ -167,7 +170,7 @@
 		try {
 			rawFlows = JSON.parse(data);
 			newFlows = rawFlows.map((flow: any) => {
-				flow.history = new History();
+				flow.history = new History(flow);
 				return flow;
 			});
 		} catch (e) {

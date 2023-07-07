@@ -106,7 +106,7 @@ class Settings {
 }
 export const settings: Settings = new Settings({
 	debateStyle: {
-		name: 'Debate Style',
+		name: 'Debate style',
 		type: 'radio',
 		value: 0,
 		auto: 0,
@@ -212,6 +212,17 @@ export const settings: Settings = new Settings({
 		},
 		info: 'Type in a custom font name if it is installed on your computer'
 	},
+	buttonSize: {
+		name: 'Button size',
+		type: 'slider',
+		value: 20,
+		auto: 20,
+		detail: {
+			min: 10,
+			max: 50,
+			step: 1
+		}
+	},
 	borderRadius: {
 		name: 'Border radius',
 		type: 'slider',
@@ -235,7 +246,7 @@ export const settings: Settings = new Settings({
 		}
 	},
 	gap: {
-		name: 'Grid Gap',
+		name: 'Grid gap',
 		value: 8,
 		auto: 8,
 		type: 'slider',

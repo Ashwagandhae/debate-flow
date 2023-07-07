@@ -74,23 +74,29 @@ export function newFlow(index: number, type: string): Flow {
 			id = $flows[i].id + 1;
 		}
 	}
-	return {
+	const flow: Flow & { history: null } = {
 		content: '',
 		level: 0,
 		columns: currentDebateStyle[type].columns,
 		invert: currentDebateStyle[type].invert,
 		focus: true,
 		index: index,
-		lastFocus: [index],
+		lastFocus: [],
 		children: [newBox(0, 1, false)],
-		history: new History(),
+		history: null,
 		id: id
 	};
+	flow.history = new History(flow);
+	return flow;
 }
 
-export function boxFromPath(path: number[], scope = 0): Flow | Box | null {
-	let ret: Flow | Box = $flows[path[0]];
-	for (let i = 1; i < path.length - scope; i++) {
+export function boxFromPath(flow: Flow, path: number[], scope = 0): Flow | Box | null {
+	if (path.length == 0 && scope >= 1) {
+		// can't go up any further
+		return null;
+	}
+	let ret: Flow | Box = flow;
+	for (let i = 0; i < path.length - scope; i++) {
 		ret = ret?.children[path[i]];
 		if (ret == undefined) {
 			return null;
@@ -111,10 +117,12 @@ export class History {
 	index: number;
 	data: Action[];
 	lastFocus: number[] | null;
-	constructor() {
+	flow: Flow;
+	constructor(flow: Flow) {
 		this.index = -1;
 		this.data = [];
 		this.lastFocus = null;
+		this.flow = flow;
 	}
 	lastAction() {
 		return this.data[this.index];
@@ -197,51 +205,66 @@ export class History {
 	}
 	undoAction(action: Action) {
 		console.log('undo', this.index, this.data);
-		const parent: Flow | Box | null = boxFromPath(action.path, 1);
-		if (parent == null) {
-			throw new Error('parent is null');
-		}
-		const childIndex: number = action.path[action.path.length - 1];
-		const children: Box[] = [...parent.children];
+
 		// do opposite of action
-		if (action.type == 'add') {
-			children.splice(childIndex, 1);
-		} else if (action.type == 'delete') {
-			children.splice(childIndex, 0, action.other.box);
+		if (action.type == 'add' || action.type == 'delete') {
+			const parent: Flow | Box | null = boxFromPath(this.flow, action.path, 1);
+			if (parent == null) {
+				throw new Error(`parent of box at path ${action.path} is null`);
+			}
+			const childIndex: number = action.path[action.path.length - 1];
+			const children: Box[] = [...parent.children];
+			if (action.type == 'add') {
+				children.splice(childIndex, 1);
+			} else if (action.type == 'delete') {
+				children.splice(childIndex, 0, action.other.box);
+			}
+			// fix index
+			for (let i = childIndex; i < children.length; i++) {
+				children[i].index = i;
+			}
+			parent.children = [...children];
 		} else if (action.type == 'edit') {
-			children[childIndex].content = action.other.lastContent;
+			const box: Flow | Box | null = boxFromPath(this.flow, action.path);
+			if (box == null) {
+				throw new Error(`box at path ${action.path} is null`);
+			}
+			box.content = action.other.lastContent;
 		}
-		// fix index
-		for (let i = childIndex; i < children.length; i++) {
-			children[i].index = i;
-		}
-		parent.children = [...children];
 	}
 	redoAction(action: Action) {
 		console.log('redo', this.index, this.data);
-		const parent: Flow | Box | null = boxFromPath(action.path, 1);
-		const childIndex: number = action.path[action.path.length - 1];
-		if (parent == null) {
-			throw new Error('parent is null');
-		}
-		const children: Box[] = [...parent.children];
+
 		// do opposite of action
-		if (action.type == 'add') {
-			children.splice(childIndex, 0, newBox(childIndex, parent.level + 1, false));
-		} else if (action.type == 'delete') {
-			children.splice(childIndex, 1);
+		if (action.type == 'add' || action.type == 'delete') {
+			const parent: Flow | Box | null = boxFromPath(this.flow, action.path, 1);
+			const childIndex: number = action.path[action.path.length - 1];
+			if (parent == null) {
+				throw new Error(`parent of box at path ${action.path} is null`);
+			}
+			const children: Box[] = [...parent.children];
+			if (action.type == 'add') {
+				children.splice(childIndex, 0, newBox(childIndex, parent.level + 1, false));
+			} else if (action.type == 'delete') {
+				children.splice(childIndex, 1);
+			}
+			// fix index
+			for (let i = childIndex; i < children.length; i++) {
+				children[i].index = i;
+			}
+			parent.children = [...children];
 		} else if (action.type == 'edit') {
-			children[childIndex].content = action.other.nextContent;
+			const box: Flow | Box | null = boxFromPath(this.flow, action.path);
+			if (box == null) {
+				throw new Error(`box at path ${action.path} is null`);
+			}
+			box.content = action.other.nextContent;
 		}
-		// fix index
-		for (let i = childIndex; i < children.length; i++) {
-			children[i].index = i;
-		}
-		parent.children = [...children];
 	}
-	focus(path: number[]) {
-		const box = boxFromPath(path);
-		if (box != undefined) {
+	focus(path: number[] | null) {
+		if (path == null) return;
+		const box = boxFromPath(this.flow, path);
+		if (box != null) {
 			box.focus = true;
 		}
 	}
@@ -251,7 +274,7 @@ export class History {
 		if (this.index > -1) {
 			const action = this.lastAction();
 			this.undoAction(action);
-			this.focus(action.lastFocus as number[]); // assume its not null because of index
+			this.focus(action.lastFocus); // assume its not null because of index
 			flows.set($flows);
 			this.index -= 1;
 		}
@@ -263,7 +286,7 @@ export class History {
 			this.index += 1;
 			const action = this.lastAction();
 			this.redoAction(action);
-			this.focus(action.nextFocus as number[]); // assume its not null because of index
+			this.focus(action.nextFocus); // assume its not null because of index
 			flows.set($flows);
 		}
 	}

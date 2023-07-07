@@ -13,9 +13,11 @@
 	async function setValidFocus() {
 		// wait until its actually done updating
 		await tick();
-		if (flow.lastFocus && flow.lastFocus.length > 1) {
-			let box: Flow | Box | null = boxFromPath(flow.lastFocus);
+		if (flow.lastFocus && flow.lastFocus.length > 0) {
+			let box: Flow | Box | null = boxFromPath(flow, flow.lastFocus);
 			validFocus = box?.focus ?? false;
+		} else {
+			validFocus = false;
 		}
 	}
 	// $: flow.lastFocus, setValidFocus();
@@ -26,8 +28,8 @@
 	async function deleteChild() {
 		// cancel if disabled
 		if (!validFocus) return;
-		let parent: Box | Flow | null = boxFromPath(flow.lastFocus, 1);
-		let target: Box | null = boxFromPath(flow.lastFocus);
+		let parent: Box | Flow | null = boxFromPath(flow, flow.lastFocus, 1);
+		let target: Box | null = boxFromPath(flow, flow.lastFocus);
 		// cancel if parent or target is null
 		if (parent == null || target == null) return;
 		let childrenClone: Box[] = [...parent.children];
@@ -69,7 +71,7 @@
 		// cancel if disabled
 		if (!validFocus) return;
 		// if not at end of column
-		let target: Box | null = boxFromPath(flow.lastFocus);
+		let target: Box | null = boxFromPath(flow, flow.lastFocus);
 		// cancel if target is null
 		if (target == null) return;
 		let childrenClone: Box[] = [...target.children];
@@ -90,8 +92,8 @@
 	function addSibling(direction: number) {
 		// cancel if disabled
 		if (!validFocus) return;
-		let parent: Flow | Box | null = boxFromPath(flow.lastFocus, 1);
-		let target: Box | null = boxFromPath(flow.lastFocus);
+		let parent: Flow | Box | null = boxFromPath(flow, flow.lastFocus, 1);
+		let target: Box | null = boxFromPath(flow, flow.lastFocus);
 		// cancel if parent or target is null
 		if (parent == null || target == null) return;
 
@@ -157,6 +159,7 @@
 				disabled={!validFocus}
 				{disabledReason}
 				tooltip="add arguement above"
+				shortcut={['option', 'return']}
 			/>
 			<Button
 				icon="addDown"

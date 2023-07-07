@@ -66,6 +66,10 @@
 		gap: {
 			name: 'gap',
 			unit: 'px'
+		},
+		buttonSize: {
+			name: 'button-size',
+			unit: 'px'
 		}
 	};
 	settings.subscribe(['fontFamily'], function (key: string) {
