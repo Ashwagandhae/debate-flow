@@ -27,6 +27,7 @@
 	} from '$lib/models/stores';
 
 	let destroyers: (() => void)[] = [];
+	$: unsavedChanges = $flows.length > 0 && !$changesSaved;
 	onMount(() => {
 		window.addEventListener(
 			'dragover',
@@ -44,8 +45,9 @@
 		);
 		// changes you made may not be saved
 		window.addEventListener('beforeunload', function (e) {
-			if ($flows.length > 0 && !$changesSaved) {
+			if (unsavedChanges) {
 				let confirmationMessage = 'Are you sure you want to leave?';
+				e.returnValue = confirmationMessage;
 				return confirmationMessage;
 			}
 		});
@@ -136,6 +138,10 @@
 			reader.readAsText(file, 'UTF-8');
 		} else if (file.type == 'application/json') {
 			reader.readAsText(file, 'UTF-8');
+		} else {
+			openPopup(Error, 'File Error', {
+				props: { message: 'Invalid file' }
+			});
 		}
 	}
 	function readUpload() {
@@ -170,7 +176,10 @@
 			});
 		}
 		if (newFlows != null) {
-			$flows = newFlows;
+			if (!unsavedChanges || confirm('Are you sure you want to overwrite your current flows?')) {
+				$flows = newFlows;
+				$selected = 0;
+			}
 		}
 	}
 
@@ -196,7 +205,6 @@
 		if (from > to) {
 			to += 1;
 		}
-		console.log(to, from);
 		let flow = newFlows.splice(from, 1)[0];
 		newFlows.splice(to, 0, flow);
 
