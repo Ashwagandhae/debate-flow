@@ -1,7 +1,7 @@
 <script lang="ts">
 	import Icon from './Icon.svelte';
 	import Tooltip from './Tooltip.svelte';
-	import { onMount } from 'svelte';
+	import { onDestroy, onMount } from 'svelte';
 	import { settings } from '$lib/models/settings';
 	import { tutorialStep } from '$lib/models/stores';
 	import { tutorialSpan, tutorialBlock } from '$lib/models/transition';
@@ -10,12 +10,16 @@
 	let transitionSpeed: number = settings.data['transitionSpeed'].value as number;
 
 	onMount(() => {
+		tutorialStep.set(0);
 		settings.subscribe(['transitionSpeed'], (key: string) => {
 			transitionSpeed = settings.data[key].value as number;
 		});
 	});
-	$: delay = 600;
+	let delay = 600;
 	let tutorialEnd = 7;
+	onDestroy(() => {
+		tutorialStep.set(0);
+	});
 </script>
 
 <button
@@ -113,7 +117,7 @@
 	{:else if $tutorialStep == 0}
 		<div class="instruction continue start">
 			<Icon name="add" />
-			<p>click in this box to start tutorial</p>
+			<p>click this box to start tutorial</p>
 		</div>
 	{:else}
 		<div class="instruction continue">
