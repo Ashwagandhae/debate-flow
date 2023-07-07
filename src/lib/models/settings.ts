@@ -111,7 +111,7 @@ export const settings: Settings = new Settings({
 		value: 0,
 		auto: 0,
 		detail: {
-			options: ['Policy', 'Public forum', 'Lincoln douglass']
+			options: ['Policy', 'Public Forum', 'Lincoln Douglas']
 		},
 		info: "Already created flows won't be affected by this setting"
 	},
