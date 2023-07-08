@@ -3,8 +3,8 @@
 	import Icon from './Icon.svelte';
 	import { getContext, onMount, tick, onDestroy } from 'svelte';
 	import { createEventDispatcher } from 'svelte';
-	import { activeMouse, flows, selected, newBox } from '$lib/models/stores';
-	import type { Box } from '../models/types';
+	import { activeMouse, flows, selected, newBox, boxFromPath } from '$lib/models/stores';
+	import type { Box, Flow } from '../models/types';
 
 	import { boxIn, boxOut, boxButtonIn, brIn, brOut } from '../models/transition';
 
@@ -161,15 +161,16 @@
 				() => content.length == 0 && children.length == 0
 			),
 
-			ArrowUp: new keyDown(() => focusSibling(index, -1)),
-			ArrowDown: new keyDown(() => focusSibling(index, 1)),
+			// ArrowUp: new keyDown(() => focusSibling(index, -1)),
+			ArrowUp: new keyDown(() => focusAdjacent(-1) || focusSelf()),
+			ArrowDown: new keyDown(() => focusAdjacent(1) || focusSelf()),
 			Tab: new keyDown(() => focusSibling(index, 1)),
 			ArrowLeft: new keyDown(() => focusParent()),
 			ArrowRight: new keyDown(() => {
 				if (children.length > 0) {
 					focusChild(0, 0);
 				} else {
-					focusSibling(index, 1);
+					focusAdjacent(1) || focusSelf();
 				}
 			})
 		}
@@ -289,6 +290,73 @@
 			}
 		}
 		children = children;
+	}
+	function reducePath(path: number[]): number[] | null {
+		if (path.length == 0) return null;
+		let last = path[path.length - 1];
+		if (last == 0) {
+			let parentPath: number[] | null = path.slice(0, path.length - 1);
+			while (true) {
+				// reduce parent path
+				parentPath = reducePath(parentPath);
+				// if no parent, return null
+				if (parentPath == null) return null;
+				let box = boxFromPath($flows[$selected], parentPath) as Box;
+				// if parent has last child, return parent path with last child
+				if (box.children.length > 0) {
+					return [...parentPath, box.children.length - 1];
+				}
+				// if parent has no children, keep reducing parentPath
+			}
+			// if no last child, return parent path
+		}
+		return [...path.slice(0, path.length - 1), last - 1];
+	}
+	function increasePath(path: number[]): number[] | null {
+		if (path.length == 0) return null;
+		let last = path[path.length - 1];
+		let parentBox = boxFromPath($flows[$selected], path.slice(0, path.length - 1)) as Box;
+		if (last == parentBox.children.length - 1) {
+			let parentPath: number[] | null = path.slice(0, path.length - 1);
+			while (true) {
+				// increase parent path
+				parentPath = increasePath(parentPath);
+				// if no parent, return null
+				if (parentPath == null) return null;
+				let box = boxFromPath($flows[$selected], parentPath) as Box;
+				// if parent has last child, return parent path with last child
+				if (box.children.length > 0) {
+					return [...parentPath, 0];
+				}
+				// if parent has no children, keep increasing parentPath
+			}
+			// if no last child, return parent path
+		}
+		return [...path.slice(0, path.length - 1), last + 1];
+	}
+	function focusAdjacent(direction: number): boolean {
+		let retPath: number[] | null = [...path];
+		while (true) {
+			// change path
+			if (direction == -1) {
+				retPath = reducePath(retPath);
+			} else if (direction == 1) {
+				retPath = increasePath(retPath);
+			}
+			if (retPath == null) return false;
+			// get box
+			let box = boxFromPath($flows[$selected], retPath) as Box;
+			if (box == null) return false;
+			if (box.empty) {
+				// skip if empty
+				continue;
+			} else {
+				// if not empty, focus on box
+				console.log('focusAdjacent', retPath, box);
+				box.focus = true;
+				return true;
+			}
+		}
 	}
 	function focusSelf() {
 		if (empty) {
