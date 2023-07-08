@@ -3,9 +3,9 @@
 	import Header from './Header.svelte';
 	import type { Flow } from '../models/types';
 	import type { Box as BoxType } from '../models/types';
-	import { flowIn, flowOut } from '../models/transition';
 
 	import { setContext } from 'svelte';
+	import { deepClone } from '$lib/models/stores';
 
 	export let root: Flow;
 	setContext('invert', () => {
@@ -54,6 +54,7 @@
 			}
 		}
 
+		root.history.add('addBox', [0], { box: deepClone(parentBox) });
 		children.splice(0, 0, parentBox);
 		// fix index
 		for (let i = childIndex; i < children.length; i++) {

@@ -55,6 +55,11 @@ flows.subscribe((value) => {
 	$flows = value;
 });
 
+// TODO better deep clone
+export function deepClone<T>(obj: T): T {
+	return JSON.parse(JSON.stringify(obj));
+}
+
 export function newBox(index: number, level: number, focus: boolean) {
 	return <Box>{
 		content: '',
@@ -74,7 +79,7 @@ export function newFlow(index: number, type: string): Flow {
 			id = $flows[i].id + 1;
 		}
 	}
-	const flow: Flow & { history: null } = {
+	const flow: Omit<Flow, 'history'> & { history: null | History } = {
 		content: '',
 		level: 0,
 		columns: currentDebateStyle[type].columns,
@@ -83,11 +88,11 @@ export function newFlow(index: number, type: string): Flow {
 		index: index,
 		lastFocus: [],
 		children: [newBox(0, 1, false)],
-		history: null,
-		id: id
+		id: id,
+		history: null
 	};
-	flow.history = new History(flow);
-	return flow;
+	flow.history = new History(flow as unknown as Flow);
+	return flow as Flow;
 }
 
 export function boxFromPath(flow: Flow, path: number[], scope = 0): Flow | Box | null {
@@ -105,8 +110,9 @@ export function boxFromPath(flow: Flow, path: number[], scope = 0): Flow | Box |
 
 	return ret;
 }
+type ActionLabel = 'add' | 'delete' | 'edit' | 'addBox';
 type Action = {
-	type: string;
+	type: ActionLabel;
 	path: number[];
 	lastFocus: number[] | null;
 	nextFocus: number[] | null;
@@ -127,7 +133,7 @@ export class History {
 	lastAction() {
 		return this.data[this.index];
 	}
-	add(type: string, path: number[], other?: any) {
+	add(type: ActionLabel, path: number[], other?: any) {
 		changesSaved.set(false);
 		this.resolveAllPending();
 		const action: Action = {
@@ -143,7 +149,7 @@ export class History {
 		this.data.push(action);
 		this.index = this.data.length - 1;
 	}
-	addPending(type: string, path: number[], other?: any) {
+	addPending(type: ActionLabel, path: number[], other?: any) {
 		changesSaved.set(false);
 		this.data = this.data.slice(0, this.index + 1);
 		this.data.push({
@@ -207,14 +213,14 @@ export class History {
 		console.log('undo', this.index, this.data);
 
 		// do opposite of action
-		if (action.type == 'add' || action.type == 'delete') {
+		if (action.type == 'add' || action.type == 'addBox' || action.type == 'delete') {
 			const parent: Flow | Box | null = boxFromPath(this.flow, action.path, 1);
 			if (parent == null) {
 				throw new Error(`parent of box at path ${action.path} is null`);
 			}
 			const childIndex: number = action.path[action.path.length - 1];
 			const children: Box[] = [...parent.children];
-			if (action.type == 'add') {
+			if (action.type == 'add' || action.type == 'addBox') {
 				children.splice(childIndex, 1);
 			} else if (action.type == 'delete') {
 				children.splice(childIndex, 0, action.other.box);
@@ -236,7 +242,7 @@ export class History {
 		console.log('redo', this.index, this.data);
 
 		// do opposite of action
-		if (action.type == 'add' || action.type == 'delete') {
+		if (action.type == 'add' || action.type == 'addBox' || action.type == 'delete') {
 			const parent: Flow | Box | null = boxFromPath(this.flow, action.path, 1);
 			const childIndex: number = action.path[action.path.length - 1];
 			if (parent == null) {
@@ -245,6 +251,8 @@ export class History {
 			const children: Box[] = [...parent.children];
 			if (action.type == 'add') {
 				children.splice(childIndex, 0, newBox(childIndex, parent.level + 1, false));
+			} else if (action.type == 'addBox') {
+				children.splice(childIndex, 0, deepClone(action.other.box));
 			} else if (action.type == 'delete') {
 				children.splice(childIndex, 1);
 			}
