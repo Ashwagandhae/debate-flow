@@ -19,4 +19,5 @@ export type Box = {
 	level: number;
 	focus: boolean;
 	empty?: boolean;
+	placeholder?: string;
 };

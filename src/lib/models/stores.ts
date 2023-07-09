@@ -14,7 +14,7 @@ export const tooltipState = writable({
 });
 const debateStyles: {
 	[key: string]: {
-		[key: string]: { columns: string[]; invert: boolean };
+		[key: string]: { columns: string[]; invert: boolean; starterBoxes?: string[] };
 	};
 } = {
 	policy: {
@@ -40,10 +40,12 @@ const debateStyles: {
 	lincolnDouglas: {
 		aff: {
 			columns: ['AC', 'NC', '1AR', '1NR', '2AR'],
+			starterBoxes: ['value', 'criterion'],
 			invert: false
 		},
 		neg: {
 			columns: ['NC', '1AR', '1NR', '2AR'],
+			starterBoxes: ['value', 'criterion'],
 			invert: true
 		}
 	}
@@ -60,13 +62,14 @@ export function deepClone<T>(obj: T): T {
 	return JSON.parse(JSON.stringify(obj));
 }
 
-export function newBox(index: number, level: number, focus: boolean) {
+export function newBox(index: number, level: number, focus: boolean, placeholder?: string): Box {
 	return <Box>{
 		content: '',
 		children: [],
 		index: index,
 		level: level,
-		focus: focus
+		focus: focus,
+		placeholder: placeholder
 	};
 }
 export function newFlow(index: number, type: string): Flow {
@@ -79,6 +82,13 @@ export function newFlow(index: number, type: string): Flow {
 			id = $flows[i].id + 1;
 		}
 	}
+	let children: Box[];
+	const starterBoxes = currentDebateStyle[type].starterBoxes;
+	if (starterBoxes != null) {
+		children = starterBoxes.map((placeholder, index) => newBox(index, 1, false, placeholder));
+	} else {
+		children = [newBox(0, 1, false)];
+	}
 	const flow: Omit<Flow, 'history'> & { history: null | History } = {
 		content: '',
 		level: 0,
@@ -87,7 +97,7 @@ export function newFlow(index: number, type: string): Flow {
 		focus: true,
 		index: index,
 		lastFocus: [],
-		children: [newBox(0, 1, false)],
+		children,
 		id: id,
 		history: null
 	};

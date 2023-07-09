@@ -20,6 +20,7 @@
 	export let focus: boolean = false;
 	export let parentPath: number[] = [];
 	export let empty: boolean = false;
+	export let placeholder: string = level == 1 && index == 0 ? 'type here' : '';
 
 	$: path = root ? [] : [...parentPath, index];
 
@@ -73,15 +74,6 @@
 		}
 	}
 	$: path, pathChange();
-
-	let placeholder: string = '';
-	$: {
-		if (level == 1 && index == 0) {
-			placeholder = 'type here';
-		} else {
-			placeholder = '';
-		}
-	}
 
 	function preventBlur(e: Event) {
 		e.preventDefault();
@@ -471,6 +463,7 @@
 				bind:level={child.level}
 				bind:focus={child.focus}
 				bind:empty={child.empty}
+				bind:placeholder={child.placeholder}
 				addSibling={addChild}
 				deleteSelf={deleteChild}
 				focusSibling={focusChild}
