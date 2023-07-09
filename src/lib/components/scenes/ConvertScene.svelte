@@ -73,8 +73,8 @@
 <div class="top">
 	<ul bind:this={flows}>
 		<div class="flow palette-accent">A1 Energy</div>
-		<div class="flow palette-accent-secondary">K Death not real</div>
-		<div class="flow palette-accent">A2 Energy</div>
+		<div class="flow palette-accent-secondary">K Anthropocentrism</div>
+		<div class="flow palette-accent">A2 Cohesion</div>
 	</ul>
 	<div class="button" bind:this={button}>
 		<FakeButton text="download as XLSX" icon="download" />
