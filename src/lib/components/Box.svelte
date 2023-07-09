@@ -27,6 +27,7 @@
 	export let addSibling: (childIndex: number, direction: number) => boolean = () => false;
 	export let deleteSelf: (childIndex: number) => void = () => {};
 	export let focusSibling: (childIndex: number, direction: number) => void = () => {};
+	export let focusSiblingStrict: (childIndex: number, direction: number) => boolean = () => false;
 	export let focusParent: () => void = () => {};
 	export let dispatchSelfFocus: (childIndex: number, isFocused: boolean) => void = () => {};
 
@@ -132,7 +133,7 @@
 	} = {
 		alt: {
 			Enter: new keyDown(() => {
-				addSibling(index, 0) && focusSibling(index, 0);
+				focusSiblingStrict(index, -1) || (addSibling(index, 0) && focusSibling(index, 0));
 			})
 		},
 		shift: {
@@ -143,7 +144,7 @@
 		},
 		other: {
 			Enter: new keyDown(() => {
-				addSibling(index, 1) && focusSibling(index, 1);
+				focusSiblingStrict(index, 1) || (addSibling(index, 1) && focusSibling(index, 1));
 			}),
 			Backspace: new keyDown(
 				() => {
@@ -154,7 +155,15 @@
 			),
 
 			// ArrowUp: new keyDown(() => focusSibling(index, -1)),
-			ArrowUp: new keyDown(() => focusAdjacent(-1) || focusSelf()),
+			ArrowUp: new keyDown(() => {
+				if (!focusAdjacent(-1)) {
+					if (level == 1) {
+						focusParent();
+					} else {
+						focusSelf();
+					}
+				}
+			}),
 			ArrowDown: new keyDown(() => focusAdjacent(1) || focusSelf()),
 			Tab: new keyDown(() => focusSibling(index, 1)),
 			ArrowLeft: new keyDown(() => focusParent()),
@@ -162,7 +171,7 @@
 				if (children.length > 0) {
 					focusChild(0, 0);
 				} else {
-					focusAdjacent(1) || focusSelf();
+					focusSelf();
 				}
 			})
 		}
@@ -255,6 +264,7 @@
 		}
 	}
 	function focusChild(childIndex: number, direction: number) {
+		//TODO fix focusChild
 		let newChildIndex = childIndex + direction;
 		// focus on parent when childIndex is before children
 		if (newChildIndex < 0) {
@@ -282,6 +292,21 @@
 			}
 		}
 		children = children;
+	}
+	function focusChildStrict(childIndex: number, direction: number): boolean {
+		let newChildIndex = childIndex + direction;
+		if (newChildIndex < 0 || newChildIndex >= children.length) {
+			return false;
+		}
+		// if is empty, skip
+		if (children[newChildIndex].empty && direction != 0) {
+			return focusChildStrict(newChildIndex, direction);
+		} else {
+			// focus on child
+			children[newChildIndex].focus = true;
+			children = children;
+			return true;
+		}
 	}
 	function reducePath(path: number[]): number[] | null {
 		if (path.length == 0) return null;
@@ -467,6 +492,7 @@
 				addSibling={addChild}
 				deleteSelf={deleteChild}
 				focusSibling={focusChild}
+				focusSiblingStrict={focusChildStrict}
 				focusParent={focusSelf}
 				dispatchSelfFocus={onChildFocus}
 				parentPath={path}
