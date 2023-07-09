@@ -107,6 +107,7 @@
 		flex-direction: row;
 		box-sizing: border-box;
 		height: var(--title-height);
+		min-width: 15ch;
 	}
 	.content {
 		width: 100%;
