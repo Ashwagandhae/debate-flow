@@ -1,6 +1,6 @@
 import { writable } from 'svelte/store';
 import type { Writable } from 'svelte/store';
-import type { Box, Flow } from './types';
+import type { Box, DebateStyle, Flow } from './types';
 import { settings } from '$lib/models/settings';
 
 export const tutorialStep = writable(0);
@@ -12,45 +12,58 @@ export const tooltipState = writable({
 	open: false,
 	claimed: false
 });
-const debateStyles: {
-	[key: string]: {
-		[key: string]: { columns: string[]; invert: boolean; starterBoxes?: string[] };
-	};
+export const debateStyles: {
+	[key: string]: DebateStyle;
 } = {
 	policy: {
-		aff: {
+		primary: {
+			name: 'aff',
 			columns: ['1AC', '1NC', '2AC', '2NC/1NR', '1AR', '2NR', '2AR'],
 			invert: false
 		},
-		neg: {
+		secondary: {
+			name: 'neg',
 			columns: ['1NC', '2AC', '2NC/1NR', '1AR', '2NR', '2AR'],
 			invert: true
 		}
 	},
 	publicForum: {
-		aff: {
-			columns: ['1AC', '1NC', '2AC', '2NC', 'AS', 'NS', 'AFF', 'NFF'],
+		primary: {
+			name: 'aff',
+			columns: ['AC', 'NC', 'AR', 'NR', 'AS', 'NS', 'AFF', 'NFF'],
+			columnsSwitch: ['AC', 'NR', 'AR', 'NS', 'AS', 'NFF', 'AFF'],
 			invert: false
 		},
-		neg: {
-			columns: ['1NC', '1AC', '2NC', '2AC', 'AS', 'NS', 'AFF', 'NFF'],
+		secondary: {
+			name: 'neg',
+			columns: ['NC', 'AR', 'NR', 'AS', 'NS', 'AFF', 'NFF'],
+			columnsSwitch: ['NC', 'AC', 'NR', 'AR', 'NS', 'AS', 'NFF', 'AFF'],
 			invert: true
 		}
 	},
 	lincolnDouglas: {
-		aff: {
+		primary: {
+			name: 'aff',
 			columns: ['AC', 'NC', '1AR', '1NR', '2AR'],
 			starterBoxes: ['value', 'criterion'],
 			invert: false
 		},
-		neg: {
+		secondary: {
+			name: 'neg',
 			columns: ['NC', '1AR', '1NR', '2AR'],
 			starterBoxes: ['value', 'criterion'],
 			invert: true
 		}
+	},
+	congress: {
+		primary: {
+			name: 'bill',
+			columns: ['1A', 'Q/1N', 'Q/2A', 'Q/2N', 'Q/3A', 'Q/3N', 'Q/4A', 'Q/4N', 'Q/5A', 'Q/5N'],
+			invert: false
+		}
 	}
 };
-const debateStyleIndex = ['policy', 'publicForum', 'lincolnDouglas'];
+export const debateStyleMap = ['policy', 'publicForum', 'lincolnDouglas', 'congress'];
 
 let $flows: Flow[];
 flows.subscribe((value) => {
@@ -72,9 +85,13 @@ export function newBox(index: number, level: number, focus: boolean, placeholder
 		placeholder: placeholder
 	};
 }
-export function newFlow(index: number, type: string): Flow {
+export function newFlow(
+	index: number,
+	type: 'primary' | 'secondary',
+	switchSpeakers = false
+): Flow | null {
 	const currentDebateStyle =
-		debateStyles[debateStyleIndex[settings.data.debateStyle.value as number]];
+		debateStyles[debateStyleMap[settings.data.debateStyle.value as number]];
 	// get new id
 	let id = 0;
 	for (let i = 0; i < $flows.length; i++) {
@@ -83,17 +100,25 @@ export function newFlow(index: number, type: string): Flow {
 		}
 	}
 	let children: Box[];
-	const starterBoxes = currentDebateStyle[type].starterBoxes;
+	const style = currentDebateStyle[type];
+	if (style == null) return null;
+	const starterBoxes = style.starterBoxes;
 	if (starterBoxes != null) {
 		children = starterBoxes.map((placeholder, index) => newBox(index, 1, false, placeholder));
 	} else {
 		children = [newBox(0, 1, false)];
 	}
+	let columns;
+	if (style.columnsSwitch != null && switchSpeakers) {
+		columns = style.columnsSwitch;
+	} else {
+		columns = style.columns;
+	}
 	const flow: Omit<Flow, 'history'> & { history: null | History } = {
 		content: '',
 		level: 0,
-		columns: currentDebateStyle[type].columns,
-		invert: currentDebateStyle[type].invert,
+		columns,
+		invert: style.invert,
 		focus: true,
 		index: index,
 		lastFocus: [],

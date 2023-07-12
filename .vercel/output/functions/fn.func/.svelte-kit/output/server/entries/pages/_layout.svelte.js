@@ -34,7 +34,8 @@ const Layout = create_ssr_component(($$result, $$props, $$bindings, slots) => {
     fontSize: { name: "font-size", unit: "rem" },
     fontWeight: { name: "font-weight", unit: "" },
     gap: { name: "gap", unit: "px" },
-    buttonSize: { name: "button-size", unit: "px" }
+    buttonSize: { name: "button-size", unit: "px" },
+    lineWidth: { name: "line-width", unit: "px" }
   };
   settings.subscribe(["fontFamily"], function(key) {
     const setting = settings.data.fontFamily;

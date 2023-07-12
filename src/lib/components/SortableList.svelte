@@ -136,6 +136,7 @@
 	ul {
 		list-style: none;
 		padding: 0;
+		margin: 0;
 		position: relative;
 		transition: height var(--transition-speed) ease-in;
 		display: block;

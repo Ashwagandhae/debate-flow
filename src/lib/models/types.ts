@@ -21,3 +21,20 @@ export type Box = {
 	empty?: boolean;
 	placeholder?: string;
 };
+
+export type DebateStyle = {
+	primary: {
+		name: string;
+		columns: string[];
+		columnsSwitch?: string[];
+		invert: boolean;
+		starterBoxes?: string[];
+	};
+	secondary?: {
+		name: string;
+		columns: string[];
+		columnsSwitch?: string[];
+		invert: boolean;
+		starterBoxes?: string[];
+	};
+};

@@ -12,6 +12,7 @@
 	import SortableList from '$lib/components/SortableList.svelte';
 	import Tutorial from '$lib/components/Tutorial.svelte';
 	import TutorialHighlight from '$lib/components/TutorialHighlight.svelte';
+	import AddTab from '$lib/components/AddTab.svelte';
 	import Tab from '$lib/components/Tab.svelte';
 	import type { Flow as IFlow } from '$lib/models/types';
 	import { screenTransition } from '$lib/models/transition';
@@ -83,12 +84,16 @@
 			(document.activeElement as HTMLElement).blur();
 		}
 	}
-	function addFlow(type: string) {
+
+	function addFlow(type: 'primary' | 'secondary') {
 		blurFlow();
-		$flows.push(newFlow($flows.length, type));
+		let flow = newFlow($flows.length, type, switchSpeakers);
+		if (flow == null) return;
+		$flows.push(flow);
 		$selected = $flows.length - 1;
 		$flows = $flows;
 	}
+
 	async function deleteFlow(index: number) {
 		blurFlow();
 		$flows.splice(index, 1);
@@ -109,10 +114,10 @@
 		$activeMouse = false;
 		if (e.ctrlKey && e.shiftKey && e.key == 'N') {
 			e.preventDefault();
-			addFlow('neg');
+			addFlow('secondary');
 		} else if (e.ctrlKey && e.key == 'n') {
 			e.preventDefault();
-			addFlow('aff');
+			addFlow('primary');
 		}
 		if ((e.metaKey || e.ctrlKey) && e.shiftKey && e.key == 'z') {
 			e.preventDefault();
@@ -215,6 +220,8 @@
 		$selected = $flows.findIndex((flow) => flow.id == selectedId);
 	}
 
+	let switchSpeakers = false;
+
 	// TODO:
 	// add command f
 	// add capitalization
@@ -291,7 +298,7 @@
 				</ButtonBar>
 			</div>
 			<div class="tabs">
-				<ul>
+				<div class="tabScroll">
 					<SortableList list={$flows} key="id" on:sort={handleSort} let:index>
 						<Tab
 							on:click={() => clickTab(index)}
@@ -299,50 +306,30 @@
 							selected={index == $selected}
 						/>
 					</SortableList>
-
-					<div class="add-tab">
-						<TutorialHighlight showOn={4}>
-							<Button
-								text="aff"
-								palette="accent"
-								icon="add"
-								on:click={() => addFlow('aff')}
-								tooltip="create new aff flow"
-								shortcut={['control', 'n']}
-							/>
-						</TutorialHighlight>
-						<TutorialHighlight showOn={5}>
-							<Button
-								text="neg"
-								palette="accent-secondary"
-								icon="add"
-								on:click={() => addFlow('neg')}
-								tooltip="create new neg flow"
-								shortcut={['control', 'shift', 'n']}
-							/>
-						</TutorialHighlight>
-					</div>
-				</ul>
+					<AddTab {addFlow} bind:switchSpeakers />
+				</div>
 			</div>
 		</div>
 		{#if $flows.length > 0 && $flows[$selected]}
 			{#key $selected}
-				<div class="title">
-					<Title
-						bind:content={$flows[$selected].content}
-						bind:children={$flows[$selected].children}
-						bind:index={$flows[$selected].index}
-						bind:focus={$flows[$selected].focus}
-						bind:invert={$flows[$selected].invert}
-						deleteSelf={() => deleteFlow($selected)}
-					/>
-				</div>
-				<div class="box-control">
-					<BoxControl bind:flow={$flows[$selected]} />
-				</div>
-				<div class="flow">
-					<Flow on:focusFlow={focusFlow} bind:root={$flows[$selected]} />
-				</div>
+				{#key $flows.length}
+					<div class="title">
+						<Title
+							bind:content={$flows[$selected].content}
+							bind:children={$flows[$selected].children}
+							bind:index={$flows[$selected].index}
+							bind:focus={$flows[$selected].focus}
+							bind:invert={$flows[$selected].invert}
+							deleteSelf={() => deleteFlow($selected)}
+						/>
+					</div>
+					<div class="box-control">
+						<BoxControl bind:flow={$flows[$selected]} />
+					</div>
+					<div class="flow">
+						<Flow on:focusFlow={focusFlow} bind:root={$flows[$selected]} />
+					</div>
+				{/key}
 			{/key}
 		{:else}
 			<div class="tutorial">
@@ -369,10 +356,7 @@
 		grid-template-areas: 'sidebar tutorial';
 		grid-template-columns: var(--sidebar-width) auto;
 	}
-	ul {
-		padding: 0;
-		margin: 0;
-	}
+
 	.sidebar {
 		background: var(--background);
 		width: 100%;
@@ -394,17 +378,13 @@
 		box-sizing: border-box;
 		position: relative;
 	}
-	.tabs > ul {
+	.tabScroll {
+		padding: 0;
+		margin: 0;
+		padding-top: 0;
 		padding-bottom: calc(var(--view-height) * 0.6);
 	}
 
-	.add-tab {
-		display: flex;
-		position: relative;
-		/* flex-wrap: wrap; */
-		/* justify-content: center; */
-		align-items: stretch;
-	}
 	.title {
 		background: var(--background);
 		border-radius: var(--border-radius);

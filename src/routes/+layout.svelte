@@ -70,6 +70,10 @@
 		buttonSize: {
 			name: 'button-size',
 			unit: 'px'
+		},
+		lineWidth: {
+			name: 'line-width',
+			unit: 'px'
 		}
 	};
 	settings.subscribe(['fontFamily'], function (key: string) {

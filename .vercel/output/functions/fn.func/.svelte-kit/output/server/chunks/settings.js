@@ -83,7 +83,7 @@ const settings = new Settings({
     value: 0,
     auto: 0,
     detail: {
-      options: ["Policy", "Public Forum", "Lincoln Douglas"]
+      options: ["Policy", "Public Forum", "Lincoln Douglas", "Congress"]
     },
     info: "Already created flows won't be affected by this setting"
   },
@@ -192,6 +192,17 @@ const settings = new Settings({
     detail: {
       min: 10,
       max: 50,
+      step: 1
+    }
+  },
+  lineWidth: {
+    name: "Line width",
+    type: "slider",
+    value: 4,
+    auto: 4,
+    detail: {
+      min: 0,
+      max: 8,
       step: 1
     }
   },

@@ -1,12 +1,12 @@
 <div class="top">
-  <slot />
+	<slot />
 </div>
 
 <style>
-  .top {
-    display: flex;
-    flex-direction: row;
-    align-items: center;
-    gap: var(--padding);
-  }
+	.top {
+		display: flex;
+		flex-direction: row;
+		align-items: center;
+		gap: var(--padding);
+	}
 </style>

@@ -2,9 +2,9 @@ import { quadOut } from 'svelte/easing';
 import { quadIn } from 'svelte/easing';
 import { settings } from '../models/settings';
 
-export function boxIn(node: HTMLElement, { root }: { root: boolean }) {
-	// don't do transition if root
-	if (root) {
+export function boxIn(node: HTMLElement, { skip }: { skip: boolean }) {
+	// don't do transition if skip
+	if (skip) {
 		return {
 			duration: 0,
 			css: () => ''
@@ -26,9 +26,9 @@ export function boxIn(node: HTMLElement, { root }: { root: boolean }) {
 		}
 	};
 }
-export function boxOut(node: HTMLElement, { root }: { root: boolean }) {
-	// don't do transition if root
-	if (root) {
+export function boxOut(node: HTMLElement, { skip }: { skip: boolean }) {
+	// don't do transition if skip
+	if (skip) {
 		return {
 			duration: 0,
 			css: () => ''
@@ -208,7 +208,6 @@ export function tutorialBlock(node: HTMLElement, { delay }: { delay?: number } =
 	const paddingTop = parseInt(style.getPropertyValue('padding-top'));
 	const paddingBottom = parseInt(style.getPropertyValue('padding-bottom'));
 	const h = node.clientHeight - paddingTop - paddingBottom;
-	console.log(h, paddingTop, paddingBottom);
 	return {
 		delay,
 		duration: settings.data.transitionSpeed.value as number,

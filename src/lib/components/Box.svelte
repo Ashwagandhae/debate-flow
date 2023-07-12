@@ -408,8 +408,8 @@
 	class:childFocus
 	class:activeMouse={$activeMouse}
 	class:highlight={childFocus || focus}
-	in:boxIn={{ root }}
-	out:boxOut={{ root }}
+	in:boxIn={{ skip: root }}
+	out:boxOut={{ skip: root }}
 >
 	{#if empty}
 		<div class="content" />
@@ -624,7 +624,7 @@
 		transform: translateX(var(--column-width));
 		border-radius: var(--border-radius);
 		padding: var(--padding);
-		margin: calc(var(--line-width) / 2) var(--padding) 0 var(--padding);
+		margin: var(--padding-small) var(--padding) 0 var(--padding);
 		width: calc(var(--column-width) - var(--padding) * 2);
 		background-color: var(--this-background);
 		box-sizing: border-box;
