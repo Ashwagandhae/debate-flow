@@ -25,7 +25,7 @@
 		setValidFocus();
 	});
 
-	async function deleteChild() {
+	async function deleteBox() {
 		// cancel if disabled
 		if (!validFocus) return;
 		let parent: Box | Flow | null = boxFromPath(flow, flow.lastFocus, 1);
@@ -36,7 +36,7 @@
 		// if target isn't only child of first level
 		if (childrenClone.length > 1 || parent.level >= 1) {
 			// add to history
-			flow.history.add('delete', flow.lastFocus, {
+			flow.history.add('deleteBox', flow.lastFocus, {
 				box: childrenClone[target.index]
 			});
 			// unfocus target
@@ -119,6 +119,18 @@
 		parent.children = [...childrenClone];
 		flow = flow;
 	}
+	function toggleCrossed() {
+		// cancel if disabled
+		if (!validFocus) return;
+		let target: Box | null = boxFromPath(flow, flow.lastFocus);
+		// cancel if target is null
+		if (target == null) return;
+		target.crossed = !target.crossed;
+		$flows[$selected].history.add('cross', [...flow.lastFocus], {
+			crossed: target.crossed
+		});
+		flow = flow;
+	}
 	function preventBlur(e: Event) {
 		e.preventDefault();
 	}
@@ -171,10 +183,19 @@
 			/>
 			<Button
 				icon="delete"
-				on:click={deleteChild}
+				on:click={deleteBox}
 				disabled={!validFocus}
 				{disabledReason}
 				tooltip="delete selected"
+				shortcut={['commandControl', 'delete']}
+			/>
+			<Button
+				icon="cross"
+				on:click={toggleCrossed}
+				disabled={!validFocus}
+				{disabledReason}
+				tooltip="toggle crossed out"
+				shortcut={['commandControl', 'x']}
 			/>
 		</ButtonBar>
 	</div>

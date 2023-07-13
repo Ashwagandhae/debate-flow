@@ -6,6 +6,7 @@
 	import type { Flow, Box } from '../models/types';
 	import { onMount } from 'svelte';
 	import { createEventDispatcher } from 'svelte';
+	import { createKeyDownHandler } from '$lib/models/keys';
 
 	const dispatch = createEventDispatcher();
 
@@ -29,21 +30,28 @@
 		}
 	}
 
-	function handleKeydown(e: KeyboardEvent) {
-		if (e.key == 'Enter' || e.key == 'ArrowDown') {
-			e.preventDefault();
-			if (children.length > 0) {
-				// focus on first non-empty child
-				for (let child of children) {
-					if (!child.empty) {
-						child.focus = true;
-						focus = false;
-						break;
-					}
-				}
-			}
+	function focusFirstChild() {
+		let child = children.find((child) => !child.empty);
+		if (child) {
+			focus = false;
+			child.focus = true;
 		}
 	}
+
+	const handleKeydown = createKeyDownHandler({
+		none: {
+			Enter: {
+				handle: focusFirstChild
+			},
+			ArrowDown: {
+				handle: focusFirstChild
+			},
+			ArrowRight: {
+				handle: focusFirstChild
+			}
+		}
+	});
+
 	let hasSentEdit: boolean = false;
 	function focusChange() {
 		if (focus) {

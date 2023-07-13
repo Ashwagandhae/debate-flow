@@ -4,7 +4,8 @@
 	import { getContext, onMount, tick, onDestroy } from 'svelte';
 	import { createEventDispatcher } from 'svelte';
 	import { activeMouse, flows, selected, newBox, boxFromPath } from '$lib/models/stores';
-	import type { Box, Flow } from '../models/types';
+	import type { Box, Flow } from '$lib/models/types';
+	import { createKeyDownHandler, type KeyComboOptionsIndex } from '$lib/models/keys';
 
 	import { boxIn, boxOut, boxButtonIn, brIn, brOut } from '../models/transition';
 
@@ -20,6 +21,7 @@
 	export let focus: boolean = false;
 	export let parentPath: number[] = [];
 	export let empty: boolean = false;
+	export let crossed: boolean = false;
 	export let placeholder: string = level == 1 && index == 0 ? 'type here' : '';
 
 	$: path = root ? [] : [...parentPath, index];
@@ -91,100 +93,102 @@
 			focus = false;
 		}
 	}
-	class keyDown {
-		require: () => boolean;
-		stopRepeat: boolean;
-		preventDefault: boolean;
-		blur: boolean;
-		handle: (e: KeyboardEvent) => void;
-		constructor(
-			handle: () => void,
-			require = () => true,
-			stopRepeat = true,
-			preventDefault = true,
-			blur = true
-		) {
-			this.require = require;
-			this.stopRepeat = stopRepeat;
-			this.preventDefault = preventDefault;
-			this.blur = blur;
-			this.handle = function (e: KeyboardEvent) {
-				if (!this.require()) {
-					return false;
+
+	const keyComboOptionsIndex: KeyComboOptionsIndex = {
+		'commandControl shift': {
+			x: {
+				handle: () => crossSelf()
+			}
+		},
+		commandControl: {
+			Backspace: {
+				handle: () => {
+					blurSelf();
+					deleteSelf(index);
 				}
-				if (this.preventDefault) {
-					e.preventDefault();
-				}
-				if (this.stopRepeat && e.repeat == true) {
-					return false;
-				}
-				if (this.blur) {
-					focus = false;
-				}
-				handle();
-				return true;
-			};
-		}
-	}
-	const keyDowns: {
-		alt: { [key: string]: keyDown };
-		shift: { [key: string]: keyDown };
-		other: { [key: string]: keyDown };
-	} = {
+			}
+		},
 		alt: {
-			Enter: new keyDown(() => {
-				focusSiblingStrict(index, -1) || (addSibling(index, 0) && focusSibling(index, 0));
-			})
+			Enter: {
+				handle: () => {
+					blurSelf();
+					focusSiblingStrict(index, -1) || (addSibling(index, 0) && focusSibling(index, 0));
+				}
+			}
 		},
 		shift: {
-			Enter: new keyDown(() => {
-				addChild(0, 0) && focusChild(0, 0);
-			}),
-			Tab: new keyDown(() => focusSibling(index, -1))
+			Enter: {
+				handle: () => {
+					blurSelf();
+					addChild(0, 0) && focusChild(0, 0);
+				}
+			},
+			Tab: {
+				handle: () => {
+					blurSelf();
+					focusSibling(index, -1);
+				}
+			}
 		},
-		other: {
-			Enter: new keyDown(() => {
-				focusSiblingStrict(index, 1) || (addSibling(index, 1) && focusSibling(index, 1));
-			}),
-			Backspace: new keyDown(
-				() => {
+		none: {
+			Enter: {
+				handle: () => {
+					blurSelf();
+					focusSiblingStrict(index, 1) || (addSibling(index, 1) && focusSibling(index, 1));
+				}
+			},
+			Backspace: {
+				handle: () => {
+					blurSelf();
 					deleteSelf(index);
 				},
 				// only delete if content is empty and there are no children
-				() => content.length == 0 && children.length == 0
-			),
+				require: () => content.length == 0 && children.length == 0
+			},
 
-			// ArrowUp: new keyDown(() => focusSibling(index, -1)),
-			ArrowUp: new keyDown(() => {
-				if (!focusAdjacent(-1)) {
-					if (level == 1) {
-						focusParent();
+			ArrowUp: {
+				handle: () => {
+					blurSelf();
+					if (!focusAdjacent(-1)) {
+						if (level == 1) {
+							focusParent();
+						} else {
+							focusSelf();
+						}
+					}
+				}
+			},
+			ArrowDown: {
+				handle: () => {
+					blurSelf();
+					focusAdjacent(1) || focusSelf();
+				}
+			},
+			Tab: {
+				handle: () => {
+					blurSelf();
+					focusSibling(index, 1);
+				}
+			},
+			ArrowLeft: {
+				handle: () => {
+					blurSelf;
+					focusParent();
+				}
+			},
+			ArrowRight: {
+				handle: () => {
+					blurSelf();
+					if (children.length > 0) {
+						focusChild(0, 0);
 					} else {
 						focusSelf();
 					}
 				}
-			}),
-			ArrowDown: new keyDown(() => focusAdjacent(1) || focusSelf()),
-			Tab: new keyDown(() => focusSibling(index, 1)),
-			ArrowLeft: new keyDown(() => focusParent()),
-			ArrowRight: new keyDown(() => {
-				if (children.length > 0) {
-					focusChild(0, 0);
-				} else {
-					focusSelf();
-				}
-			})
+			}
 		}
 	};
-	function handleKeydown(e: KeyboardEvent) {
-		if (e.shiftKey && keyDowns.shift[e.key]) {
-			keyDowns.shift[e.key].handle(e);
-		} else if (e.altKey && keyDowns.alt[e.key]) {
-			keyDowns.alt[e.key].handle(e);
-		} else if (keyDowns.other[e.key]) {
-			keyDowns.other[e.key].handle(e);
-		}
-	}
+	let handleKeydown = createKeyDownHandler(keyComboOptionsIndex);
 	function handleBeforeinput(e: InputEvent) {
 		if (!hasSentEdit) {
 			$flows[$selected].history.addPending('edit', [...path], {
@@ -198,6 +202,13 @@
 			});
 		}
 		hasSentEdit = true;
+	}
+
+	function crossSelf() {
+		crossed = !crossed;
+		$flows[$selected].history.add('cross', [...path], {
+			crossed: crossed
+		});
 	}
 
 	function addChild(childIndex: number, direction: number): boolean {
@@ -231,7 +242,7 @@
 			}
 			let childrenClone = [...children];
 			// add to history
-			$flows[$selected].history.add('delete', [...path, childIndex], {
+			$flows[$selected].history.add('deleteBox', [...path, childIndex], {
 				box: childrenClone[childIndex]
 			});
 			// unfocus target
@@ -369,7 +380,6 @@
 				continue;
 			} else {
 				// if not empty, focus on box
-				console.log('focusAdjacent', retPath, box);
 				box.focus = true;
 				return true;
 			}
@@ -381,6 +391,9 @@
 		} else {
 			focus = true;
 		}
+	}
+	function blurSelf() {
+		focus = false;
 	}
 	let palette: string;
 	$: {
@@ -438,7 +451,7 @@
 					role="separator"
 				/>
 
-				<div class="text">
+				<div class="text" class:crossed>
 					<Text
 						on:keydown={handleKeydown}
 						on:beforeinput={handleBeforeinput}
@@ -489,6 +502,7 @@
 				bind:focus={child.focus}
 				bind:empty={child.empty}
 				bind:placeholder={child.placeholder}
+				bind:crossed={child.crossed}
 				addSibling={addChild}
 				deleteSelf={deleteChild}
 				focusSibling={focusChild}
@@ -535,6 +549,10 @@
 	.text {
 		padding: var(--padding);
 		position: relative;
+	}
+	.text.crossed {
+		text-decoration: line-through;
+		color: var(--this-text-weak);
 	}
 
 	.childFocus > .content,

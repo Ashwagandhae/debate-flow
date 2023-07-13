@@ -145,7 +145,7 @@ export function boxFromPath(flow: Flow, path: number[], scope = 0): Flow | Box |
 
 	return ret;
 }
-type ActionLabel = 'add' | 'delete' | 'edit' | 'addBox';
+type ActionLabel = 'add' | 'deleteBox' | 'edit' | 'addBox' | 'cross';
 type Action = {
 	type: ActionLabel;
 	path: number[];
@@ -248,7 +248,7 @@ export class History {
 		console.log('undo', this.index, this.data);
 
 		// do opposite of action
-		if (action.type == 'add' || action.type == 'addBox' || action.type == 'delete') {
+		if (action.type == 'add' || action.type == 'addBox' || action.type == 'deleteBox') {
 			const parent: Flow | Box | null = boxFromPath(this.flow, action.path, 1);
 			if (parent == null) {
 				throw new Error(`parent of box at path ${action.path} is null`);
@@ -257,7 +257,7 @@ export class History {
 			const children: Box[] = [...parent.children];
 			if (action.type == 'add' || action.type == 'addBox') {
 				children.splice(childIndex, 1);
-			} else if (action.type == 'delete') {
+			} else if (action.type == 'deleteBox') {
 				children.splice(childIndex, 0, action.other.box);
 			}
 			// fix index
@@ -271,13 +271,20 @@ export class History {
 				throw new Error(`box at path ${action.path} is null`);
 			}
 			box.content = action.other.lastContent;
+		} else if (action.type == 'cross') {
+			// assume Box isn't Flow
+			const box: Box | null = boxFromPath(this.flow, action.path) as Box | null;
+			if (box == null) {
+				throw new Error(`box at path ${action.path} is null`);
+			}
+			box.crossed = !action.other.crossed;
 		}
 	}
 	redoAction(action: Action) {
 		console.log('redo', this.index, this.data);
 
 		// do opposite of action
-		if (action.type == 'add' || action.type == 'addBox' || action.type == 'delete') {
+		if (action.type == 'add' || action.type == 'addBox' || action.type == 'deleteBox') {
 			const parent: Flow | Box | null = boxFromPath(this.flow, action.path, 1);
 			const childIndex: number = action.path[action.path.length - 1];
 			if (parent == null) {
@@ -288,7 +295,7 @@ export class History {
 				children.splice(childIndex, 0, newBox(childIndex, parent.level + 1, false));
 			} else if (action.type == 'addBox') {
 				children.splice(childIndex, 0, deepClone(action.other.box));
-			} else if (action.type == 'delete') {
+			} else if (action.type == 'deleteBox') {
 				children.splice(childIndex, 1);
 			}
 			// fix index
@@ -302,6 +309,13 @@ export class History {
 				throw new Error(`box at path ${action.path} is null`);
 			}
 			box.content = action.other.nextContent;
+		} else if (action.type == 'cross') {
+			// assume Box isn't Flow
+			const box: Box | null = boxFromPath(this.flow, action.path) as Box | null;
+			if (box == null) {
+				throw new Error(`box at path ${action.path} is null`);
+			}
+			box.crossed = action.other.crossed;
 		}
 	}
 	focus(path: number[] | null) {

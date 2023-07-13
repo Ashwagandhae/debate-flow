@@ -20,6 +20,7 @@ export type Box = {
 	focus: boolean;
 	empty?: boolean;
 	placeholder?: string;
+	crossed?: boolean;
 };
 
 export type DebateStyle = {

@@ -5,6 +5,7 @@
 	export let value: string;
 	export let placeholder: string = '';
 	export let nowrap: boolean = false;
+	export let strikethrough: boolean = false;
 	let whiteSpaceCss: string;
 	$: {
 		if (nowrap) {
@@ -44,6 +45,7 @@
 	spellcheck="false"
 	{placeholder}
 	style={`--white-space:${whiteSpaceCss};`}
+	class:strikethrough
 />
 
 <style>
@@ -66,7 +68,9 @@
 		font-size: inherit;
 		color: inherit;
 		white-space: var(--white-space);
+		text-decoration: inherit;
 	}
+
 	textarea::-webkit-scrollbar {
 		display: none;
 	}

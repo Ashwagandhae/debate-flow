@@ -26,6 +26,7 @@
 		History,
 		changesSaved
 	} from '$lib/models/stores';
+	import { createKeyDownHandler } from '$lib/models/keys';
 
 	let destroyers: (() => void)[] = [];
 	$: unsavedChanges = $flows.length > 0 && !$changesSaved;
@@ -58,29 +59,26 @@
 	});
 
 	function clickTab(index: number) {
+		blurFlow();
 		$selected = index;
 		focusFlow();
 	}
 	function focusFlow() {
-		let lastFocus =
-			$flows[$selected]?.lastFocus && boxFromPath($flows[$selected], $flows[$selected]?.lastFocus);
-		if (lastFocus) {
-			lastFocus.focus = true;
-		} else {
-			$flows[$selected].focus = true;
+		let lastFocus = boxFromPath($flows[$selected], $flows[$selected]?.lastFocus);
+		if (lastFocus == null) {
+			lastFocus = $flows[$selected];
 		}
+		lastFocus.focus = true;
 		$flows = $flows;
 	}
 	function blurFlow() {
 		if ($flows.length > 0) {
-			let lastFocus =
-				$flows[$selected]?.lastFocus &&
-				boxFromPath($flows[$selected], $flows[$selected]?.lastFocus);
+			let lastFocus = boxFromPath($flows[$selected], $flows[$selected].lastFocus);
 			if (!lastFocus) {
 				lastFocus = $flows[$selected];
 			}
 			lastFocus.focus = false;
-			lastFocus = lastFocus;
+			$flows = $flows;
 			(document.activeElement as HTMLElement).blur();
 		}
 	}
@@ -110,23 +108,70 @@
 	function handleMouseMove(e: MouseEvent) {
 		$activeMouse = true;
 	}
+	const keyDownHandler = createKeyDownHandler({
+		control: {
+			n: { handle: () => addFlow('primary') }
+		},
+		'control shift': {
+			n: { handle: () => addFlow('secondary') }
+		},
+		'commandControl shift': {
+			z: {
+				handle: () => {
+					$flows[$selected].history.redo();
+				},
+				stopRepeat: false
+			},
+			Backspace: {
+				handle: () => {
+					if ($flows.length > 0) {
+						deleteFlow($selected);
+					}
+				}
+			}
+		},
+		commandControl: {
+			z: { handle: () => $flows[$selected].history.undo(), stopRepeat: false }
+		},
+		'commandControl alt': {
+			ArrowUp: {
+				handle: () => {
+					let newSelected = $selected - 1 < 0 ? $flows.length - 1 : $selected - 1;
+					clickTab(newSelected);
+				},
+				stopRepeat: false
+			},
+			ArrowDown: {
+				handle: () => {
+					let newSelected = $selected + 1 >= $flows.length ? 0 : $selected + 1;
+					clickTab(newSelected);
+				},
+				stopRepeat: false
+			}
+		}
+	});
 	function handleKeydown(e: KeyboardEvent) {
 		$activeMouse = false;
-		if (e.ctrlKey && e.shiftKey && e.key == 'N') {
-			e.preventDefault();
-			addFlow('secondary');
-		} else if (e.ctrlKey && e.key == 'n') {
-			e.preventDefault();
-			addFlow('primary');
-		}
-		if ((e.metaKey || e.ctrlKey) && e.shiftKey && e.key == 'z') {
-			e.preventDefault();
-			$flows[$selected].history.redo();
-		} else if ((e.metaKey || e.ctrlKey) && e.key == 'z') {
-			e.preventDefault();
-			$flows[$selected].history.undo();
-		}
+		keyDownHandler(e);
 	}
+
+	// function handleKeydown(e: KeyboardEvent) {
+	// 	$activeMouse = false;
+	// 	if (e.ctrlKey && e.shiftKey && e.key == 'N') {
+	// 		e.preventDefault();
+	// 		addFlow('secondary');
+	// 	} else if (e.ctrlKey && e.key == 'n') {
+	// 		e.preventDefault();
+	// 		addFlow('primary');
+	// 	}
+	// 	if ((e.metaKey || e.ctrlKey) && e.shiftKey && e.key == 'z') {
+	// 		e.preventDefault();
+	// 		$flows[$selected].history.redo();
+	// 	} else if ((e.metaKey || e.ctrlKey) && e.key == 'z') {
+	// 		e.preventDefault();
+	// 		$flows[$selected].history.undo();
+	// 	}
+	// }
 
 	function readUploadDragged(e: DragEvent) {
 		e.preventDefault();
@@ -223,6 +268,9 @@
 	let switchSpeakers = false;
 
 	// TODO:
+	// add tab switch keyboard shortcut
+	// add cross out
+	// add command K
 	// add command f
 	// add capitalization
 </script>

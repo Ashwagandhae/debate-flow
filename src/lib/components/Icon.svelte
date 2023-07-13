@@ -91,6 +91,11 @@
 			name: 'home',
 			svg: `<path d="M6 47L50 8L94 47" stroke-width="10" stroke-linecap="round" stroke-linejoin="round"/>
 <path d="M21 60L21 83C21 88.5228 25.4772 93 31 93H70C75.5228 93 80 88.5228 80 83V60" stroke-width="10" stroke-linecap="round" stroke-linejoin="round"/>`
+		},
+		{
+			name: 'cross',
+			svg: `<path d="M78.5686 22L22.0001 78.5685" stroke-width="10" stroke-linecap="round"/>
+<circle cx="50" cy="50" r="40" stroke-width="10"/>`
 		}
 	];
 	let displayIcon: { name: string; svg: string } | null;
