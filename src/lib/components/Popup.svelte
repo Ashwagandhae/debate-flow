@@ -35,6 +35,8 @@
 		align-items: center;
 		flex-direction: row;
 		gap: var(--padding-small);
+	}
+	span {
 		font-weight: bold;
 	}
 </style>

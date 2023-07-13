@@ -63,6 +63,10 @@
 			name: 'font-weight',
 			unit: ''
 		},
+		fontWeightBold: {
+			name: 'font-weight-bold',
+			unit: ''
+		},
 		gap: {
 			name: 'gap',
 			unit: 'px'

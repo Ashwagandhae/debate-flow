@@ -3,7 +3,7 @@
 	import Button from './Button.svelte';
 	import ButtonBar from './ButtonBar.svelte';
 	import { flows, selected } from '$lib/models/stores';
-	import type { Flow, Box } from '../models/types';
+	import type { Box } from '../models/types';
 	import { onMount } from 'svelte';
 	import { createEventDispatcher } from 'svelte';
 	import { createKeyDownHandler } from '$lib/models/keys';
@@ -12,7 +12,6 @@
 
 	export let content: string;
 	export let children: Box[];
-	export let index: number;
 	export let focus: boolean;
 	export let invert: boolean;
 	export let deleteSelf: () => void = () => {};
@@ -103,7 +102,12 @@
 			/>
 		</div>
 		<ButtonBar>
-			<Button on:click={deleteSelf} icon="delete" tooltip="delete flow" />
+			<Button
+				on:click={deleteSelf}
+				icon="trash"
+				tooltip="delete flow"
+				shortcut={['commandControl', 'shift', 'delete']}
+			/>
 		</ButtonBar>
 	</div>
 </div>

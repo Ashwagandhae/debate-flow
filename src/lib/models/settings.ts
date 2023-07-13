@@ -61,10 +61,16 @@ class Settings {
 		};
 	}
 	saveToLocalStorage() {
-		const jsonData: { [key: string]: number | boolean } = {};
-		for (const key in this.data) {
+		const jsonData: { [key: string]: number | boolean | string } = {};
+		for (const key of Object.keys(this.data)) {
 			if (this.data[key].value != this.data[key].auto) {
 				jsonData[key] = this.data[key].value;
+				if (this.data[key].type == 'radio') {
+					const setting = this.data[key] as RadioSetting;
+					if (setting.detail.customOptionValue) {
+						jsonData[key + 'Custom'] = setting.detail.customOptionValue;
+					}
+				}
 			}
 		}
 		localStorage.setItem('settings', JSON.stringify(jsonData));
@@ -75,9 +81,17 @@ class Settings {
 			const jsonData = JSON.parse(settingsObj);
 			try {
 				for (const key in jsonData) {
+					if (this.data[key] == null) return;
+					if (this.data[key].type == 'radio') {
+						const setting = this.data[key] as RadioSetting;
+						if (jsonData[key + 'Custom']) {
+							setting.detail.customOptionValue = jsonData[key + 'Custom'];
+						}
+					}
 					this.setValue(key, jsonData[key]);
 				}
 			} catch (e) {
+				console.log(e);
 				localStorage.setItem('settings', JSON.stringify({}));
 				this.resetToAuto();
 			}
@@ -200,6 +214,17 @@ export const settings: Settings = new Settings({
 			step: 50
 		}
 	},
+	fontWeightBold: {
+		name: 'Font weight bold',
+		type: 'slider',
+		value: 700,
+		auto: 700,
+		detail: {
+			min: 100,
+			max: 900,
+			step: 50
+		}
+	},
 	fontFamily: {
 		name: 'Font',
 		type: 'radio',
@@ -268,3 +293,34 @@ export const settings: Settings = new Settings({
 		}
 	}
 });
+
+type SettingsGroup = {
+	name: string;
+	settings: string[];
+};
+export const settingsGroups: SettingsGroup[] = [
+	{
+		name: 'General',
+		settings: ['debateStyle', 'colorTheme', 'columnWidth', 'transitionSpeed', 'useTooltips']
+	},
+	{
+		name: 'Colors',
+		settings: ['colorTheme', 'accentHue', 'accentSecondaryHue']
+	},
+	{
+		name: 'Font',
+		settings: ['fontFamily', 'fontSize', 'fontWeight', 'fontWeightBold']
+	},
+	{
+		name: 'Spacing',
+		settings: ['columnWidth', 'buttonSize', 'padding', 'gap']
+	},
+	{
+		name: 'Borders',
+		settings: ['lineWidth', 'borderRadius']
+	},
+	{
+		name: 'Animations',
+		settings: ['transitionSpeed', 'useTooltips']
+	}
+];

@@ -182,7 +182,7 @@
 				shortcut={['return']}
 			/>
 			<Button
-				icon="delete"
+				icon="trash"
 				on:click={deleteBox}
 				disabled={!validFocus}
 				{disabledReason}

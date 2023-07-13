@@ -21,9 +21,7 @@
 		<div
 			class="switch"
 			style={`--pos:calc(${value} * (var(--button-size) + var(--padding) * 2) + var(--padding-small))`}
-		>
-			<!-- <Icon name="among" /> -->
-		</div>
+		/>
 	</div>
 	<ul>
 		{#each detail.options as option, index}
@@ -34,7 +32,7 @@
 						{option}
 					</p>
 					{#if index == auto}
-						<p class="option-info">default</p>
+						<p class="optionInfo">default</p>
 					{/if}
 				</li>
 			</label>
@@ -57,7 +55,7 @@
 						on:focus={() => (value = detail.options.length)}
 					/>
 					{#if detail.customOptionValue != ''}
-						<p class="option-info">custom</p>
+						<p class="optionInfo">custom</p>
 					{/if}
 				</li>
 			</label>
@@ -70,6 +68,7 @@
 		display: flex;
 		flex-direction: row;
 		position: relative;
+		width: auto;
 	}
 	.background {
 		position: relative;
@@ -144,13 +143,14 @@
 	input:checked + li {
 		color: var(--this-text);
 	}
-	.option-info {
+	.optionInfo {
 		opacity: 0;
 		margin-left: auto;
 		color: var(--this-text-weak);
 		transition: opacity var(--transition-speed);
+		width: min-content;
 	}
-	li:hover > .option-info {
+	label:hover > li > .optionInfo {
 		opacity: 1;
 	}
 </style>

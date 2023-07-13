@@ -54,6 +54,7 @@
 		opacity: 0;
 		transform: translateY(50px);
 		transition: opacity 0.5s ease-in-out, transform 0.5s ease-in-out;
+		overflow: hidden;
 	}
 	.top.show {
 		opacity: 1;

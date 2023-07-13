@@ -34,9 +34,15 @@ class Settings {
   }
   saveToLocalStorage() {
     const jsonData = {};
-    for (const key in this.data) {
+    for (const key of Object.keys(this.data)) {
       if (this.data[key].value != this.data[key].auto) {
         jsonData[key] = this.data[key].value;
+        if (this.data[key].type == "radio") {
+          const setting = this.data[key];
+          if (setting.detail.customOptionValue) {
+            jsonData[key + "Custom"] = setting.detail.customOptionValue;
+          }
+        }
       }
     }
     localStorage.setItem("settings", JSON.stringify(jsonData));
@@ -47,9 +53,18 @@ class Settings {
       const jsonData = JSON.parse(settingsObj);
       try {
         for (const key in jsonData) {
+          if (this.data[key] == null)
+            return;
+          if (this.data[key].type == "radio") {
+            const setting = this.data[key];
+            if (jsonData[key + "Custom"]) {
+              setting.detail.customOptionValue = jsonData[key + "Custom"];
+            }
+          }
           this.setValue(key, jsonData[key]);
         }
       } catch (e) {
+        console.log(e);
         localStorage.setItem("settings", JSON.stringify({}));
         this.resetToAuto();
       }
@@ -166,6 +181,17 @@ const settings = new Settings({
     type: "slider",
     value: 300,
     auto: 300,
+    detail: {
+      min: 100,
+      max: 900,
+      step: 50
+    }
+  },
+  fontWeightBold: {
+    name: "Font weight bold",
+    type: "slider",
+    value: 700,
+    auto: 700,
     detail: {
       min: 100,
       max: 900,

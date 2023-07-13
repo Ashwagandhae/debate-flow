@@ -92,7 +92,7 @@
 					</p>
 				</div>
 				<div class="instruction" in:tutorialSpan={{ delay: delay * 4 }}>
-					<Icon name="settings" />
+					<Icon name="gear" />
 					<p>
 						click on <span class="primary">settings</span> to customize
 					</p>

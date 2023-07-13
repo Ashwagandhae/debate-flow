@@ -43,14 +43,16 @@
 
 <div class="top" bind:this={element} style={`--spotlight:${$spotlight}`}>
 	<span class="above">
-		<h1>{setting.name}</h1>
-		<div class="reset" class:hidden={value == setting.auto}>
-			<Button
-				icon="delete"
-				tooltip="reset to default"
-				tooltipLayout="right"
-				on:click={resetValue}
-			/>
+		<div class="titleReset">
+			<h2>{setting.name}</h2>
+			<div class="reset" class:hidden={value == setting.auto}>
+				<Button
+					icon="arrowRoundLeft"
+					tooltip="reset to default"
+					tooltipLayout="right"
+					on:click={resetValue}
+				/>
+			</div>
 		</div>
 
 		{#if setting.type == 'toggle'}
@@ -78,9 +80,13 @@
 	.top {
 		position: relative;
 		border-radius: var(--border-radius);
-		padding: var(--padding-big);
-		margin-bottom: var(--padding-big);
+		padding: var(--padding);
+		max-width: 30rem;
+		min-width: 10rem;
+		width: 100%;
+		box-sizing: border-box;
 	}
+
 	.above {
 		position: relative;
 		display: flex;
@@ -88,17 +94,24 @@
 		gap: 1em;
 		height: var(--button-size);
 		align-items: center;
-		padding-bottom: var(--padding-big);
+		padding-bottom: var(--padding);
 		height: 100%;
 	}
-	.above > h1 {
+	.above h2 {
 		width: max-content;
 		white-space: nowrap;
+	}
+	.above .titleReset {
+		display: flex;
+		flex-direction: row;
+		align-items: center;
+		gap: 1em;
 	}
 	.above > p {
 		color: var(--this-text-weak);
 		opacity: 0;
 		transition: opacity var(--transition-speed);
+		margin: 0;
 	}
 	.top:hover .above > p {
 		opacity: 1;
@@ -106,12 +119,19 @@
 	.hidden {
 		color: var(--this-text-weak);
 	}
-	.top .reset,
-	.top:hover .reset.hidden {
-		opacity: 0;
+	.reset {
+		opacity: 1;
+
 		transition: opacity var(--transition-speed);
 	}
-	.top:hover .reset {
-		opacity: 1;
+	.reset.hidden {
+		opacity: 0;
+	}
+	@media (max-width: 800px) {
+		.above {
+			flex-direction: column;
+			align-items: flex-start;
+			gap: 0;
+		}
 	}
 </style>

@@ -33,6 +33,7 @@ const Layout = create_ssr_component(($$result, $$props, $$bindings, slots) => {
     padding: { name: "padding", unit: "px" },
     fontSize: { name: "font-size", unit: "rem" },
     fontWeight: { name: "font-weight", unit: "" },
+    fontWeightBold: { name: "font-weight-bold", unit: "" },
     gap: { name: "gap", unit: "px" },
     buttonSize: { name: "button-size", unit: "px" },
     lineWidth: { name: "line-width", unit: "px" }

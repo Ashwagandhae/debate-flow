@@ -16,7 +16,8 @@
 		<section class="title">
 			<div class="words">
 				<h1>Flower</h1>
-				<p>Debate flowing app</p>
+				<p>An easer way to flow.</p>
+				<p>A better way to debate.</p>
 			</div>
 			<a href="./app" class="flowerholder">
 				<Flower {hover} />
@@ -135,6 +136,13 @@
 
 		/* padding: 0 3rem; */
 	}
+	.words p {
+		margin: 0;
+		line-height: 3.5rem;
+	}
+	.words h1 {
+		padding-bottom: 2rem;
+	}
 
 	h1 {
 		font-size: 5rem;
@@ -215,6 +223,9 @@
 			display: flex;
 			flex-direction: column;
 			align-items: center;
+		}
+		.words p {
+			font-size: 1.5rem;
 		}
 
 		.tryit {

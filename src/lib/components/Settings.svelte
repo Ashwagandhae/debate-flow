@@ -2,7 +2,7 @@
 	import Setting from './Setting.svelte';
 	import Button from './Button.svelte';
 	import ButtonBar from './ButtonBar.svelte';
-	import { settings } from '$lib/models/settings';
+	import { settingsGroups, settings } from '$lib/models/settings';
 	import { onDestroy } from 'svelte';
 
 	export const closePopup: () => void = () => {};
@@ -10,40 +10,66 @@
 		settings.saveToLocalStorage();
 	});
 
-	let settingComponents: Setting[] = [];
-	function scrollToSettingElement(index: number) {
-		settingComponents[index].scrollToSelf();
+	let settingComponents: Setting[][] = [];
+	for (let i = 0; i < settingsGroups.length; i++) {
+		settingComponents.push([]);
+	}
+	function scrollToSettingElement(groupIndex: number, index: number) {
+		settingComponents[groupIndex][index].scrollToSelf();
 	}
 </script>
 
 <div class="top palette-plain">
 	<div class="outline">
-		<ul>
-			{#each Object.keys(settings.data) as key, index}
-				<li>
-					<button on:click={() => scrollToSettingElement(index)}>
-						{settings.data[key].name}
-					</button>
-				</li>
-			{/each}
-		</ul>
+		<div class="outlineScroll">
+			<ul>
+				{#each settingsGroups as group, groupIndex}
+					<li class="title">
+						{group.name}
+					</li>
+					{#each group.settings as key, index}
+						<li>
+							<button on:click={() => scrollToSettingElement(groupIndex, index)}>
+								{settings.data[key].name}
+							</button>
+						</li>
+					{/each}
+				{/each}
+			</ul>
+		</div>
 	</div>
 	<div class="content">
 		<section class="controls">
-			<ButtonBar>
-				<Button icon="delete" text="reset all settings" on:click={() => settings.resetToAuto()} />
-				<Button
-					icon="dots"
-					text="randomize settings"
-					tooltip="why would you click this"
-					on:click={() => settings.randomize()}
-				/>
-			</ButtonBar>
+			<Button
+				icon="arrowRoundLeft"
+				text="reset all settings"
+				on:click={() => settings.resetToAuto()}
+			/>
+			<Button
+				icon="dots"
+				text="randomize settings"
+				tooltip="why would you click this"
+				on:click={() => settings.randomize()}
+			/>
 		</section>
 		<section class="settings">
 			<ul>
-				{#each Object.keys(settings.data) as key, index}
+				<!-- {#each Object.keys(settings.data) as key, index}
 					<Setting {key} setting={settings.data[key]} bind:this={settingComponents[index]} />
+				{/each} -->
+				{#each settingsGroups as group, groupIndex}
+					<li class="title">
+						<h1>
+							{group.name}
+						</h1>
+					</li>
+					{#each group.settings as key, index}
+						<Setting
+							{key}
+							setting={settings.data[key]}
+							bind:this={settingComponents[groupIndex][index]}
+						/>
+					{/each}
 				{/each}
 			</ul>
 		</section>
@@ -52,8 +78,8 @@
 
 <style>
 	.top {
-		width: clamp(500px, 80vw, 3000px);
-		height: clamp(300px, 90vh, 2000px);
+		width: min(calc(100vw - var(--padding) * 2), 1100px);
+		height: min(calc(100vh - var(--padding) * 2), 700px);
 		display: grid;
 		grid-template-columns: calc(max(150px, 20%) + var(--padding-big)) 1fr;
 	}
@@ -67,7 +93,27 @@
 		align-items: left;
 		gap: var(--padding);
 		background-color: var(--background-secondary);
-		overflow: scroll;
+		overflow: hidden;
+	}
+	.outlineScroll {
+		overflow: auto;
+		height: 100%;
+	}
+	.outlineScroll ul {
+		padding-bottom: 50vh;
+	}
+	.outlineScroll .title {
+		font-weight: var(--font-weight-bold);
+		padding: var(--padding-big) 0 var(--padding) 0;
+	}
+	.settings .title {
+		width: 100%;
+		max-width: 30rem;
+		box-sizing: border-box;
+		padding: calc(var(--padding-big) * 2) var(--padding) var(--padding) var(--padding);
+	}
+	.settings .title h1 {
+		font-weight: var(--font-weight-bold);
 	}
 	.outline button {
 		border: none;
@@ -93,27 +139,42 @@
 	.content {
 		box-sizing: border-box;
 		width: 100%;
-		padding: calc(var(--button-size) + var(--padding)) 20% 0 20%;
+		padding-top: calc(var(--button-size) + var(--padding));
 		overflow: auto;
 		scroll-behavior: smooth;
 		display: flex;
 		flex-direction: column;
+		align-items: center;
 		gap: var(--padding-big);
 		height: inherit;
+		position: relative;
 	}
-	section.controls {
-		display: flex;
-		flex-direction: column;
-		align-items: center;
-		justify-content: center;
-		gap: var(--padding);
+	.settings {
+		width: 100%;
 	}
 	ul {
 		margin: 0;
 		padding: 0;
 		list-style: none;
 	}
+	.settings ul {
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+	}
 	.content > .settings > ul {
-		padding-bottom: 100%;
+		padding-bottom: 50vh;
+	}
+	.controls {
+		display: flex;
+		flex-direction: row;
+		align-items: center;
+		gap: var(--padding);
+		justify-content: center;
+	}
+	@media (max-width: 800px) {
+		.controls {
+			flex-direction: column;
+		}
 	}
 </style>

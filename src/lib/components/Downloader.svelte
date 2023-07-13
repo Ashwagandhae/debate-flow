@@ -152,10 +152,12 @@
 
 <style>
 	.top {
-		width: clamp(400px, 30vw, 600px);
-		height: min-content;
+		width: min(calc(100vw - var(--padding) * 2), 500px);
+		height: min(calc(100vh - var(--padding) * 2), min-content);
+		box-sizing: border-box;
 		display: grid;
 		grid-template-columns: 1fr 1fr;
+		overflow: auto;
 	}
 	ul {
 		line-height: 1.6em;

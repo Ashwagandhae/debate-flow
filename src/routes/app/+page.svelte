@@ -120,18 +120,22 @@
 				handle: () => {
 					$flows[$selected].history.redo();
 				},
+				require: () => $flows.length > 0,
 				stopRepeat: false
 			},
 			Backspace: {
 				handle: () => {
-					if ($flows.length > 0) {
-						deleteFlow($selected);
-					}
-				}
+					deleteFlow($selected);
+				},
+				require: () => $flows.length > 0
 			}
 		},
 		commandControl: {
-			z: { handle: () => $flows[$selected].history.undo(), stopRepeat: false }
+			z: {
+				handle: () => $flows[$selected].history.undo(),
+				require: () => $flows.length > 0,
+				stopRepeat: false
+			}
 		},
 		'commandControl alt': {
 			ArrowUp: {
@@ -139,6 +143,7 @@
 					let newSelected = $selected - 1 < 0 ? $flows.length - 1 : $selected - 1;
 					clickTab(newSelected);
 				},
+				require: () => $flows.length > 0,
 				stopRepeat: false
 			},
 			ArrowDown: {
@@ -146,6 +151,7 @@
 					let newSelected = $selected + 1 >= $flows.length ? 0 : $selected + 1;
 					clickTab(newSelected);
 				},
+				require: () => $flows.length > 0,
 				stopRepeat: false
 			}
 		}
@@ -322,7 +328,7 @@
 					</TutorialHighlight>
 					<TutorialHighlight showOn={2}>
 						<Button
-							icon="settings"
+							icon="gear"
 							on:click={() => openPopup(Settings, 'Settings')}
 							tooltip="settings"
 						/>
@@ -365,7 +371,6 @@
 						<Title
 							bind:content={$flows[$selected].content}
 							bind:children={$flows[$selected].children}
-							bind:index={$flows[$selected].index}
 							bind:focus={$flows[$selected].focus}
 							bind:invert={$flows[$selected].invert}
 							deleteSelf={() => deleteFlow($selected)}
