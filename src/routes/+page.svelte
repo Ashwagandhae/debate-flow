@@ -16,7 +16,7 @@
 		<section class="title">
 			<div class="words">
 				<h1>Flower</h1>
-				<p>An easer way to flow.</p>
+				<p>An easier way to flow.</p>
 				<p>A better way to debate.</p>
 			</div>
 			<a href="./app" class="flowerholder">

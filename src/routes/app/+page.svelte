@@ -322,33 +322,58 @@
 	<div class="grid" class:tutorialMode={$flows.length == 0}>
 		<div class="sidebar">
 			<div class="header">
-				<ButtonBar>
-					<TutorialHighlight showOn={1}>
-						<Button icon="home" link="/" tooltip="go home" />
-					</TutorialHighlight>
-					<TutorialHighlight showOn={2}>
-						<Button
-							icon="gear"
-							on:click={() => openPopup(Settings, 'Settings')}
-							tooltip="settings"
-						/>
-					</TutorialHighlight>
-					<TutorialHighlight showOn={3}>
-						<Button
-							icon="download"
-							on:click={() => openPopup(Downloader, 'Download')}
-							disabled={$flows.length == 0}
-							disabledReason={'nothing to download'}
-							tooltip="download as file"
-						/>
-					</TutorialHighlight>
-					<TutorialHighlight showOn={3}>
-						<Button
-							icon="upload"
-							on:click={() => openPopup(Uploader, 'Upload')}
-							tooltip="import file"
-						/>
-					</TutorialHighlight>
+				<ButtonBar
+					resize
+					buttons={[
+						{
+							icon: 'home',
+							link: '/',
+							tooltip: 'go home',
+							tutorialHighlight: 1
+						},
+						{
+							icon: 'gear',
+							onclick: () => openPopup(Settings, 'Settings'),
+							tooltip: 'settings',
+							tutorialHighlight: 2
+						},
+						{
+							icon: 'download',
+							onclick: () => openPopup(Downloader, 'Download'),
+							disabled: $flows.length == 0,
+							disabledReason: 'nothing to download',
+							tooltip: 'download as file',
+							tutorialHighlight: 3
+						},
+						{
+							icon: 'upload',
+							onclick: () => openPopup(Uploader, 'Upload'),
+							tooltip: 'import file',
+							tutorialHighlight: 3
+						}
+					]}
+				>
+					<!-- <Button icon="home" link="/" tooltip="go home" tutorialHighlight={1} />
+					<Button
+						icon="gear"
+						on:click={() => openPopup(Settings, 'Settings')}
+						tooltip="settings"
+						tutorialHighlight={2}
+					/>
+					<Button
+						icon="download"
+						on:click={() => openPopup(Downloader, 'Download')}
+						disabled={$flows.length == 0}
+						disabledReason={'nothing to download'}
+						tooltip="download as file"
+						tutorialHighlight={3}
+					/>
+					<Button
+						icon="upload"
+						on:click={() => openPopup(Uploader, 'Upload')}
+						tooltip="import file"
+						tutorialHighlight={3}
+					/> -->
 				</ButtonBar>
 			</div>
 			<div class="tabs">
@@ -404,6 +429,7 @@
 		width: 100%;
 		height: 100%;
 		box-sizing: border-box;
+		position: relative;
 	}
 	.grid.tutorialMode {
 		grid-template-areas: 'sidebar tutorial';

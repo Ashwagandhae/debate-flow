@@ -223,3 +223,18 @@ export function tutorialBlock(node: HTMLElement, { delay }: { delay?: number } =
 		}
 	};
 }
+
+export function hiddenButtons(_node: HTMLElement) {
+	return {
+		duration: settings.data.transitionSpeed.value as number,
+		css: (t: number) => {
+			const eased = quadOut(t);
+
+			return `
+				transform-origin: 50% 0%;
+        transform: scale(${eased});
+        opacity: ${t};
+      `;
+		}
+	};
+}

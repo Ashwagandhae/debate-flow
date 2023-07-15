@@ -4,6 +4,7 @@
 
 	import { dev } from '$app/environment';
 	import { inject } from '@vercel/analytics';
+	import { onDestroy } from 'svelte';
 
 	inject({ mode: dev ? 'development' : 'production' });
 
@@ -20,15 +21,17 @@
 	// listen for changes in system settings
 	colorThemeMediaQuery.addEventListener('change', updateColorTheme);
 	// listen for changes in color theme setting, and unsubscribe onDestroy
-	settings.subscribe(['colorTheme'], function () {
-		if (settings.data.colorTheme.value == 1) {
-			document.body.classList.remove('dark');
-		} else if (settings.data.colorTheme.value == 2) {
-			document.body.classList.add('dark');
-		} else {
-			updateColorTheme();
-		}
-	});
+	onDestroy(
+		settings.subscribe(['colorTheme'], function () {
+			if (settings.data.colorTheme.value == 1) {
+				document.body.classList.remove('dark');
+			} else if (settings.data.colorTheme.value == 2) {
+				document.body.classList.add('dark');
+			} else {
+				updateColorTheme();
+			}
+		})
+	);
 	// listen for changes in cssVariables setting group, and unsubscribe onDestroy
 	const cssVarIndex: { [key: string]: { name: string; unit: string } } = {
 		accentHue: {
@@ -78,33 +81,41 @@
 		lineWidth: {
 			name: 'line-width',
 			unit: 'px'
+		},
+		sidebarWidth: {
+			name: 'sidebar-width',
+			unit: 'px'
 		}
 	};
-	settings.subscribe(['fontFamily'], function (key: string) {
-		const setting = settings.data.fontFamily;
-		if (setting.type != 'radio') return;
-		const index = setting.value;
-		let chosenFont: string | undefined = undefined;
-		if (setting.detail.customOption && setting.detail.options.length == index) {
-			chosenFont = setting.detail.customOptionValue;
-		} else if (setting.detail.options[index]) {
-			chosenFont = setting.detail.options[index];
-		}
-		if (chosenFont) {
-			document.body.style.setProperty(
-				'--font-family',
-				`'${chosenFont}', 'Merriweather Sans', sans-serif`
-			);
-		} else {
-			document.body.style.setProperty('--font-family', `'Merriweather Sans', sans-serif`);
-		}
-	});
-	settings.subscribe(Object.keys(cssVarIndex), function (key: string) {
-		const name = cssVarIndex[key].name;
-		const value = settings.data[key].value;
-		const unit = cssVarIndex[key].unit;
-		document.body.style.setProperty(`--${name}`, `${value}${unit}`);
-	});
+	onDestroy(
+		settings.subscribe(['fontFamily'], function (key: string) {
+			const setting = settings.data.fontFamily;
+			if (setting.type != 'radio') return;
+			const index = setting.value;
+			let chosenFont: string | undefined = undefined;
+			if (setting.detail.customOption && setting.detail.options.length == index) {
+				chosenFont = setting.detail.customOptionValue;
+			} else if (setting.detail.options[index]) {
+				chosenFont = setting.detail.options[index];
+			}
+			if (chosenFont) {
+				document.body.style.setProperty(
+					'--font-family',
+					`'${chosenFont}', 'Merriweather Sans', sans-serif`
+				);
+			} else {
+				document.body.style.setProperty('--font-family', `'Merriweather Sans', sans-serif`);
+			}
+		})
+	);
+	onDestroy(
+		settings.subscribe(Object.keys(cssVarIndex), function (key: string) {
+			const name = cssVarIndex[key].name;
+			const value = settings.data[key].value;
+			const unit = cssVarIndex[key].unit;
+			document.body.style.setProperty(`--${name}`, `${value}${unit}`);
+		})
+	);
 </script>
 
 <svelte:head>

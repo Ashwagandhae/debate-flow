@@ -9,12 +9,12 @@
 
 	let transitionSpeed: number = settings.data['transitionSpeed'].value as number;
 
-	onMount(() => {
-		tutorialStep.set(0);
+	tutorialStep.set(0);
+	onDestroy(
 		settings.subscribe(['transitionSpeed'], (key: string) => {
 			transitionSpeed = settings.data[key].value as number;
-		});
-	});
+		})
+	);
 	let delay = 600;
 	let tutorialEnd = 7;
 	onDestroy(() => {

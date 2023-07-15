@@ -46,7 +46,7 @@ body {
 	--padding: 8px;
 	--padding-small: calc(var(--padding) / 2);
 	--padding-big: calc(var(--padding) * 2);
-	--title-height: calc(35px + var(--padding) * 2);
+	--title-height: calc(var(--button-size) + var(--padding) * 4);
 	--view-height: calc(var(--main-height) - var(--title-height) - var(--gap));
 	--font-size: 0.9rem;
 	--font-weight-bold: 700;
@@ -57,10 +57,7 @@ body {
 	--button-size: 20px;
 	--gap: 8px;
 	--line-width: 8px;
-	--sidebar-width: max(
-		180px,
-		calc(var(--button-size) * 4 + var(--padding) * 3 * 3 + var(--padding) * 2 * 2)
-	);
+	--sidebar-width: 184px;
 }
 /* background text color 
 accent

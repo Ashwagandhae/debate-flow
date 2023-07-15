@@ -1,13 +1,15 @@
 <script lang="ts">
 	import { tutorialStep } from '$lib/models/stores';
-	export let showOn: number | number[];
-	let showOnList: number[];
-	if (typeof showOn === 'number') {
-		showOnList = [showOn];
+	export let step: number | number[] | null = null;
+	let stepList: number[];
+	if (typeof step === 'number') {
+		stepList = [step];
+	} else if (step === null) {
+		stepList = [];
 	} else {
-		showOnList = showOn;
+		stepList = step;
 	}
-	$: show = showOnList.includes($tutorialStep);
+	$: show = stepList.includes($tutorialStep);
 </script>
 
 {#if show}

@@ -1,7 +1,6 @@
 <script lang="ts">
 	import Text from './Text.svelte';
 	import Button from './Button.svelte';
-	import ButtonBar from './ButtonBar.svelte';
 	import { flows, selected } from '$lib/models/stores';
 	import type { Box } from '../models/types';
 	import { onMount } from 'svelte';
@@ -101,14 +100,14 @@
 				placeholder="type name here"
 			/>
 		</div>
-		<ButtonBar>
+		<div class="button">
 			<Button
 				on:click={deleteSelf}
 				icon="trash"
 				tooltip="delete flow"
 				shortcut={['commandControl', 'shift', 'delete']}
 			/>
-		</ButtonBar>
+		</div>
 	</div>
 </div>
 
@@ -138,5 +137,8 @@
 	.text.focus {
 		background-color: var(--this-background-active);
 		transition: background var(--transition-speed);
+	}
+	.button {
+		padding: var(--padding) 0;
 	}
 </style>

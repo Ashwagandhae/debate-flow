@@ -3,17 +3,17 @@
 	import TutorialHighlight from './TutorialHighlight.svelte';
 	import { debateStyleMap, debateStyles } from '$lib/models/stores';
 	import { settings } from '$lib/models/settings';
-	import { onMount } from 'svelte';
+	import { onDestroy, onMount } from 'svelte';
 
 	export let addFlow: (type: 'primary' | 'secondary') => void;
 	export let switchSpeakers: boolean;
 
 	let debateStyleIndex = settings.data['debateStyle'].value as number;
-	onMount(() => {
+	onDestroy(
 		settings.subscribe(['debateStyle'], (key: string) => {
 			debateStyleIndex = settings.data[key].value as number;
-		});
-	});
+		})
+	);
 	$: debateStyle = debateStyles[debateStyleMap[debateStyleIndex]];
 
 	$: hasSwitch = debateStyle.primary.columnsSwitch != null;
@@ -21,7 +21,7 @@
 
 <div class="addTab" class:hasSwitch class:switch={switchSpeakers}>
 	<div class="buttons">
-		<TutorialHighlight showOn={4}>
+		<TutorialHighlight step={4}>
 			<Button
 				text={debateStyle.primary.name}
 				palette="accent"
@@ -32,7 +32,7 @@
 			/>
 		</TutorialHighlight>
 		{#if debateStyle.secondary != null}
-			<TutorialHighlight showOn={5}>
+			<TutorialHighlight step={5}>
 				<Button
 					text={debateStyle.secondary.name}
 					palette="accent-secondary"

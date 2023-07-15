@@ -4,16 +4,16 @@
 	import { crossfade } from 'svelte/transition';
 	import { flip } from 'svelte/animate';
 	import { tab, tabList } from '../models/transition';
-	import { tick, onMount } from 'svelte';
+	import { tick, onMount, onDestroy } from 'svelte';
 	import { settings } from '$lib/models/settings';
 
 	let transitionSpeed: number = settings.data['transitionSpeed'].value as number;
 
-	onMount(() => {
+	onDestroy(
 		settings.subscribe(['transitionSpeed'], (key: string) => {
 			transitionSpeed = settings.data[key].value as number;
-		});
-	});
+		})
+	);
 
 	// FLIP ANIMATION
 	const [send, receive] = crossfade({
@@ -104,6 +104,7 @@
 	onMount(() => {
 		changeHeight(true);
 	});
+	onDestroy(settings.subscribe(['sidebarWidth', 'fontSize', 'padding'], () => changeHeight()));
 
 	$: list, changeHeight();
 </script>

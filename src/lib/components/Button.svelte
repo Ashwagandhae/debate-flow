@@ -1,6 +1,7 @@
 <script lang="ts">
 	import Icon from './Icon.svelte';
 	import Tooltip from './Tooltip.svelte';
+	import TutorialHighlight from './TutorialHighlight.svelte';
 	import Link from './Link.svelte';
 
 	export let icon: string;
@@ -12,27 +13,37 @@
 	export let link: string | null = null;
 	export let disabledReason: string = 'disabled';
 	export let tooltipLayout: string = 'bottom';
+	export let tutorialHighlight: number | null = null;
+	export let onclick: () => void = () => {};
 	function preventBlur(e: MouseEvent) {
 		e.preventDefault();
 	}
 </script>
 
-<Tooltip content={tooltip} disabled={disabled && disabledReason} {shortcut} layout={tooltipLayout}>
-	<Link {link}>
-		<button
-			class={`top ${palette ? 'palette-' + palette : ''}`}
-			class:disabled
-			on:click
-			on:mousedown={preventBlur}
-			disabled={!!disabled}
-		>
-			<Icon name={icon} size="var(--button-size)" />
-			{#if text != null}
-				<p>{text}</p>
-			{/if}
-		</button>
-	</Link>
-</Tooltip>
+<TutorialHighlight step={tutorialHighlight}>
+	<Tooltip
+		content={tooltip}
+		disabled={disabled && disabledReason}
+		{shortcut}
+		layout={tooltipLayout}
+	>
+		<Link {link}>
+			<button
+				class={`top ${palette ? 'palette-' + palette : ''}`}
+				class:disabled
+				on:click
+				on:click={onclick}
+				on:mousedown={preventBlur}
+				disabled={!!disabled}
+			>
+				<Icon name={icon} size="var(--button-size)" />
+				{#if text != null}
+					<p>{text}</p>
+				{/if}
+			</button>
+		</Link>
+	</Tooltip>
+</TutorialHighlight>
 
 <style>
 	.top {
