@@ -264,8 +264,68 @@ const settings = new Settings({
       max: 30,
       step: 1
     }
+  },
+  sidebarWidth: {
+    name: "Sidebar width",
+    value: 184,
+    auto: 184,
+    type: "slider",
+    detail: {
+      min: 50,
+      max: 500,
+      step: 1
+    }
+  },
+  showUndoRedoButtons: {
+    name: "Undo/redo buttons",
+    value: true,
+    auto: true,
+    type: "toggle"
+  },
+  showBoxCreationButtons: {
+    name: "Cell creation/deletion buttons",
+    value: true,
+    auto: true,
+    type: "toggle"
+  },
+  showBoxFormatButtons: {
+    name: "Cell format buttons",
+    value: true,
+    auto: true,
+    type: "toggle"
   }
 });
+const settingsGroups = [
+  {
+    name: "General",
+    settings: ["debateStyle", "colorTheme", "columnWidth", "transitionSpeed", "useTooltips"]
+  },
+  {
+    name: "Colors",
+    settings: ["colorTheme", "accentHue", "accentSecondaryHue"]
+  },
+  {
+    name: "Font",
+    settings: ["fontFamily", "fontSize", "fontWeight", "fontWeightBold"]
+  },
+  {
+    name: "Spacing",
+    settings: ["columnWidth", "sidebarWidth", "buttonSize", "padding", "gap"]
+  },
+  {
+    name: "Borders",
+    settings: ["lineWidth", "borderRadius"]
+  },
+  {
+    name: "Animations",
+    settings: ["transitionSpeed", "useTooltips"]
+  },
+  {
+    name: "Toolbar",
+    settings: ["showUndoRedoButtons", "showBoxCreationButtons", "showBoxFormatButtons"]
+  }
+];
 export {
+  settingsGroups as a,
   settings as s
 };

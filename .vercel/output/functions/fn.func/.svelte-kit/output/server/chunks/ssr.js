@@ -1,5 +1,14 @@
 function noop() {
 }
+const identity = (x) => x;
+function assign(tar, src) {
+  for (const k in src)
+    tar[k] = src[k];
+  return (
+    /** @type {T & S} */
+    tar
+  );
+}
 function run(fn) {
   return fn();
 }
@@ -163,12 +172,14 @@ export {
   getContext as g,
   current_component as h,
   createEventDispatcher as i,
-  set_store_value as j,
-  noop as k,
-  safe_not_equal as l,
+  null_to_empty as j,
+  assign as k,
+  identity as l,
   missing_component as m,
-  null_to_empty as n,
+  noop as n,
   onDestroy as o,
+  set_store_value as p,
+  safe_not_equal as q,
   run_all as r,
   setContext as s,
   validate_component as v

@@ -1,4 +1,4 @@
-import { c as create_ssr_component } from "../../chunks/ssr.js";
+import { c as create_ssr_component, o as onDestroy } from "../../chunks/ssr.js";
 import { s as settings } from "../../chunks/settings.js";
 import { inject } from "@vercel/analytics";
 const global = "";
@@ -15,7 +15,7 @@ const Layout = create_ssr_component(($$result, $$props, $$bindings, slots) => {
     }
   }
   colorThemeMediaQuery.addEventListener("change", updateColorTheme);
-  settings.subscribe(["colorTheme"], function() {
+  onDestroy(settings.subscribe(["colorTheme"], function() {
     if (settings.data.colorTheme.value == 1) {
       document.body.classList.remove("dark");
     } else if (settings.data.colorTheme.value == 2) {
@@ -23,7 +23,7 @@ const Layout = create_ssr_component(($$result, $$props, $$bindings, slots) => {
     } else {
       updateColorTheme();
     }
-  });
+  }));
   const cssVarIndex = {
     accentHue: { name: "accent-hue", unit: "" },
     accentSecondaryHue: { name: "accent-secondary-hue", unit: "" },
@@ -36,9 +36,10 @@ const Layout = create_ssr_component(($$result, $$props, $$bindings, slots) => {
     fontWeightBold: { name: "font-weight-bold", unit: "" },
     gap: { name: "gap", unit: "px" },
     buttonSize: { name: "button-size", unit: "px" },
-    lineWidth: { name: "line-width", unit: "px" }
+    lineWidth: { name: "line-width", unit: "px" },
+    sidebarWidth: { name: "sidebar-width", unit: "px" }
   };
-  settings.subscribe(["fontFamily"], function(key) {
+  onDestroy(settings.subscribe(["fontFamily"], function(key) {
     const setting = settings.data.fontFamily;
     if (setting.type != "radio")
       return;
@@ -54,13 +55,13 @@ const Layout = create_ssr_component(($$result, $$props, $$bindings, slots) => {
     } else {
       document.body.style.setProperty("--font-family", `'Merriweather Sans', sans-serif`);
     }
-  });
-  settings.subscribe(Object.keys(cssVarIndex), function(key) {
+  }));
+  onDestroy(settings.subscribe(Object.keys(cssVarIndex), function(key) {
     const name = cssVarIndex[key].name;
     const value = settings.data[key].value;
     const unit = cssVarIndex[key].unit;
     document.body.style.setProperty(`--${name}`, `${value}${unit}`);
-  });
+  }));
   return `${$$result.head += `<!-- HEAD_svelte-18lrh3p_START -->${$$result.title = `<title>Flower: Debate Flowing App</title>`, ""}<meta name="description" content="A webapp for flowing in debate."><!-- HEAD_svelte-18lrh3p_END -->`, ""} ${slots.default ? slots.default({}) : ``}`;
 });
 export {
