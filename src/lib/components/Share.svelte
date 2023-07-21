@@ -4,18 +4,8 @@
 </script>
 
 <div class="top palette-plain">
-	<div class="basic">
-		<TextInput placeholder="document name" />
-	</div>
-	<div class="share">
-		<TextInput placeholder="reciever username" />
-		<Button
-			icon="link"
-			text="share to user"
-			tooltip="save your flow online temporarily"
-			tooltipLayout="top"
-		/>
-	</div>
+	<h1>Sharing</h1>
+	<p>Coming soon</p>
 </div>
 
 <style>
@@ -30,12 +20,6 @@
 		justify-content: center;
 		align-items: center;
 		overflow: auto;
-		gap: var(--padding);
-	}
-
-	.share {
-		display: flex;
-		flex-direction: row;
 		gap: var(--padding);
 	}
 </style>

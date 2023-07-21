@@ -12,11 +12,10 @@
 	import Share from '$lib/components/Share.svelte';
 	import Tab from '$lib/components/Tab.svelte';
 	import { dev } from '$app/environment';
-	import { openPopup, closePopup } from '$lib/models/popup';
+	import { openPopup } from '$lib/models/popup';
 
 	import type { Flow as IFlow } from '$lib/models/type';
-	import { screenTransition } from '$lib/models/transition';
-	import { SvelteComponent, onDestroy, onMount } from 'svelte';
+	import { onDestroy, onMount } from 'svelte';
 	import {
 		activeMouse,
 		flows,
@@ -277,7 +276,7 @@
 					buttons={[
 						{
 							icon: 'home',
-							link: '/app/docs',
+							link: '/',
 							tooltip: 'go home',
 							tutorialHighlight: 1
 						},
@@ -292,15 +291,15 @@
 							onclick: () => openPopup(DownloadUpload, 'File'),
 							tooltip: 'download & upload file',
 							tutorialHighlight: 3
-						},
-						{
-							icon: 'people',
-							onclick: () => openPopup(Share, 'Save online & share'),
-							disabled: $flows.length == 0,
-							disabledReason: 'nothing to share',
-							tooltip: 'share',
-							tutorialHighlight: 4
 						}
+						// {
+						// 	icon: 'people',
+						// 	onclick: () => openPopup(Share, 'Save online & share'),
+						// 	disabled: $flows.length == 0,
+						// 	disabledReason: 'nothing to share',
+						// 	tooltip: 'share',
+						// 	tutorialHighlight: 4
+						// }
 					]}
 				/>
 			</div>
