@@ -55,7 +55,7 @@
 <div class="top">
 	<ul class="palette-accent">
 		<div class="row1 palette-accent">
-			<FakeBox text="Arguement 1" />
+			<FakeBox text="Argument 1" />
 			<div class="palette-accent-secondary">
 				<FakeBox text="Response 1" below />
 				<div class="addedResponse" bind:this={addedResponse}>
@@ -64,9 +64,9 @@
 			</div>
 		</div>
 		<div bind:this={otherRows} class="otherRows">
-			<FakeBox text="Arguement 2" />
-			<FakeBox text="Arguement 3" />
-			<FakeBox text="Arguement 4" below />
+			<FakeBox text="Argument 2" />
+			<FakeBox text="Argument 3" />
+			<FakeBox text="Argument 4" below />
 		</div>
 	</ul>
 </div>
