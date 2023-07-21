@@ -171,7 +171,7 @@
 					icon: 'addUp',
 					onclick: () => addSibling(0),
 					disabled: !validFocus,
-					tooltip: 'add arguement above',
+					tooltip: 'add argument above',
 					shortcut: ['option', 'return'],
 					disabledReason
 				},
@@ -179,7 +179,7 @@
 					icon: 'addDown',
 					onclick: () => addSibling(1),
 					disabled: !validFocus,
-					tooltip: 'add arguement below',
+					tooltip: 'add argument below',
 					shortcut: ['return'],
 					disabledReason
 				},
