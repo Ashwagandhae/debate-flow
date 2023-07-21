@@ -3,9 +3,9 @@
 	import Icon from './Icon.svelte';
 	import { getContext, onMount, tick, onDestroy } from 'svelte';
 	import { createEventDispatcher } from 'svelte';
-	import { activeMouse, flows, selected, newBox, boxFromPath } from '$lib/models/stores';
-	import type { Box, Flow } from '$lib/models/types';
-	import { createKeyDownHandler, type KeyComboOptionsIndex } from '$lib/models/keys';
+	import { activeMouse, flows, selected, newBox, boxFromPath } from '$lib/models/store';
+	import type { Box, Flow } from '$lib/models/type';
+	import { createKeyDownHandler, type KeyComboOptionsIndex } from '$lib/models/key';
 
 	import { boxIn, boxOut, boxButtonIn, brIn, brOut } from '../models/transition';
 

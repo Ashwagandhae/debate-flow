@@ -2,21 +2,21 @@
 	import Flow from '$lib/components/Flow.svelte';
 	import Title from '$lib/components/Title.svelte';
 	import BoxControl from '$lib/components/BoxControl.svelte';
-	import Button from '$lib/components/Button.svelte';
 	import ButtonBar from '$lib/components/ButtonBar.svelte';
-	import Popup from '$lib/components/Popup.svelte';
-	import Downloader from '$lib/components/Downloader.svelte';
-	import Uploader from '$lib/components/Uploader.svelte';
+	import DownloadUpload from '$lib/components/DownloadUpload.svelte';
 	import Error from '$lib/components/Error.svelte';
 	import Settings from '$lib/components/Settings.svelte';
 	import SortableList from '$lib/components/SortableList.svelte';
 	import Tutorial from '$lib/components/Tutorial.svelte';
-	import TutorialHighlight from '$lib/components/TutorialHighlight.svelte';
 	import AddTab from '$lib/components/AddTab.svelte';
+	import Share from '$lib/components/Share.svelte';
 	import Tab from '$lib/components/Tab.svelte';
-	import type { Flow as IFlow } from '$lib/models/types';
+	import { dev } from '$app/environment';
+	import { openPopup, closePopup } from '$lib/models/popup';
+
+	import type { Flow as IFlow } from '$lib/models/type';
 	import { screenTransition } from '$lib/models/transition';
-	import { onDestroy, onMount, tick } from 'svelte';
+	import { SvelteComponent, onDestroy, onMount } from 'svelte';
 	import {
 		activeMouse,
 		flows,
@@ -25,8 +25,8 @@
 		newFlow,
 		History,
 		changesSaved
-	} from '$lib/models/stores';
-	import { createKeyDownHandler } from '$lib/models/keys';
+	} from '$lib/models/store';
+	import { createKeyDownHandler } from '$lib/models/key';
 
 	let destroyers: (() => void)[] = [];
 	$: unsavedChanges = $flows.length > 0 && !$changesSaved;
@@ -47,7 +47,7 @@
 		);
 		// changes you made may not be saved
 		window.addEventListener('beforeunload', function (e) {
-			if (unsavedChanges) {
+			if (unsavedChanges && !dev) {
 				let confirmationMessage = 'Are you sure you want to leave?';
 				e.returnValue = confirmationMessage;
 				return confirmationMessage;
@@ -122,12 +122,6 @@
 				},
 				require: () => $flows.length > 0,
 				stopRepeat: false
-			},
-			Backspace: {
-				handle: () => {
-					deleteFlow($selected);
-				},
-				require: () => $flows.length > 0
 			}
 		},
 		commandControl: {
@@ -242,20 +236,6 @@
 		}
 	}
 
-	let popups: {
-		component: Uploader | Downloader | Settings | Error;
-		title: string;
-		props: any;
-	}[] = [];
-	function closePopup(index: number) {
-		popups.splice(index, 1);
-		popups = popups;
-	}
-	function openPopup(component: any, title: string, { props = {} } = {}) {
-		popups.push({ component, props, title });
-		popups = popups;
-	}
-
 	function handleSort(e: { detail: { from: number; to: number } }) {
 		let { from, to } = e.detail;
 		let selectedId = $flows[$selected].id;
@@ -288,36 +268,6 @@
 	on:drop={readUploadDragged}
 />
 <main class:activeMouse class="palette-plain">
-	{#if popups.length > 0}
-		<!-- we can ignore because pressing escape on window already has same functionality -->
-		<!-- svelte-ignore a11y-click-events-have-key-events -->
-		<!-- svelte-ignore a11y-no-static-element-interactions -->
-		<div
-			class="screen"
-			on:click|self={() => {
-				closePopup(0);
-			}}
-			transition:screenTransition
-		>
-			<!-- svelte-ignore a11y-no-static-element-interactions -->
-			<!-- svelte-ignore a11y-click-events-have-key-events -->
-			<div
-				class="popups"
-				on:click|self={() => {
-					closePopup(0);
-				}}
-			>
-				{#key popups}
-					<Popup
-						component={popups[0].component}
-						closeSelf={() => closePopup(0)}
-						title={popups[0].title}
-						props={popups[0].props}
-					/>
-				{/key}
-			</div>
-		</div>
-	{/if}
 	<input id="uploadId" type="file" hidden on:change={readUpload} />
 	<div class="grid" class:tutorialMode={$flows.length == 0}>
 		<div class="sidebar">
@@ -327,7 +277,7 @@
 					buttons={[
 						{
 							icon: 'home',
-							link: '/',
+							link: '/app/docs',
 							tooltip: 'go home',
 							tutorialHighlight: 1
 						},
@@ -338,43 +288,21 @@
 							tutorialHighlight: 2
 						},
 						{
-							icon: 'download',
-							onclick: () => openPopup(Downloader, 'Download'),
-							disabled: $flows.length == 0,
-							disabledReason: 'nothing to download',
-							tooltip: 'download as file',
+							icon: 'file',
+							onclick: () => openPopup(DownloadUpload, 'File'),
+							tooltip: 'download & upload file',
 							tutorialHighlight: 3
 						},
 						{
-							icon: 'upload',
-							onclick: () => openPopup(Uploader, 'Upload'),
-							tooltip: 'import file',
-							tutorialHighlight: 3
+							icon: 'people',
+							onclick: () => openPopup(Share, 'Save online & share'),
+							disabled: $flows.length == 0,
+							disabledReason: 'nothing to share',
+							tooltip: 'share',
+							tutorialHighlight: 4
 						}
 					]}
-				>
-					<!-- <Button icon="home" link="/" tooltip="go home" tutorialHighlight={1} />
-					<Button
-						icon="gear"
-						on:click={() => openPopup(Settings, 'Settings')}
-						tooltip="settings"
-						tutorialHighlight={2}
-					/>
-					<Button
-						icon="download"
-						on:click={() => openPopup(Downloader, 'Download')}
-						disabled={$flows.length == 0}
-						disabledReason={'nothing to download'}
-						tooltip="download as file"
-						tutorialHighlight={3}
-					/>
-					<Button
-						icon="upload"
-						on:click={() => openPopup(Uploader, 'Upload')}
-						tooltip="import file"
-						tutorialHighlight={3}
-					/> -->
-				</ButtonBar>
+				/>
 			</div>
 			<div class="tabs">
 				<div class="tabScroll">
@@ -502,22 +430,5 @@
 	.flow {
 		-ms-overflow-style: none; /* IE and Edge */
 		scrollbar-width: none; /* Firefox */
-	}
-	.screen {
-		background-color: var(--color-screen);
-		width: 100vw;
-		height: 100vh;
-		position: fixed;
-		display: flex;
-		align-items: center;
-		justify-content: center;
-		z-index: 999;
-	}
-	.popups {
-		width: 100vw;
-		height: min-content;
-		display: flex;
-		align-items: center;
-		justify-content: center;
 	}
 </style>

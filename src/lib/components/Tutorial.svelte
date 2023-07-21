@@ -3,7 +3,7 @@
 	import Tooltip from './Tooltip.svelte';
 	import { onDestroy, onMount } from 'svelte';
 	import { settings } from '$lib/models/settings';
-	import { tutorialStep } from '$lib/models/stores';
+	import { tutorialStep } from '$lib/models/store';
 	import { tutorialSpan, tutorialBlock } from '$lib/models/transition';
 	import Button from './Button.svelte';
 

@@ -1,11 +1,11 @@
 <script lang="ts">
 	import Text from './Text.svelte';
 	import Button from './Button.svelte';
-	import { flows, selected } from '$lib/models/stores';
-	import type { Box } from '../models/types';
+	import { flows, selected } from '$lib/models/store';
+	import type { Box } from '../models/type';
 	import { onMount } from 'svelte';
 	import { createEventDispatcher } from 'svelte';
-	import { createKeyDownHandler } from '$lib/models/keys';
+	import { createKeyDownHandler } from '$lib/models/key';
 
 	const dispatch = createEventDispatcher();
 
@@ -101,12 +101,7 @@
 			/>
 		</div>
 		<div class="button">
-			<Button
-				on:click={deleteSelf}
-				icon="trash"
-				tooltip="delete flow"
-				shortcut={['commandControl', 'shift', 'delete']}
-			/>
+			<Button on:click={deleteSelf} icon="trash" tooltip="delete flow" />
 		</div>
 	</div>
 </div>

@@ -3,7 +3,7 @@
 	import Shortcut from './Shortcut.svelte';
 	import { tick, onDestroy } from 'svelte';
 	import { settings } from '$lib/models/settings';
-	import { tooltipState } from '$lib/models/stores';
+	import { tooltipState } from '$lib/models/store';
 
 	export let content: string | null;
 	export let shortcut: string[] | null = null;

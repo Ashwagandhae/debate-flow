@@ -35,8 +35,10 @@
 	"dependencies": {
 		"@fontsource/merriweather-sans": "^5.0.4",
 		"@types/animejs": "^3.1.7",
+		"@urql/svelte": "^4.0.3",
 		"@vercel/analytics": "^1.0.1",
 		"animejs": "^3.2.1",
-		"exceljs": "^4.3.0"
+		"exceljs": "^4.3.0",
+		"graphql": "^16.7.1"
 	}
 }

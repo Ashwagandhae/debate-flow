@@ -1,6 +1,9 @@
 <script lang="ts">
 	import './global.css';
 	import { settings } from '$lib/models/settings';
+	import { popups, closePopup } from '$lib/models/popup';
+	import Popup from '$lib/components/Popup.svelte';
+	import { screenTransition } from '$lib/models/transition';
 
 	import { dev } from '$app/environment';
 	import { inject } from '@vercel/analytics';
@@ -127,3 +130,55 @@
 	<link rel="canonical" href="https://debate-flow.vercel.app/" />
 </svelte:head>
 <slot />
+{#if $popups.length > 0}
+	<!-- we can ignore because pressing escape on window already has same functionality -->
+	<!-- svelte-ignore a11y-click-events-have-key-events -->
+	<!-- svelte-ignore a11y-no-static-element-interactions -->
+	<div
+		class="screen"
+		on:click|self={() => {
+			closePopup(0);
+		}}
+		transition:screenTransition
+	>
+		<!-- svelte-ignore a11y-no-static-element-interactions -->
+		<!-- svelte-ignore a11y-click-events-have-key-events -->
+		<div
+			class="popups"
+			on:click|self={() => {
+				closePopup(0);
+			}}
+		>
+			{#key $popups}
+				<Popup
+					component={$popups[0].component}
+					closeSelf={() => closePopup(0)}
+					title={$popups[0].title}
+					props={$popups[0].props}
+				/>
+			{/key}
+		</div>
+	</div>
+{/if}
+
+<style>
+	.screen {
+		background-color: var(--color-screen);
+		width: 100vw;
+		height: 100vh;
+		position: fixed;
+		display: flex;
+		top: 0;
+		left: 0;
+		align-items: center;
+		justify-content: center;
+		z-index: 999;
+	}
+	.popups {
+		width: 100vw;
+		height: min-content;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+	}
+</style>

@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { keyDict } from '$lib/models/keys';
+	import { keyDict } from '$lib/models/key';
 	export let keys: string[];
 </script>
 

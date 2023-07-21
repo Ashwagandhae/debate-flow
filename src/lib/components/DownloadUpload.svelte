@@ -2,7 +2,7 @@
 	import { flows } from '$lib/models/store';
 	import Button from './Button.svelte';
 	import { Workbook, type Buffer } from 'exceljs';
-	import type { Flow, Box } from '../models/type';
+	import type { Box } from '../models/type';
 	import { changesSaved } from '$lib/models/store';
 
 	export let closePopup: () => void;
@@ -116,10 +116,14 @@
 			});
 		closePopup();
 	}
+	function openUploadDialog() {
+		(document.getElementById('uploadId') as HTMLElement).click();
+		closePopup();
+	}
 </script>
 
 <div class="top">
-	<section class="json">
+	<section class="download">
 		<Button
 			icon="download"
 			text="download as JSON"
@@ -128,13 +132,12 @@
 			on:click={download}
 			disabled={$flows.length == 0}
 			disabledReason={'nothing to download'}
+			palette="accent"
 		/>
 		<ul>
 			<li>Can reopen file in this editor</li>
 			<li>More data is saved (last focused cell etc.)</li>
 		</ul>
-	</section>
-	<section class="xlsx">
 		<Button
 			icon="download"
 			text="download as XLSX"
@@ -143,10 +146,22 @@
 			on:click={downloadXLSX}
 			disabled={$flows.length == 0}
 			disabledReason={'nothing to download'}
+			palette="accent-secondary"
 		/>
 		<ul>
 			<li>Anyone can view it</li>
 		</ul>
+	</section>
+	<section class="upload">
+		<Button
+			icon="upload"
+			text="choose file from computer"
+			tooltip="upload a JSON file from your computer"
+			tooltipLayout="top"
+			on:click={openUploadDialog}
+			palette="accent"
+		/>
+		<p>Or drag and drop a JSON file anywhere in this window</p>
 	</section>
 </div>
 
@@ -165,6 +180,12 @@
 		padding-left: var(--padding-big);
 		color: var(--color-subtle);
 	}
+	p {
+		margin: 0;
+		padding: 0;
+		color: var(--color-subtle);
+		text-align: center;
+	}
 
 	section {
 		width: 100%;
@@ -176,7 +197,7 @@
 		align-items: center;
 		gap: var(--padding);
 	}
-	.json {
+	.upload {
 		background: var(--background-secondary);
 	}
 </style>

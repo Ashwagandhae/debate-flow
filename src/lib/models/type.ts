@@ -1,4 +1,5 @@
-import type { History } from '$lib/models/stores';
+import type { History } from '$lib/models/store';
+import type { DebateStyleKey } from './debateStyle';
 
 export type Flow = {
 	content: string;
@@ -23,19 +24,9 @@ export type Box = {
 	crossed?: boolean;
 };
 
-export type DebateStyle = {
-	primary: {
-		name: string;
-		columns: string[];
-		columnsSwitch?: string[];
-		invert: boolean;
-		starterBoxes?: string[];
-	};
-	secondary?: {
-		name: string;
-		columns: string[];
-		columnsSwitch?: string[];
-		invert: boolean;
-		starterBoxes?: string[];
-	};
+export type Doc = {
+	name: string;
+	created: Date;
+	expire: Date;
+	style: DebateStyleKey;
 };

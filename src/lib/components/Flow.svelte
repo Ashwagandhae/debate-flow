@@ -1,11 +1,11 @@
 <script lang="ts">
 	import Box from './Box.svelte';
 	import Header from './Header.svelte';
-	import type { Flow } from '../models/types';
-	import type { Box as BoxType } from '../models/types';
+	import type { Flow } from '../models/type';
+	import type { Box as BoxType } from '../models/type';
 
 	import { setContext } from 'svelte';
-	import { deepClone } from '$lib/models/stores';
+	import { deepClone } from '$lib/models/store';
 
 	export let root: Flow;
 	setContext('invert', () => {

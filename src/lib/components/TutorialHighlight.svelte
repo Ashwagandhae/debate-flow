@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { tutorialStep } from '$lib/models/stores';
+	import { tutorialStep } from '$lib/models/store';
 	export let step: number | number[] | null = null;
 	let stepList: number[];
 	if (typeof step === 'number') {

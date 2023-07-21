@@ -19,7 +19,7 @@
 				<p>An easier way to flow.</p>
 				<p>A better way to debate.</p>
 			</div>
-			<a href="./app" class="flowerholder">
+			<a href="./app/flow" class="flowerholder">
 				<Flower {hover} />
 				<button
 					on:mouseenter={() => (hover = true)}
