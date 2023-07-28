@@ -3,12 +3,10 @@
 	import Button from './Button.svelte';
 	import { Workbook, type Buffer } from 'exceljs';
 	import type { Box } from '../models/type';
-	import { changesSaved } from '$lib/models/store';
 
 	export let closePopup: () => void;
 
 	function download() {
-		$changesSaved = true;
 		let data: string = JSON.stringify($flows, (key, value) => {
 			if (key === 'history') {
 				return undefined;
@@ -24,7 +22,6 @@
 		closePopup();
 	}
 	function downloadXLSX() {
-		$changesSaved = true;
 		let wb: Workbook = new Workbook();
 		for (let flow of $flows) {
 			let data: string[][] = [];

@@ -1,6 +1,7 @@
 <script lang="ts">
 	import ButtonBar from './ButtonBar.svelte';
-	import { flows, selected, boxFromPath, newBox } from '$lib/models/store';
+	import { flows, selected } from '$lib/models/store';
+	import { boxFromPath, newBox } from '$lib/models/flow';
 	import { afterUpdate, onDestroy, tick, type ComponentProps } from 'svelte';
 	import type { Flow, Box } from '../models/type';
 	import type Button from './Button.svelte';

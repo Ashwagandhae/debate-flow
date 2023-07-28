@@ -7,3 +7,4 @@
 - Added PF speaking order switcher (u/InfinetlyNothing)
 - Added crossing out arguments (u/Low_Road_6511)
 - Added tab switching shortcut (u/SuperQuivocal)
+- Merged upload & download buttons into file button

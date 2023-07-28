@@ -1,9 +1,11 @@
 <script lang="ts">
 	import Text from './Text.svelte';
 	import Icon from './Icon.svelte';
-	import { getContext, onMount, tick, onDestroy } from 'svelte';
+	import { getContext, onMount, tick } from 'svelte';
 	import { createEventDispatcher } from 'svelte';
-	import { activeMouse, flows, selected, newBox, boxFromPath } from '$lib/models/store';
+	import { activeMouse, flows, flowsChange, selected } from '$lib/models/store';
+	import { boxFromPath, newBox } from '$lib/models/flow';
+	import { isMergingFlows } from '$lib/models/sharing';
 	import type { Box, Flow } from '$lib/models/type';
 	import { createKeyDownHandler, type KeyComboOptionsIndex } from '$lib/models/key';
 
@@ -202,6 +204,7 @@
 			});
 		}
 		hasSentEdit = true;
+		flowsChange();
 	}
 
 	function crossSelf() {
@@ -421,8 +424,8 @@
 	class:childFocus
 	class:activeMouse={$activeMouse}
 	class:highlight={childFocus || focus}
-	in:boxIn={{ skip: root }}
-	out:boxOut={{ skip: root }}
+	in:boxIn={{ skip: root || isMergingFlows }}
+	out:boxOut={{ skip: root || isMergingFlows }}
 >
 	{#if empty}
 		<div class="content" />

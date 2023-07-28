@@ -14,21 +14,37 @@
 	import { dev } from '$app/environment';
 	import { openPopup } from '$lib/models/popup';
 
-	import type { Flow as IFlow } from '$lib/models/type';
+	import type { Flow as FlowType, Box } from '$lib/models/type';
 	import { onDestroy, onMount } from 'svelte';
 	import {
 		activeMouse,
+		flowsChange,
 		flows,
 		selected,
-		boxFromPath,
-		newFlow,
-		History,
-		changesSaved
+		subscribeflowsChange,
+		isSharing
 	} from '$lib/models/store';
+	import { boxFromPath, newFlow } from '$lib/models/flow';
+	import { History } from '$lib/models/history';
 	import { createKeyDownHandler } from '$lib/models/key';
+	import { maybeStartSharing } from '$lib/models/sharing';
 
 	let destroyers: (() => void)[] = [];
-	$: unsavedChanges = $flows.length > 0 && !$changesSaved;
+
+	let changesSaved = true;
+	subscribeflowsChange(() => {
+		changesSaved = false;
+	});
+	$: unsavedChanges = $flows.length > 0 && !changesSaved;
+	onMount(maybeStartSharing);
+
+	let removeIsSharingSubscribe = isSharing.subscribe((sharing) => {
+		if (sharing) {
+			openPopup(Share, 'Sharing');
+			removeIsSharingSubscribe();
+		}
+	});
+
 	onMount(() => {
 		window.addEventListener(
 			'dragover',
@@ -63,7 +79,7 @@
 		focusFlow();
 	}
 	function focusFlow() {
-		let lastFocus = boxFromPath($flows[$selected], $flows[$selected]?.lastFocus);
+		let lastFocus = boxFromPath<FlowType, Box>($flows[$selected], $flows[$selected]?.lastFocus);
 		if (lastFocus == null) {
 			lastFocus = $flows[$selected];
 		}
@@ -72,7 +88,7 @@
 	}
 	function blurFlow() {
 		if ($flows.length > 0) {
-			let lastFocus = boxFromPath($flows[$selected], $flows[$selected].lastFocus);
+			let lastFocus = boxFromPath<FlowType, Box>($flows[$selected], $flows[$selected].lastFocus);
 			if (!lastFocus) {
 				lastFocus = $flows[$selected];
 			}
@@ -89,6 +105,7 @@
 		$flows.push(flow);
 		$selected = $flows.length - 1;
 		$flows = $flows;
+		flowsChange();
 	}
 
 	async function deleteFlow(index: number) {
@@ -99,11 +116,37 @@
 		} else {
 			$selected = index - 1;
 		}
+		// fix indices
+		for (let i = index; i < $flows.length; i++) {
+			$flows[i].index = i;
+		}
 		$flows = $flows;
+		flowsChange();
 		if ($flows.length > 0) {
 			focusFlow();
 		}
 	}
+
+	function handleSort(e: { detail: { from: number; to: number } }) {
+		let { from, to } = e.detail;
+		let selectedId = $flows[$selected].id;
+		let newFlows = [...$flows];
+		// add to to if needed
+		if (from > to) {
+			to += 1;
+		}
+		let flow = newFlows.splice(from, 1)[0];
+		newFlows.splice(to, 0, flow);
+		// fix indices
+		for (let i = 0; i < newFlows.length; i++) {
+			newFlows[i].index = i;
+		}
+
+		$flows = newFlows;
+		flowsChange();
+		$selected = $flows.findIndex((flow) => flow.id == selectedId);
+	}
+
 	function handleMouseMove(e: MouseEvent) {
 		$activeMouse = true;
 	}
@@ -154,24 +197,6 @@
 		keyDownHandler(e);
 	}
 
-	// function handleKeydown(e: KeyboardEvent) {
-	// 	$activeMouse = false;
-	// 	if (e.ctrlKey && e.shiftKey && e.key == 'N') {
-	// 		e.preventDefault();
-	// 		addFlow('secondary');
-	// 	} else if (e.ctrlKey && e.key == 'n') {
-	// 		e.preventDefault();
-	// 		addFlow('primary');
-	// 	}
-	// 	if ((e.metaKey || e.ctrlKey) && e.shiftKey && e.key == 'z') {
-	// 		e.preventDefault();
-	// 		$flows[$selected].history.redo();
-	// 	} else if ((e.metaKey || e.ctrlKey) && e.key == 'z') {
-	// 		e.preventDefault();
-	// 		$flows[$selected].history.undo();
-	// 	}
-	// }
-
 	function readUploadDragged(e: DragEvent) {
 		e.preventDefault();
 		let file = e?.dataTransfer?.files[0];
@@ -215,7 +240,7 @@
 
 	async function handleUpload(data: string) {
 		let rawFlows: unknown[];
-		let newFlows: IFlow[] | null = null;
+		let newFlows: FlowType[] | null = null;
 		try {
 			rawFlows = JSON.parse(data);
 			newFlows = rawFlows.map((flow: any) => {
@@ -233,21 +258,6 @@
 				$selected = 0;
 			}
 		}
-	}
-
-	function handleSort(e: { detail: { from: number; to: number } }) {
-		let { from, to } = e.detail;
-		let selectedId = $flows[$selected].id;
-		let newFlows = [...$flows];
-		// add to to if needed
-		if (from > to) {
-			to += 1;
-		}
-		let flow = newFlows.splice(from, 1)[0];
-		newFlows.splice(to, 0, flow);
-
-		$flows = newFlows;
-		$selected = $flows.findIndex((flow) => flow.id == selectedId);
 	}
 
 	let switchSpeakers = false;
@@ -291,15 +301,13 @@
 							onclick: () => openPopup(DownloadUpload, 'File'),
 							tooltip: 'download & upload file',
 							tutorialHighlight: 3
+						},
+						{
+							icon: 'people',
+							onclick: () => openPopup(Share, 'Save online & share'),
+							tooltip: 'share',
+							tutorialHighlight: 4
 						}
-						// {
-						// 	icon: 'people',
-						// 	onclick: () => openPopup(Share, 'Save online & share'),
-						// 	disabled: $flows.length == 0,
-						// 	disabledReason: 'nothing to share',
-						// 	tooltip: 'share',
-						// 	tutorialHighlight: 4
-						// }
 					]}
 				/>
 			</div>

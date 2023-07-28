@@ -1,7 +1,7 @@
 <script lang="ts">
 	import Text from './Text.svelte';
 	import Button from './Button.svelte';
-	import { flows, selected } from '$lib/models/store';
+	import { flows, flowsChange, selected } from '$lib/models/store';
 	import type { Box } from '../models/type';
 	import { onMount } from 'svelte';
 	import { createEventDispatcher } from 'svelte';
@@ -75,6 +75,7 @@
 			});
 		}
 		hasSentEdit = true;
+		flowsChange();
 	}
 	let palette: string = 'plain';
 	$: {

@@ -1,5 +1,4 @@
-import type { History } from '$lib/models/store';
-import type { DebateStyleKey } from './debateStyle';
+import type { History } from './history';
 
 export type Flow = {
 	content: string;
@@ -22,11 +21,4 @@ export type Box = {
 	empty?: boolean;
 	placeholder?: string;
 	crossed?: boolean;
-};
-
-export type Doc = {
-	name: string;
-	created: Date;
-	expire: Date;
-	style: DebateStyleKey;
 };

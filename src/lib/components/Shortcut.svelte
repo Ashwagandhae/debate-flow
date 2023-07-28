@@ -1,9 +1,10 @@
 <script lang="ts">
 	import { keyDict } from '$lib/models/key';
 	export let keys: string[];
+	export let inline: boolean = false;
 </script>
 
-<span class="top">
+<span class="top" class:inline>
 	{#each keys as key, index}
 		{#if key in keyDict}
 			<kbd class="modifier" class:big={keyDict[key].length == 1}>{keyDict[key]}</kbd>
@@ -20,6 +21,9 @@
 		gap: 0.3em;
 		font-size: inherit;
 		align-items: center;
+	}
+	.top.inline {
+		display: inline-flex;
 	}
 	kbd {
 		font-weight: inherit;

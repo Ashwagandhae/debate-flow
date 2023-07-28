@@ -5,7 +5,7 @@
 	import type { Box as BoxType } from '../models/type';
 
 	import { setContext } from 'svelte';
-	import { deepClone } from '$lib/models/store';
+	import { deepClone } from '$lib/models/history';
 
 	export let root: Flow;
 	setContext('invert', () => {

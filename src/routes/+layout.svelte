@@ -8,6 +8,9 @@
 	import { dev } from '$app/environment';
 	import { inject } from '@vercel/analytics';
 	import { onDestroy } from 'svelte';
+	import { appMinimized } from '$lib/models/store';
+	import { unminimizeApp } from '$lib/models/sharing';
+	import Button from '$lib/components/Button.svelte';
 
 	inject({ mode: dev ? 'development' : 'production' });
 
@@ -129,36 +132,48 @@
 	/>
 	<link rel="canonical" href="https://debate-flow.vercel.app/" />
 </svelte:head>
-<slot />
-{#if $popups.length > 0}
-	<!-- we can ignore because pressing escape on window already has same functionality -->
-	<!-- svelte-ignore a11y-click-events-have-key-events -->
-	<!-- svelte-ignore a11y-no-static-element-interactions -->
-	<div
-		class="screen"
-		on:click|self={() => {
-			closePopup(0);
-		}}
-		transition:screenTransition
-	>
-		<!-- svelte-ignore a11y-no-static-element-interactions -->
+{#if $appMinimized}
+	<div class="minimized">
+		<Button
+			icon="undo"
+			text="unminimize"
+			on:click={() => {
+				unminimizeApp();
+			}}
+		/>
+	</div>
+{:else}
+	<slot />
+	{#if $popups.length > 0}
+		<!-- we can ignore because pressing escape on window already has same functionality -->
 		<!-- svelte-ignore a11y-click-events-have-key-events -->
+		<!-- svelte-ignore a11y-no-static-element-interactions -->
 		<div
-			class="popups"
+			class="screen"
 			on:click|self={() => {
 				closePopup(0);
 			}}
+			transition:screenTransition
 		>
-			{#key $popups}
-				<Popup
-					component={$popups[0].component}
-					closeSelf={() => closePopup(0)}
-					title={$popups[0].title}
-					props={$popups[0].props}
-				/>
-			{/key}
+			<!-- svelte-ignore a11y-no-static-element-interactions -->
+			<!-- svelte-ignore a11y-click-events-have-key-events -->
+			<div
+				class="popups"
+				on:click|self={() => {
+					closePopup(0);
+				}}
+			>
+				{#key $popups}
+					<Popup
+						component={$popups[0].component}
+						closeSelf={() => closePopup(0)}
+						title={$popups[0].title}
+						props={$popups[0].props}
+					/>
+				{/key}
+			</div>
 		</div>
-	</div>
+	{/if}
 {/if}
 
 <style>
@@ -180,5 +195,15 @@
 		display: flex;
 		align-items: center;
 		justify-content: center;
+	}
+	.minimized {
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		position: fixed;
+		width: 100%;
+		height: 100%;
+		background-color: var(--color-screen);
+		z-index: 999;
 	}
 </style>
