@@ -14,7 +14,7 @@ export const appMinimized = writable(false);
 export const isSharing = writable(false);
 
 const flowsChangeCallbacks: (() => void)[] = [];
-export function subscribeflowsChange(callback: () => void): () => void {
+export function subscribeFlowsChange(callback: () => void): () => void {
 	flowsChangeCallbacks.push(callback);
 	return () => {
 		const index = flowsChangeCallbacks.indexOf(callback);

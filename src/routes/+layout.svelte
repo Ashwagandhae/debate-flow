@@ -1,16 +1,24 @@
 <script lang="ts">
 	import './global.css';
 	import { settings } from '$lib/models/settings';
-	import { popups, closePopup } from '$lib/models/popup';
+	import { popups, closePopup, openPopup } from '$lib/models/popup';
 	import Popup from '$lib/components/Popup.svelte';
 	import { screenTransition } from '$lib/models/transition';
 
 	import { dev } from '$app/environment';
 	import { inject } from '@vercel/analytics';
-	import { onDestroy } from 'svelte';
+	import { onDestroy, onMount } from 'svelte';
 	import { appMinimized } from '$lib/models/store';
-	import { unminimizeApp } from '$lib/models/sharing';
+	import { maybeStartSharing, stopSharing, unminimizeApp } from '$lib/models/sharing';
 	import Button from '$lib/components/Button.svelte';
+	import Share from '$lib/components/Share.svelte';
+
+	onMount(() => {
+		maybeStartSharing(() => {
+			openPopup(Share, 'Sharing');
+		});
+	});
+	onDestroy(stopSharing);
 
 	inject({ mode: dev ? 'development' : 'production' });
 

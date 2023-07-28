@@ -21,29 +21,21 @@
 		flowsChange,
 		flows,
 		selected,
-		subscribeflowsChange,
+		subscribeFlowsChange,
 		isSharing
 	} from '$lib/models/store';
 	import { boxFromPath, newFlow } from '$lib/models/flow';
 	import { History } from '$lib/models/history';
 	import { createKeyDownHandler } from '$lib/models/key';
-	import { maybeStartSharing } from '$lib/models/sharing';
+	import { maybeStartSharing, stopSharing } from '$lib/models/sharing';
 
 	let destroyers: (() => void)[] = [];
 
 	let changesSaved = true;
-	subscribeflowsChange(() => {
+	subscribeFlowsChange(() => {
 		changesSaved = false;
 	});
 	$: unsavedChanges = $flows.length > 0 && !changesSaved;
-	onMount(maybeStartSharing);
-
-	let removeIsSharingSubscribe = isSharing.subscribe((sharing) => {
-		if (sharing) {
-			openPopup(Share, 'Sharing');
-			removeIsSharingSubscribe();
-		}
-	});
 
 	onMount(() => {
 		window.addEventListener(

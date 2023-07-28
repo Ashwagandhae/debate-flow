@@ -5,6 +5,8 @@
  */
 
 (async function () {
+	const URL = 'https://debate-flow.vercel.app/app';
+	// const URL = 'http://localhost:5173/app';
 	const VERSION = '0.0.1';
 	const GOTO_INPUT_SELECT =
 		'.docs-gotobar-content > input[type="text"][aria-label="Enter a range"]';
@@ -178,7 +180,7 @@
 	}
 
 	let iframe = document.createElement('iframe');
-	iframe.src = 'https://debate-flow.vercel.app/app';
+	iframe.src = URL;
 	iframe.style.cssText = `position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; border: none; z-index: 99999`;
 	// connection between flower and sheets
 	window.addEventListener(

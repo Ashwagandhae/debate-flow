@@ -1,4 +1,3 @@
-import { writable } from 'svelte/store';
 import type {
 	SheetsMessage,
 	InitMessage,
@@ -8,7 +7,7 @@ import type {
 	ReadCellResponse
 } from './shareType';
 import type { Box, Flow } from './type';
-import { flows, subscribeflowsChange, selected, appMinimized, isSharing } from './store';
+import { flows, subscribeFlowsChange, selected, appMinimized, isSharing } from './store';
 import { History } from './history';
 import { boxFromPath } from './flow';
 import { tick } from 'svelte';
@@ -51,9 +50,10 @@ function sendMessage(message: SheetsMessage) {
 		window.parent.postMessage(message, '*');
 	});
 }
+let syncInterval: NodeJS.Timeout | null = null;
 
 export const isSheetsEmbedded = window.self !== window.top;
-export async function maybeStartSharing() {
+export async function maybeStartSharing(openSharePopup: () => void) {
 	if (!isSheetsEmbedded) return;
 	try {
 		const response = (await sendMessage({
@@ -67,23 +67,29 @@ export async function maybeStartSharing() {
 			alert('Error starting sharing: invalid URL. Make sure you have a google sheet open.');
 			return;
 		}
-		startSharing(response.data.version);
+		if (response.data.version != '0.0.1') return;
+		openSharePopup();
+		startSharing();
 	} catch (e) {
 		alert('Error starting sharing: ' + (e as Error).message);
 		return;
 	}
 }
 
-let syncInterval: NodeJS.Timeout | null = null;
-let flowsHasChanged = false;
-function startSharing(version: InitResponse['data']['version']) {
-	if (version != '0.0.1') return;
+export function stopSharing() {
+	if (syncInterval != null) {
+		clearInterval(syncInterval);
+	}
+	isSharing.set(false);
+}
 
+let flowsHasChanged = false;
+function startSharing() {
 	isSharing.set(true);
-	console.log('start sharing', version);
+	console.log('start sharing');
 	restartSyncInterval();
 }
-subscribeflowsChange(() => {
+subscribeFlowsChange(() => {
 	flowsHasChanged = true;
 });
 export function restartSyncInterval() {
@@ -135,7 +141,6 @@ async function writeFlows() {
 
 window.addEventListener('focusout', () => {
 	if ($isSharing && needsRefocus) {
-		console.log('refocus', needsRefocus);
 		setTimeout(function () {
 			window.focus();
 			needsRefocus?.focus();
