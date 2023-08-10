@@ -68,22 +68,6 @@ interface BoxLike<Child> {
 	children: Child[];
 }
 
-// export function boxFromPath(flow: Flow, path: number[], scope = 0): Flow | Box | null {
-// 	if (path.length == 0 && scope >= 1) {
-// 		// can't go up any further
-// 		return null;
-// 	}
-// 	let ret: Flow | Box = flow;
-// 	for (let i = 0; i < path.length - scope; i++) {
-// 		ret = ret?.children[path[i]];
-// 		if (ret == undefined) {
-// 			return null;
-// 		}
-// 	}
-
-// 	return ret;
-// }
-
 export function boxFromPath<Root extends BoxLike<Child>, Child extends BoxLike<Child>>(
 	root: Root,
 	path: number[],

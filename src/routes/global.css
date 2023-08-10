@@ -19,12 +19,12 @@ button {
 
 h1 {
 	font-weight: var(--font-weight);
-	font-size: 1.5em;
+	font-size: 1.5rem;
 	margin: 0;
 }
 h2 {
 	font-weight: var(--font-weight);
-	font-size: 1.2em;
+	font-size: 1.2rem;
 	margin: 0;
 }
 a {

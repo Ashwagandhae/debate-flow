@@ -28,6 +28,8 @@
 	import { History } from '$lib/models/history';
 	import { createKeyDownHandler } from '$lib/models/key';
 	import { maybeStartSharing, stopSharing } from '$lib/models/sharing';
+	import Prelude from '$lib/components/Prelude.svelte';
+	import { loadFlows } from '$lib/models/file';
 
 	let destroyers: (() => void)[] = [];
 
@@ -234,11 +236,7 @@
 		let rawFlows: unknown[];
 		let newFlows: FlowType[] | null = null;
 		try {
-			rawFlows = JSON.parse(data);
-			newFlows = rawFlows.map((flow: any) => {
-				flow.history = new History(flow);
-				return flow;
-			});
+			newFlows = loadFlows(data);
 		} catch (e) {
 			openPopup(Error, 'File Error', {
 				props: { message: 'Invalid file' }
@@ -270,7 +268,7 @@
 />
 <main class:activeMouse class="palette-plain">
 	<input id="uploadId" type="file" hidden on:change={readUpload} />
-	<div class="grid" class:tutorialMode={$flows.length == 0}>
+	<div class="grid" class:showPrelude={$flows.length == 0}>
 		<div class="sidebar">
 			<div class="header">
 				<ButtonBar
@@ -337,8 +335,8 @@
 				{/key}
 			{/key}
 		{:else}
-			<div class="tutorial">
-				<Tutorial />
+			<div class="prelude">
+				<Prelude />
 			</div>
 		{/if}
 	</div>
@@ -358,8 +356,8 @@
 		box-sizing: border-box;
 		position: relative;
 	}
-	.grid.tutorialMode {
-		grid-template-areas: 'sidebar tutorial';
+	.grid.showPrelude {
+		grid-template-areas: 'sidebar prelude';
 		grid-template-columns: var(--sidebar-width) auto;
 	}
 
@@ -414,10 +412,11 @@
 		grid-area: flow;
 		height: var(--view-height);
 	}
-	.tutorial {
-		width: 100%;
+	.prelude {
+		position: relative;
+		width: calc(100vw - var(--sidebar-width) - var(--gap) * 3);
 		height: var(--main-height);
-		grid-area: tutorial;
+		grid-area: prelude;
 	}
 	/* Hide scrollbar for Chrome, Safari and Opera */
 	.tabs::-webkit-scrollbar,

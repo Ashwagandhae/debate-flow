@@ -1,7 +1,7 @@
 <script lang="ts">
 	import Icon from './Icon.svelte';
 	import Tooltip from './Tooltip.svelte';
-	import { onDestroy, onMount } from 'svelte';
+	import { onDestroy } from 'svelte';
 	import { settings } from '$lib/models/settings';
 	import { tutorialStep } from '$lib/models/store';
 	import { tutorialSpan, tutorialBlock } from '$lib/models/transition';
@@ -16,10 +16,13 @@
 		})
 	);
 	let delay = 600;
-	let tutorialEnd = 7;
+	let tutorialEnd = 8;
 	onDestroy(() => {
 		tutorialStep.set(0);
 	});
+
+	export let showTutorial: boolean;
+	export let savedFlowsExist: boolean;
 </script>
 
 <button
@@ -44,20 +47,25 @@
 				{/if}
 				{#if $tutorialStep > 2}
 					<span in:tutorialSpan>
-						and to <span class="secondary">download/upload</span>
+						to <span class="secondary">download/upload</span>,
+					</span>
+				{/if}
+				{#if $tutorialStep > 3}
+					<span in:tutorialSpan>
+						and to <span class="secondary">share</span>
 					</span>
 				{/if}
 			</p>
 		</div>
 	{/if}
-	{#if $tutorialStep > 3}
+	{#if $tutorialStep > 4}
 		<div class="instruction" in:tutorialBlock>
 			<Icon name="arrowLeft" />
 			<p>
 				<span>
 					click to create a new flow on <span class="primary">aff</span>
 				</span>
-				{#if $tutorialStep > 4}
+				{#if $tutorialStep > 5}
 					<span in:tutorialSpan>
 						or <span class="secondary">neg</span>
 					</span>
@@ -65,7 +73,7 @@
 			</p>
 		</div>
 	{/if}
-	{#if $tutorialStep > 5}
+	{#if $tutorialStep > 6}
 		<div class="tipsWrapper">
 			<div class="tips" in:tutorialBlock>
 				<h1>Tips</h1>
@@ -105,19 +113,21 @@
 			<Icon name="check" />
 			<p>tutorial done</p>
 			<Button
-				icon="undo"
+				icon="arrowRoundLeft"
 				text="reset"
-				tooltip="reset tutorial"
 				on:click={(event) => {
 					event.stopPropagation();
 					$tutorialStep = 0;
 				}}
 			/>
+			{#if savedFlowsExist}
+				<Button text="show saved flows" icon="undo" on:click={() => (showTutorial = false)} />
+			{/if}
 		</div>
 	{:else if $tutorialStep == 0}
 		<div class="instruction continue start">
 			<Icon name="add" />
-			<p>click this box to start tutorial</p>
+			<p>click to start tutorial</p>
 		</div>
 	{:else}
 		<div class="instruction continue">

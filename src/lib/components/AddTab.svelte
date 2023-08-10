@@ -21,7 +21,7 @@
 
 <div class="addTab" class:hasSwitch class:switch={switchSpeakers}>
 	<div class="buttons">
-		<TutorialHighlight step={4}>
+		<TutorialHighlight step={5}>
 			<Button
 				text={debateStyle.primary.name}
 				palette="accent"
@@ -32,7 +32,7 @@
 			/>
 		</TutorialHighlight>
 		{#if debateStyle.secondary != null}
-			<TutorialHighlight step={5}>
+			<TutorialHighlight step={6}>
 				<Button
 					text={debateStyle.secondary.name}
 					palette="accent-secondary"

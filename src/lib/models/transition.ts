@@ -238,3 +238,18 @@ export function hiddenButtons(_node: HTMLElement) {
 		}
 	};
 }
+
+export function savedFlow(_node: HTMLElement) {
+	return {
+		duration: settings.data.transitionSpeed.value as number,
+		css: (t: number) => {
+			const eased = quadOut(t);
+
+			return `
+				opacity: ${t};
+				transform-origin: 50% 50%;
+				transform: scale(${eased});
+			`;
+		}
+	};
+}

@@ -109,7 +109,7 @@
 
 <style>
 	.top {
-		font-size: 25px;
+		font-size: 1.5rem;
 		display: flex;
 		flex-direction: row;
 		box-sizing: border-box;
