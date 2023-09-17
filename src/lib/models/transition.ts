@@ -253,3 +253,18 @@ export function savedFlow(_node: HTMLElement) {
 		}
 	};
 }
+
+export function timer(_node: HTMLElement) {
+	return {
+		duration: settings.data.transitionSpeed.value as number,
+		css: (t: number) => {
+			const eased = quadOut(t);
+
+			return `
+				transform-origin: 0% 100%;
+        transform: scale(${eased});
+        opacity: ${t};
+      `;
+		}
+	};
+}

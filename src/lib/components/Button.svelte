@@ -15,8 +15,12 @@
 	export let tooltipLayout: string = 'bottom';
 	export let tutorialHighlight: number | null = null;
 	export let onclick: () => void = () => {};
-	function preventBlur(e: MouseEvent) {
-		e.preventDefault();
+
+	export let preventBlur: boolean = true;
+	function handleMouseDown(e: MouseEvent) {
+		if (preventBlur) {
+			e.preventDefault();
+		}
 	}
 </script>
 
@@ -33,7 +37,7 @@
 				class:disabled
 				on:click
 				on:click={onclick}
-				on:mousedown={preventBlur}
+				on:mousedown={handleMouseDown}
 				disabled={!!disabled}
 			>
 				<Icon name={icon} size="var(--button-size)" />

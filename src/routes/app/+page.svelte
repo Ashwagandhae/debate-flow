@@ -30,6 +30,7 @@
 	import { maybeStartSharing, stopSharing } from '$lib/models/sharing';
 	import Prelude from '$lib/components/Prelude.svelte';
 	import { loadFlows } from '$lib/models/file';
+	import Timers from '$lib/components/Timers.svelte';
 
 	let destroyers: (() => void)[] = [];
 
@@ -312,6 +313,9 @@
 					</SortableList>
 					<AddTab {addFlow} bind:switchSpeakers />
 				</div>
+			</div>
+			<div class="timer">
+				<Timers />
 			</div>
 		</div>
 		{#if $flows.length > 0 && $flows[$selected]}

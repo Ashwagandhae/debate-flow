@@ -162,6 +162,30 @@
 			svg: `
 			<path d="M49.5 16C70.2642 16 87.7516 30.1877 93 49.5C87.7516 68.8123 70.2642 83 49.5 83C28.7358 83 11.2484 68.8123 6 49.5C11.2484 30.1877 28.7358 16 49.5 16Z" stroke-width="10"/>
 <circle cx="50" cy="50" r="15" stroke-width="10"/>`
+		},
+		{
+			name: 'pause',
+			svg: `
+			<path d="M18 23L18 76C18 81.5228 22.4772 86 28 86C33.5228 86 38 81.5228 38 76V23C38 17.4771 33.5228 13 28 13C22.4772 13 18 17.4771 18 23Z" stroke-width="10" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M61 23L61 76C61 81.5228 65.4772 86 71 86C76.5228 86 81 81.5228 81 76V23C81 17.4771 76.5228 13 71 13C65.4772 13 61 17.4771 61 23Z" stroke-width="10" stroke-linecap="round" stroke-linejoin="round"/>`
+		},
+		{
+			name: 'play',
+			svg: `
+			<path d="M85 41.3398C91.6667 45.1888 91.6667 54.8113 85 58.6603L34 88.1051C27.3333 91.9541 19 87.1429 19 79.4449L19 20.5551C19 12.8571 27.3333 8.04589 34 11.8949L85 41.3398Z" stroke-width="10"/>
+			`
+		},
+		{
+			name: 'clock',
+			svg: `
+			<circle cx="50" cy="50" r="45" stroke-width="10"/>
+<path d="M33 40L50.3205 50" stroke-width="10" stroke-linecap="round"/>
+<path d="M50 5V15" stroke-width="10" stroke-linecap="round"/>
+<path d="M50 85V95" stroke-width="10" stroke-linecap="round"/>
+<path d="M85 50L95 50" stroke-width="10" stroke-linecap="round"/>
+<path d="M5 50L15 50" stroke-width="10" stroke-linecap="round"/>
+<path d="M71.2132 29L50 50.2132" stroke-width="10" stroke-linecap="round"/>
+			`
 		}
 	];
 	let displayIcon: { name: string; svg: string } | null;
