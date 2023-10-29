@@ -8,3 +8,6 @@
 - Added crossing out arguments (u/Low_Road_6511)
 - Added tab switching shortcut (u/SuperQuivocal)
 - Merged upload & download buttons into file button
+- Added sharing (u/MeasurementFeisty889 & u/OutrageousAd9355)
+- Added auto-save
+- Added timer

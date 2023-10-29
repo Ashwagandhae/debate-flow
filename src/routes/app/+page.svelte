@@ -254,11 +254,10 @@
 	let switchSpeakers = false;
 
 	// TODO:
-	// add tab switch keyboard shortcut
-	// add cross out
 	// add command K
 	// add command f
 	// add capitalization
+	// fix pf timer speaking order
 </script>
 
 <svelte:body

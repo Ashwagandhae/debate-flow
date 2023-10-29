@@ -59,8 +59,18 @@ export const debateStyles: {
 				secondary: false
 			},
 			{
+				name: 'CX',
+				time: 3 * 60 * 1000,
+				secondary: false
+			},
+			{
 				name: '2NC',
 				time: 8 * 60 * 1000,
+				secondary: true
+			},
+			{
+				name: 'CX',
+				time: 3 * 60 * 1000,
 				secondary: true
 			},
 			{
