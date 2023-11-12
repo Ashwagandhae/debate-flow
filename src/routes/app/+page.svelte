@@ -31,6 +31,7 @@
 	import Prelude from '$lib/components/Prelude.svelte';
 	import { loadFlows } from '$lib/models/file';
 	import Timers from '$lib/components/Timers.svelte';
+	import Help from '$lib/components/Help.svelte';
 
 	let destroyers: (() => void)[] = [];
 
@@ -275,9 +276,9 @@
 					resize
 					buttons={[
 						{
-							icon: 'home',
-							link: '/',
-							tooltip: 'go home',
+							icon: 'link',
+							onclick: () => openPopup(Help, 'Help'),
+							tooltip: 'help',
 							tutorialHighlight: 1
 						},
 						{
@@ -289,7 +290,7 @@
 						{
 							icon: 'file',
 							onclick: () => openPopup(DownloadUpload, 'File'),
-							tooltip: 'download & upload file',
+							tooltip: 'file',
 							tutorialHighlight: 3
 						},
 						{

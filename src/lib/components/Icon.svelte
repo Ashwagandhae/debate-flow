@@ -186,6 +186,14 @@
 <path d="M5 50L15 50" stroke-width="10" stroke-linecap="round"/>
 <path d="M71.2132 29L50 50.2132" stroke-width="10" stroke-linecap="round"/>
 			`
+		},
+		{
+			name: 'angleBrackets',
+			svg: `
+			<path d="M27 69L6 50L27 31" stroke="currentColor" stroke-width="10" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M72 31L93 50L72 69" stroke="currentColor" stroke-width="10" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M42 78.9556L57.5291 21" stroke="currentColor" stroke-width="10" stroke-linecap="round" stroke-linejoin="round"/>
+			`
 		}
 	];
 	let displayIcon: { name: string; svg: string } | null;

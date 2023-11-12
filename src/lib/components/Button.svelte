@@ -11,6 +11,7 @@
 	export let shortcut: string[] | null = null;
 	export let palette: string | null = null;
 	export let link: string | null = null;
+	export let target: string | null = null;
 	export let disabledReason: string = 'disabled';
 	export let tooltipLayout: string = 'bottom';
 	export let tutorialHighlight: number | null = null;
@@ -31,7 +32,7 @@
 		{shortcut}
 		layout={tooltipLayout}
 	>
-		<Link {link}>
+		<Link {link} {target}>
 			<button
 				class={`top ${palette ? 'palette-' + palette : ''}`}
 				class:disabled

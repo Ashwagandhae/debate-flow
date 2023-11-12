@@ -1,9 +1,10 @@
 <script lang="ts">
 	export let link: string | null = null;
+	export let target: string | null = null;
 </script>
 
 {#if link}
-	<a href={link}>
+	<a href={link} {target}>
 		<slot />
 	</a>
 {:else}
