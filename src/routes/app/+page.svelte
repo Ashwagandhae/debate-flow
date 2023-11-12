@@ -294,7 +294,7 @@
 						},
 						{
 							icon: 'people',
-							onclick: () => openPopup(Share, 'Save online & share'),
+							onclick: () => openPopup(Share, 'Share'),
 							tooltip: 'share',
 							tutorialHighlight: 4
 						}
@@ -420,16 +420,5 @@
 		width: calc(100vw - var(--sidebar-width) - var(--gap) * 3);
 		height: var(--main-height);
 		grid-area: prelude;
-	}
-	/* Hide scrollbar for Chrome, Safari and Opera */
-	.tabs::-webkit-scrollbar,
-	.flow::-webkit-scrollbar {
-		display: none;
-	}
-	/* Hide scrollbar for IE, Edge and Firefox */
-	.tabs,
-	.flow {
-		-ms-overflow-style: none; /* IE and Edge */
-		scrollbar-width: none; /* Firefox */
 	}
 </style>

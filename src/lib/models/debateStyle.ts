@@ -1,5 +1,15 @@
 import type { TimerSpeech } from './timer';
 
+export const debateStyleMap = [
+	'policy',
+	'publicForum',
+	'lincolnDouglas',
+	'congress',
+	'worldSchools'
+] as const;
+
+export type DebateStyleKey = (typeof debateStyleMap)[number];
+
 export type DebateStyle = {
 	primary: {
 		name: string;
@@ -233,13 +243,59 @@ export const debateStyles: {
 				secondary: false
 			}
 		]
+	},
+	worldSchools: {
+		primary: {
+			name: 'prop',
+			columns: ['P1', 'O1', 'P2', 'O2', 'PW', 'OW', 'OR', 'PR'],
+			invert: false
+		},
+		secondary: {
+			name: 'opp',
+			columns: ['O1', 'P2', 'O2', 'PW', 'OW', 'OR', 'PR'],
+			invert: true
+		},
+		timerSpeeches: [
+			{
+				name: 'P1',
+				time: 8 * 60 * 1000,
+				secondary: false
+			},
+			{
+				name: 'O1',
+				time: 8 * 60 * 1000,
+				secondary: true
+			},
+			{
+				name: 'P2',
+				time: 8 * 60 * 1000,
+				secondary: false
+			},
+			{
+				name: 'O2',
+				time: 8 * 60 * 1000,
+				secondary: true
+			},
+			{
+				name: 'PW',
+				time: 8 * 60 * 1000,
+				secondary: false
+			},
+			{
+				name: 'OW',
+				time: 8 * 60 * 1000,
+				secondary: true
+			},
+			{
+				name: 'OR',
+				time: 4 * 60 * 1000,
+				secondary: true
+			},
+			{
+				name: 'PR',
+				time: 4 * 60 * 1000,
+				secondary: false
+			}
+		]
 	}
 };
-export const debateStyleMap: DebateStyleKey[] = [
-	'policy',
-	'publicForum',
-	'lincolnDouglas',
-	'congress'
-];
-
-export type DebateStyleKey = 'policy' | 'publicForum' | 'lincolnDouglas' | 'congress';

@@ -136,7 +136,7 @@
 	<title>Flower: Debate Flowing App</title>
 	<meta
 		name="description"
-		content="App for flowing in competitive debate, better than Excel or Google Sheets. Supports Policy, Lincoln-Douglas, Public Forum, and Congress debate."
+		content="App for flowing in competitive debate, better than Excel or Google Sheets. Supports Policy, Lincoln-Douglas, Public Forum, Congress, and World Schools debate."
 	/>
 	<link rel="canonical" href="https://debate-flow.vercel.app/" />
 </svelte:head>

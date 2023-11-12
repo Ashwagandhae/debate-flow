@@ -74,6 +74,9 @@
 		margin: 0;
 		padding-left: var(--padding-big);
 		color: var(--color-subtle);
+		text-align: left;
+		width: 100%;
+		box-sizing: border-box;
 	}
 	p {
 		margin: 0;

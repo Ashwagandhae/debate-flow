@@ -40,7 +40,7 @@
 			</div>
 		</div>
 	{:else}
-		<div class="explainContent">
+		<div class="explainContentScroll">
 			<h1>Sharing explained</h1>
 			<p>
 				Flower uses Google Sheets as a "backend" for sharing flow data. You can collaborate on your
@@ -105,7 +105,8 @@
 					{:else if browser == 'firefox'}
 						Right click on your bookmarks bar, click <code>Add Bookmark</code> and paste the code
 						into the URL. You can name it whatever you want. If you don't see a bookmarks bar, click
-						the dots in the top right corner of your browser, go to <code>Bookmarks</code> and click
+						the dots in the top right corner of your browser, go to <code>Bookmarks</code>
+						and click
 						<code>Show bookmarks toolbar</code>.
 					{:else if browser == 'safari'}
 						Open a new tab, paste the code into the URL bar, and press enter. Click on the three
@@ -161,7 +162,7 @@
 
 <style>
 	.top {
-		width: min(calc(100vw - var(--padding) * 2), 1100px);
+		width: min(calc(100vw - var(--padding) * 2), 800px);
 		height: min(calc(100vh - var(--padding) * 2), 700px);
 		padding: calc(var(--button-size) + var(--padding) * 2) 0 0 0;
 		box-sizing: border-box;
@@ -177,7 +178,7 @@
 			var(--padding-big);
 		align-items: flex-start;
 	}
-	.explainContent {
+	.explainContentScroll {
 		overflow: auto;
 		display: flex;
 		flex-direction: column;
@@ -260,9 +261,5 @@
 		display: flex;
 		flex-direction: row;
 		gap: var(--padding);
-	}
-
-	.explainContent {
-		padding-bottom: 50vh;
 	}
 </style>
