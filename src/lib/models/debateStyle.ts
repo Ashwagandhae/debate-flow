@@ -5,7 +5,8 @@ export const debateStyleMap = [
 	'publicForum',
 	'lincolnDouglas',
 	'congress',
-	'worldSchools'
+	'worldSchools',
+	'bigQuestions'
 ] as const;
 
 export type DebateStyleKey = (typeof debateStyleMap)[number];
@@ -297,5 +298,70 @@ export const debateStyles: {
 				secondary: false
 			}
 		]
+	},
+	bigQuestions: {
+		primary: {
+			name: 'Aff',
+			columns: ['AC', 'NC', 'ARb', 'NRb', 'A3', 'N3', 'ARt', 'NRt'],
+			invert: false
+		},
+		secondary: {
+			name: 'Neg',
+			columns: ['NC', 'ARb', 'NRb', 'A3', 'N3', 'ARt', 'NRt'],
+			invert: true
+		},
+		timerSpeeches: [
+			{
+				name: 'AC',
+				time: 5 * 60 * 1000,
+				secondary: false
+			},
+			{
+				name: 'NC',
+				time: 5 * 60 * 1000,
+				secondary: true
+			},
+			{
+				name: 'QS',
+				time: 3 * 60 * 1000,
+				secondary: false
+			},
+			{
+				name: 'ARb',
+				time: 4 * 60 * 1000,
+				secondary: false
+			},
+			{
+				name: 'NRb',
+				time: 4 * 60 * 1000,
+				secondary: true
+			},
+			{
+				name: 'QS',
+				time: 3 * 60 * 1000,
+				secondary: false
+			},
+			{
+				name: 'A3',
+				time: 3 * 60 * 1000,
+				secondary: false
+			},
+			{
+				name: 'N3',
+				time: 3 * 60 * 1000,
+				secondary: true
+			},
+			{
+				name: 'ARt',
+				time: 3 * 60 * 1000,
+				secondary: false
+			},
+			{
+				name: 'NRt',
+				time: 3 * 60 * 1000,
+				secondary: true
+			}
+		],
+		prepTime: 3 * 60 * 1000
 	}
 };
