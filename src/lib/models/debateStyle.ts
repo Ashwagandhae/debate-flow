@@ -301,12 +301,12 @@ export const debateStyles: {
 	},
 	bigQuestions: {
 		primary: {
-			name: 'Aff',
+			name: 'aff',
 			columns: ['AC', 'NC', 'ARb', 'NRb', 'A3', 'N3', 'ARt', 'NRt'],
 			invert: false
 		},
 		secondary: {
-			name: 'Neg',
+			name: 'neg',
 			columns: ['NC', 'ARb', 'NRb', 'A3', 'N3', 'ARt', 'NRt'],
 			invert: true
 		},
