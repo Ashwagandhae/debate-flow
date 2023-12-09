@@ -343,6 +343,9 @@
 				<Prelude />
 			</div>
 		{/if}
+		<div class="document">
+			<textarea class="document-text"/>
+		</div>
 	</div>
 </main>
 
@@ -352,7 +355,7 @@
 		gap: var(--gap);
 		grid-template-areas:
 			'sidebar title box-control'
-			'sidebar flow flow';
+			'sidebar flow doc';
 		grid-template-columns: var(--sidebar-width) 1fr auto;
 		padding: var(--main-margin);
 		width: 100%;
@@ -421,5 +424,32 @@
 		width: calc(100vw - var(--sidebar-width) - var(--gap) * 3);
 		height: var(--main-height);
 		grid-area: prelude;
+	}
+	.document {
+		background: var(--background);
+		width: 100%;
+		height: var(--view-height);
+		border-radius: var(--border-radius);
+		padding: var(--padding);
+		grid-area: doc;
+		display: flex;
+		flex-direction: column;
+		box-sizing: border-box;
+	}
+	.document-text {
+		height: 100%;
+		width: 100%;
+		outline: none;
+		margin: none;
+		overflow-y: scroll;
+		background: none;
+		border: none;
+		font-size: inherit;
+		color: inherit;
+		text-decoration: inherit;
+
+	}
+	.document-text::-webkit-scrollbar {
+		display:none
 	}
 </style>
