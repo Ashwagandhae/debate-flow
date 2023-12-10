@@ -11,6 +11,15 @@ export function getJson(flows: Flow[]): string {
 	});
 }
 
+export function loadFlows(data: string) {
+	const rawFlows = JSON.parse(data);
+	const newFlows = rawFlows.map((flow: Flow) => {
+		flow.history = new History(flow);
+		return flow;
+	});
+	return newFlows;
+}
+
 export function downloadJson(flows: Flow[]) {
 	const data: string = getJson(flows);
 	downloadString(data, 'flow.json');
@@ -116,13 +125,4 @@ export function downloadXlsx(flows: Flow[]) {
 		.catch(function (error) {
 			console.log(error.message);
 		});
-}
-
-export function loadFlows(data: string) {
-	const rawFlows = JSON.parse(data);
-	const newFlows = rawFlows.map((flow: Flow) => {
-		flow.history = new History(flow);
-		return flow;
-	});
-	return newFlows;
 }

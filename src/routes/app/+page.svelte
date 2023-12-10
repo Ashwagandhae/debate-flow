@@ -32,8 +32,8 @@
 	import { loadFlows } from '$lib/models/file';
 	import Timers from '$lib/components/Timers.svelte';
 	import Help from '$lib/components/Help.svelte';
-
-	let destroyers: (() => void)[] = [];
+	import { settings } from '$lib/models/settings';
+	import SideDoc from '$lib/components/SideDoc.svelte';
 
 	let changesSaved = true;
 	subscribeFlowsChange(() => {
@@ -65,9 +65,14 @@
 			}
 		});
 	});
-	onDestroy(() => {
-		destroyers.forEach((destroy) => destroy());
-	});
+
+	let showSideDoc: boolean = settings.data['showSideDoc'].value as boolean;
+
+	onDestroy(
+		settings.subscribe(['showSideDoc'], (key: string) => {
+			showSideDoc = settings.data[key].value as boolean;
+		})
+	);
 
 	function clickTab(index: number) {
 		blurFlow();
@@ -258,7 +263,6 @@
 	// add command K
 	// add command f
 	// add capitalization
-	// fix pf timer speaking order
 </script>
 
 <svelte:body
@@ -336,6 +340,11 @@
 					<div class="flow">
 						<Flow on:focusFlow={focusFlow} bind:root={$flows[$selected]} />
 					</div>
+					{#if showSideDoc}
+						<div class="side-doc">
+							<SideDoc />
+						</div>
+					{/if}
 				{/key}
 			{/key}
 		{:else}
@@ -359,6 +368,11 @@
 		height: 100%;
 		box-sizing: border-box;
 		position: relative;
+	}
+	.grid:has(.side-doc) {
+		grid-template-areas:
+			'sidebar title box-control side-doc'
+			'sidebar flow flow side-doc';
 	}
 	.grid.showPrelude {
 		grid-template-areas: 'sidebar prelude';
@@ -421,5 +435,11 @@
 		width: calc(100vw - var(--sidebar-width) - var(--gap) * 3);
 		height: var(--main-height);
 		grid-area: prelude;
+	}
+	.side-doc {
+		position: relative;
+		width: var(--side-doc-width);
+		height: var(--main-height);
+		grid-area: side-doc;
 	}
 </style>

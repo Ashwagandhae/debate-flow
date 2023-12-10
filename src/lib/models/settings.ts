@@ -125,7 +125,14 @@ export const settings: Settings = new Settings({
 		value: 0,
 		auto: 0,
 		detail: {
-			options: ['Policy', 'Public Forum', 'Lincoln Douglas', 'Congress', 'World Schools', "Big Questions"]
+			options: [
+				'Policy',
+				'Public Forum',
+				'Lincoln Douglas',
+				'Congress',
+				'World Schools',
+				'Big Questions'
+			]
 		},
 		info: "Already created flows won't be affected by this setting"
 	},
@@ -320,6 +327,23 @@ export const settings: Settings = new Settings({
 		value: true,
 		auto: true,
 		type: 'toggle'
+	},
+	showSideDoc: {
+		name: 'Show notes doc',
+		value: false,
+		auto: false,
+		type: 'toggle'
+	},
+	sideDocWidth: {
+		name: 'Notes doc width',
+		value: 300,
+		auto: 300,
+		type: 'slider',
+		detail: {
+			min: 50,
+			max: 1000,
+			step: 1
+		}
 	}
 });
 
@@ -330,7 +354,14 @@ type SettingsGroup = {
 export const settingsGroups: SettingsGroup[] = [
 	{
 		name: 'General',
-		settings: ['debateStyle', 'colorTheme', 'columnWidth', 'transitionSpeed', 'useTooltips']
+		settings: [
+			'debateStyle',
+			'colorTheme',
+			'columnWidth',
+			'transitionSpeed',
+			'useTooltips',
+			'showSideDoc'
+		]
 	},
 	{
 		name: 'Colors',
@@ -342,7 +373,7 @@ export const settingsGroups: SettingsGroup[] = [
 	},
 	{
 		name: 'Spacing',
-		settings: ['columnWidth', 'sidebarWidth', 'buttonSize', 'padding', 'gap']
+		settings: ['columnWidth', 'sidebarWidth', 'sideDocWidth', 'buttonSize', 'padding', 'gap']
 	},
 	{
 		name: 'Borders',

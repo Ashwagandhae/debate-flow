@@ -163,12 +163,12 @@
 
 	input[type='number'] {
 		background: none;
-		text-align: left;
+		text-align: center;
 		border: none;
-		width: 3ch;
+		width: 4ch;
 		outline: none;
+		margin: 0;
 		color: var(--this-text);
-		margin-left: var(--padding-small);
 	}
 
 	input[type='number']::-webkit-outer-spin-button,

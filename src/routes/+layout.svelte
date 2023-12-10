@@ -99,6 +99,10 @@
 		sidebarWidth: {
 			name: 'sidebar-width',
 			unit: 'px'
+		},
+		sideDocWidth: {
+			name: 'side-doc-width',
+			unit: 'px'
 		}
 	};
 	onDestroy(
