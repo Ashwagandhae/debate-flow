@@ -7,6 +7,7 @@ export const debateStyleMap = [
 	'congress',
 	'worldSchools',
 	'bigQuestions'
+	'nofSpar'
 ] as const;
 
 export type DebateStyleKey = (typeof debateStyleMap)[number];
@@ -363,5 +364,49 @@ export const debateStyles: {
 			}
 		],
 		prepTime: 3 * 60 * 1000
+	},
+	nofSpar: {
+		primary: {
+			name: 'pro',
+			columns: ['PC', 'CC', 'PR', 'CR'],
+			invert: false
+		},
+		secondary: {
+			name: 'con',
+			columns: ['CC','PR','CR'],
+			invert: true
+		},
+		timerSpeeches: [
+			{
+				name: 'PREP',
+				time: 2 * 60 * 1000,
+				secondary: false
+			},
+			{
+				name: 'PC',
+				time: 2 * 60 * 1000,
+				secondary: false
+			},
+			{
+				name: 'CC',
+				time: 2 * 60 * 1000,
+				secondary: false
+			},
+			{
+				name: 'CX',
+				time: 4 * 60 * 1000,
+				secondary: false
+			},
+			{
+				name: 'PR',
+				time: 2 * 60 * 1000,
+				secondary: true
+			},
+			{
+				name: 'CR',
+				time: 2 * 60 * 1000,
+				secondary: true
+			}
+		]
 	}
 };
