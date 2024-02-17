@@ -131,7 +131,8 @@ export const settings: Settings = new Settings({
 				'Lincoln Douglas',
 				'Congress',
 				'World Schools',
-				'Big Questions'
+				'Big Questions',
+				'NOF SPAR'
 			]
 		},
 		info: "Already created flows won't be affected by this setting"
