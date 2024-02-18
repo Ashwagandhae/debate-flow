@@ -6,7 +6,7 @@
 	import { activeMouse, flows, flowsChange, selected } from '$lib/models/store';
 	import { boxFromPath, newBox } from '$lib/models/flow';
 	import { isMergingFlows } from '$lib/models/sheetSharing';
-	import type { Box, Flow } from '$lib/models/type';
+	import type { Box, Flow } from '$lib/models/node';
 	import { createKeyDownHandler, type KeyComboOptionsIndex } from '$lib/models/key';
 
 	import { boxIn, boxOut, boxButtonIn, brIn, brOut } from '../models/transition';
@@ -399,18 +399,13 @@
 		focus = false;
 	}
 	let palette: string;
-	$: {
-		if ((level % 2 == 0 && !invert) || (level % 2 == 1 && invert)) {
-			palette = 'accent-secondary';
-		} else {
-			palette = 'accent';
-		}
-	}
 	let outsidePalette: string;
 	$: {
 		if ((level % 2 == 0 && !invert) || (level % 2 == 1 && invert)) {
+			palette = 'accent-secondary';
 			outsidePalette = 'accent';
 		} else {
+			palette = 'accent';
 			outsidePalette = 'accent-secondary';
 		}
 	}

@@ -1,4 +1,4 @@
-import type { Flow } from './type';
+import type { Flow } from './node';
 import { flows, subscribeFlowsChange, isSheetSharing } from '$lib/models/store';
 import type { Writable } from 'svelte/store';
 import { writable, derived } from 'svelte/store';

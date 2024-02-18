@@ -1,4 +1,4 @@
-import type { Flow, Box } from '$lib/models/type';
+import type { Flow, Box } from '$lib/models/node';
 import { Workbook, type Buffer } from 'exceljs';
 import { History } from './history';
 

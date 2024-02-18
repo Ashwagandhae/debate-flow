@@ -3,7 +3,7 @@
 	import { flows, selected } from '$lib/models/store';
 	import { boxFromPath, newBox } from '$lib/models/flow';
 	import { afterUpdate, onDestroy, tick, type ComponentProps } from 'svelte';
-	import type { Flow, Box } from '../models/type';
+	import type { Flow, Box } from '../models/node';
 	import type Button from './Button.svelte';
 	import { settings } from '$lib/models/settings';
 

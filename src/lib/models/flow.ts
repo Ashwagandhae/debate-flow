@@ -1,4 +1,4 @@
-import type { Box, Flow } from './type';
+import type { Box, Flow } from './node';
 import { flows } from './store';
 import { settings } from './settings';
 import { debateStyles, debateStyleMap } from './debateStyle';

@@ -6,7 +6,7 @@ import type {
 	InitResponse,
 	ReadCellResponse
 } from './sheetShareType';
-import type { Box, Flow } from './type';
+import type { Box, Flow } from './node';
 import { flows, subscribeFlowsChange, selected, appMinimized, isSheetSharing } from './store';
 import { History } from './history';
 import { boxFromPath } from './flow';

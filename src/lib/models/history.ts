@@ -1,4 +1,4 @@
-import type { Box, Flow } from './type';
+import type { Box, Flow } from './node';
 import { boxFromPath, newBox } from './flow';
 import { flowsChange, flows } from './store';
 

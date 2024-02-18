@@ -14,7 +14,7 @@
 	import { dev } from '$app/environment';
 	import { openPopup } from '$lib/models/popup';
 
-	import type { Flow as FlowType, Box } from '$lib/models/type';
+	import type { Flow as FlowType, Box } from '$lib/models/node';
 	import { onDestroy, onMount } from 'svelte';
 	import {
 		activeMouse,

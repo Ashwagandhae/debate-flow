@@ -1,5 +1,5 @@
 <script lang="ts">
-	import type { Flow } from '../models/type';
+	import type { Flow } from '../models/node';
 
 	export let flow: Flow;
 	export let selected: boolean;

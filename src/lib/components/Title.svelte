@@ -2,7 +2,7 @@
 	import Text from './Text.svelte';
 	import Button from './Button.svelte';
 	import { flows, flowsChange, selected } from '$lib/models/store';
-	import type { Box } from '../models/type';
+	import type { Box } from '../models/node';
 	import { onMount } from 'svelte';
 	import { createEventDispatcher } from 'svelte';
 	import { createKeyDownHandler } from '$lib/models/key';
