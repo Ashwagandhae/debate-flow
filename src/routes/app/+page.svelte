@@ -22,12 +22,12 @@
 		flows,
 		selected,
 		subscribeFlowsChange,
-		isSharing
+		isSheetSharing
 	} from '$lib/models/store';
 	import { boxFromPath, newFlow } from '$lib/models/flow';
 	import { History } from '$lib/models/history';
 	import { createKeyDownHandler } from '$lib/models/key';
-	import { maybeStartSharing, stopSharing } from '$lib/models/sharing';
+	import { maybeStartSharing, stopSharing } from '$lib/models/sheetSharing';
 	import Prelude from '$lib/components/Prelude.svelte';
 	import { loadFlows } from '$lib/models/file';
 	import Timers from '$lib/components/Timers.svelte';

@@ -5,7 +5,7 @@
 	import { createEventDispatcher } from 'svelte';
 	import { activeMouse, flows, flowsChange, selected } from '$lib/models/store';
 	import { boxFromPath, newBox } from '$lib/models/flow';
-	import { isMergingFlows } from '$lib/models/sharing';
+	import { isMergingFlows } from '$lib/models/sheetSharing';
 	import type { Box, Flow } from '$lib/models/type';
 	import { createKeyDownHandler, type KeyComboOptionsIndex } from '$lib/models/key';
 

@@ -9,7 +9,7 @@
 	import { inject } from '@vercel/analytics';
 	import { onDestroy, onMount } from 'svelte';
 	import { appMinimized } from '$lib/models/store';
-	import { maybeStartSharing, stopSharing, unminimizeApp } from '$lib/models/sharing';
+	import { maybeStartSharing, stopSharing, unminimizeApp } from '$lib/models/sheetSharing';
 	import Button from '$lib/components/Button.svelte';
 	import Share from '$lib/components/Share.svelte';
 

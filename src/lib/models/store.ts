@@ -11,7 +11,7 @@ export const tooltipState = writable({
 	claimed: false
 });
 export const appMinimized = writable(false);
-export const isSharing = writable(false);
+export const isSheetSharing = writable(false);
 
 const flowsChangeCallbacks: (() => void)[] = [];
 export function subscribeFlowsChange(callback: () => void): () => void {

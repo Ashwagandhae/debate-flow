@@ -1,5 +1,5 @@
 import type { Flow } from './type';
-import { flows, subscribeFlowsChange, isSharing } from '$lib/models/store';
+import { flows, subscribeFlowsChange, isSheetSharing } from '$lib/models/store';
 import type { Writable } from 'svelte/store';
 import { writable, derived } from 'svelte/store';
 import { getJson, loadFlows, downloadString } from './file';
@@ -33,9 +33,9 @@ flows.subscribe((value) => {
 	$flows = value;
 });
 
-let $isSharing: boolean;
-isSharing.subscribe((value) => {
-	$isSharing = value;
+let $isSheetSharing: boolean;
+isSheetSharing.subscribe((value) => {
+	$isSheetSharing = value;
 });
 
 let $savedFlowsDatasMut: SavedFlowsDatas;
@@ -47,7 +47,7 @@ savedFlowsDatasMut.subscribe((value) => {
 let lastSaveTime: number = Date.now();
 export function maybeSaveFlows() {
 	if ($flows.length == 0) return;
-	if ($isSharing) return;
+	if ($isSheetSharing) return;
 	// check if empty
 	if (
 		$flows.length == 1 &&

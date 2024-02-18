@@ -1,7 +1,7 @@
 <script lang="ts">
 	import Button from './Button.svelte';
-	import { restartSyncInterval, minimizeApp } from '$lib/models/sharing';
-	import { isSharing } from '$lib/models/store';
+	import { restartSyncInterval, minimizeApp } from '$lib/models/sheetSharing';
+	import { isSheetSharing } from '$lib/models/store';
 	import injectCode from '$lib/../../scripts/inject.min.js?raw';
 
 	$: copyCode = browser == 'arc' ? injectCode : 'javascript:' + injectCode;
@@ -15,8 +15,9 @@
 	}
 </script>
 
-<div class="top palette-plain" class:isSharing={$isSharing}>
-	{#if $isSharing}
+<div class="top palette-plain" class:isSheetSharing={$isSheetSharing}>
+	<p>Test</p>
+	{#if $isSheetSharing}
 		<div class="shareControls">
 			<h1>Sharing successful!</h1>
 			<p>
@@ -171,7 +172,7 @@
 		align-items: center;
 		gap: var(--padding);
 	}
-	.top.isSharing {
+	.top.isSheetSharing {
 		width: min(calc(100vw - var(--padding) * 2), min-content);
 		height: min(calc(100vh - var(--padding) * 2), min-content);
 		padding: calc(var(--button-size) + var(--padding) * 2) var(--padding-big) var(--padding-big)

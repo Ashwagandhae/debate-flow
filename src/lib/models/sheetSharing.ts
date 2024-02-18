@@ -5,9 +5,9 @@ import type {
 	SheetsResponse,
 	InitResponse,
 	ReadCellResponse
-} from './shareType';
+} from './sheetShareType';
 import type { Box, Flow } from './type';
-import { flows, subscribeFlowsChange, selected, appMinimized, isSharing } from './store';
+import { flows, subscribeFlowsChange, selected, appMinimized, isSheetSharing } from './store';
 import { History } from './history';
 import { boxFromPath } from './flow';
 import { tick } from 'svelte';
@@ -22,9 +22,9 @@ selected.subscribe((value) => {
 	$selected = value;
 });
 
-let $isSharing: boolean;
-isSharing.subscribe((value) => {
-	$isSharing = value;
+let $isSheetSharing: boolean;
+isSheetSharing.subscribe((value) => {
+	$isSheetSharing = value;
 });
 
 function checkEvent(event: MessageEvent): boolean {
@@ -80,12 +80,12 @@ export function stopSharing() {
 	if (syncInterval != null) {
 		clearInterval(syncInterval);
 	}
-	isSharing.set(false);
+	isSheetSharing.set(false);
 }
 
 let flowsHasChanged = false;
 function startSharing() {
-	isSharing.set(true);
+	isSheetSharing.set(true);
 	console.log('start sharing');
 	restartSyncInterval();
 }
@@ -140,7 +140,7 @@ async function writeFlows() {
 }
 
 window.addEventListener('focusout', () => {
-	if ($isSharing && needsRefocus) {
+	if ($isSheetSharing && needsRefocus) {
 		setTimeout(function () {
 			window.focus();
 			needsRefocus?.focus();
