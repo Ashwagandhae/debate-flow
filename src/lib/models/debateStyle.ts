@@ -6,7 +6,8 @@ export const debateStyleMap = [
 	'lincolnDouglas',
 	'congress',
 	'worldSchools',
-	'bigQuestions'
+	'bigQuestions',
+	'spar'
 ] as const;
 
 export type DebateStyleKey = (typeof debateStyleMap)[number];
@@ -363,5 +364,59 @@ export const debateStyles: {
 			}
 		],
 		prepTime: 3 * 60 * 1000
+	},
+	spar: {
+		primary: {
+			name: 'aff',
+			columns: ['AC', 'NC/NR', 'AR', 'NCS', 'ACS'],
+			invert: false
+		},
+		secondary: {
+			name: 'neg',
+			columns: ['NC/NR', 'AR', 'NCS', 'ACS'],
+			invert: true
+		},
+		timerSpeeches: [
+			{
+				name: 'AC',
+				time: 3 * 60 * 1000,
+				secondary: false
+			},
+			{
+				name: 'CX',
+				time: 1.5 * 60 * 1000,
+				secondary: false
+			},
+			{
+				name: 'NC',
+				time: 3 * 60 * 1000,
+				secondary: true
+			},
+			{
+				name: 'CX',
+				time: 1.5 * 60 * 1000,
+				secondary: true
+			},
+			{
+				name: 'NR',
+				time: 2 * 60 * 1000,
+				secondary: true
+			},
+			{
+				name: 'AR',
+				time: 2 * 60 * 1000,
+				secondary: false
+			},
+			{
+				name: 'NCS',
+				time: 2 * 60 * 1000,
+				secondary: true
+			},
+			{
+				name: 'ACS',
+				time: 2 * 60 * 1000,
+				secondary: false
+			}
+		]
 	}
 };
