@@ -132,7 +132,7 @@ export const settings: Settings = new Settings({
 				'Congress',
 				'World Schools',
 				'Big Questions',
-				'Spar'
+				'NOF SPAR'
 			]
 		},
 		info: "Already created flows won't be affected by this setting"

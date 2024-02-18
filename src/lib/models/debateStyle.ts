@@ -7,7 +7,7 @@ export const debateStyleMap = [
 	'congress',
 	'worldSchools',
 	'bigQuestions',
-	'spar'
+	'nofSpar'
 ] as const;
 
 export type DebateStyleKey = (typeof debateStyleMap)[number];
@@ -365,57 +365,47 @@ export const debateStyles: {
 		],
 		prepTime: 3 * 60 * 1000
 	},
-	spar: {
+	nofSpar: {
 		primary: {
-			name: 'aff',
-			columns: ['AC', 'NC/NR', 'AR', 'NCS', 'ACS'],
+			name: 'pro',
+			columns: ['PC', 'CC', 'PR', 'CR'],
 			invert: false
 		},
 		secondary: {
-			name: 'neg',
-			columns: ['NC/NR', 'AR', 'NCS', 'ACS'],
+			name: 'con',
+			columns: ['CC','PR','CR'],
 			invert: true
 		},
 		timerSpeeches: [
 			{
-				name: 'AC',
-				time: 3 * 60 * 1000,
+				name: 'PREP',
+				time: 2 * 60 * 1000,
 				secondary: false
+			},
+			{
+				name: 'PC',
+				time: 2 * 60 * 1000,
+				secondary: false
+			},
+			{
+				name: 'CC',
+				time: 2 * 60 * 1000,
+				secondary: true
 			},
 			{
 				name: 'CX',
-				time: 1.5 * 60 * 1000,
+				time: 4 * 60 * 1000,
 				secondary: false
 			},
 			{
-				name: 'NC',
-				time: 3 * 60 * 1000,
-				secondary: true
-			},
-			{
-				name: 'CX',
-				time: 1.5 * 60 * 1000,
-				secondary: true
-			},
-			{
-				name: 'NR',
-				time: 2 * 60 * 1000,
-				secondary: true
-			},
-			{
-				name: 'AR',
+				name: 'PR',
 				time: 2 * 60 * 1000,
 				secondary: false
 			},
 			{
-				name: 'NCS',
+				name: 'CR',
 				time: 2 * 60 * 1000,
 				secondary: true
-			},
-			{
-				name: 'ACS',
-				time: 2 * 60 * 1000,
-				secondary: false
 			}
 		]
 	}
