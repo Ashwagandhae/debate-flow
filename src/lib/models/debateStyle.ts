@@ -6,7 +6,7 @@ export const debateStyleMap = [
 	'lincolnDouglas',
 	'congress',
 	'worldSchools',
-	'bigQuestions'
+	'bigQuestions',
 	'nofSpar'
 ] as const;
 
