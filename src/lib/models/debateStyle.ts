@@ -390,7 +390,7 @@ export const debateStyles: {
 			{
 				name: 'CC',
 				time: 2 * 60 * 1000,
-				secondary: false
+				secondary: true
 			},
 			{
 				name: 'CX',
@@ -400,7 +400,7 @@ export const debateStyles: {
 			{
 				name: 'PR',
 				time: 2 * 60 * 1000,
-				secondary: true
+				secondary: false
 			},
 			{
 				name: 'CR',
