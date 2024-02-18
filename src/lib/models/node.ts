@@ -217,7 +217,7 @@ export function applyAction<Value extends Box2 | Flow2>(nodes: Nodes, action: Ac
 		case 'add': {
 			const parent = getNode(nodes, action.parent);
 			const child = getNode(nodes, action.id);
-			if (parent.tag == 'flow' && child.tag == 'box') {
+			if (parent.tag == 'flow' && action.id) {
 				parent.children.splice(action.index, 0, action.id);
 			}
 			child.parent = action.parent;
