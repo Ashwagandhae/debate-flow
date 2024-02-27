@@ -13,9 +13,7 @@ export class Channel<SendMessage, RecieveMessage> {
 	}
 	send(message: SendMessage) {
 		const payload = JSON.stringify(message);
-		setTimeout(() => {
-			this.#channel.send(payload);
-		}, 2000);
+		this.#channel.send(payload);
 	}
 	onOpen(fn: () => void) {
 		this.#channel.addEventListener('open', fn);
