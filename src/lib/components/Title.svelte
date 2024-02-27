@@ -2,37 +2,55 @@
 	import Text from './Text.svelte';
 	import Button from './Button.svelte';
 	import { flows, flowsChange, selected } from '$lib/models/store';
-	import type { Box } from '../models/node';
+	import {
+		type FlowId,
+		nodes,
+		type Node,
+		type Flow2,
+		updateFlow,
+		addPendingAction,
+		checkIdBox,
+		getNode,
+		updateWithoutResolve,
+		resolveAllPending
+	} from '../models/node';
 	import { onMount } from 'svelte';
-	import { createEventDispatcher } from 'svelte';
 	import { createKeyDownHandler } from '$lib/models/key';
+	import { focusId } from '$lib/models/focus';
+	import { history } from '$lib/models/history';
 
-	const dispatch = createEventDispatcher();
-
-	export let content: string;
-	export let children: Box[];
-	export let focus: boolean;
-	export let invert: boolean;
+	// export let content: string;
+	// export let children: Box[];
+	// export let focus: boolean;
+	// export let invert: boolean;
+	export let flowId: FlowId;
 	export let deleteSelf: () => void = () => {};
-	$: path = [];
+
+	let node: Node<Flow2>;
+	$: {
+		// hold onto node when it's deleted
+		if ($nodes[flowId] != null) {
+			node = $nodes[flowId];
+		}
+	}
+	$: flow = node.value;
 
 	let textarea: Text;
 	function handleBlur() {
-		if (focus) {
-			focus = false;
+		if ($focusId == flowId) {
+			$focusId = null;
 		}
 	}
 	function handleFocus() {
-		if (!focus) {
-			focus = true;
+		if ($focusId != flowId) {
+			$focusId = flowId;
 		}
 	}
 
 	function focusFirstChild() {
-		let child = children.find((child) => !child.empty);
-		if (child) {
-			focus = false;
-			child.focus = true;
+		let childId = $nodes[flowId].children.find((childId) => !$nodes[childId].value.empty);
+		if (childId) {
+			$focusId = childId;
 		}
 	}
 
@@ -52,34 +70,42 @@
 
 	let hasSentEdit: boolean = false;
 	function focusChange() {
-		if (focus) {
-			$flows[$selected].history.addFocus([...path]);
-			dispatch('saveFocus', path);
+		if ($focusId == flowId) {
 			textarea && textarea.focus();
 		} else {
+			resolveAllPending($nodes);
+			$nodes = $nodes;
 			hasSentEdit = false;
 		}
 	}
 	onMount(focusChange);
-	$: focus, focusChange();
-	function handleBeforeinput(e: InputEvent) {
-		if (!hasSentEdit) {
-			$flows[$selected].history.addPending('edit', [...path], {
-				lastContent: content,
-				getNextContent: function () {
-					return content;
-				},
-				createEditBreak: function () {
-					hasSentEdit = false;
-				}
-			});
+	$: $focusId, focusChange();
+
+	$: flow, syncNodesToContent();
+	let content: string;
+	function syncNodesToContent() {
+		if (content != flow.content) {
+			content = flow.content;
 		}
-		hasSentEdit = true;
-		flowsChange();
 	}
+	function handleBeforeInput() {
+		if (hasSentEdit) return;
+		hasSentEdit = true;
+		addPendingAction(function (nodes) {
+			if (flow == null) return;
+			let value = { ...flow, content };
+			let flowIdRes = getNode(nodes, flowId);
+			if (!flowIdRes.ok) return;
+			history.setNextBeforeFocus(flowId, flowId);
+			updateWithoutResolve(nodes, flowId, value);
+			history.setPrevAfterFocus(flowId, flowId);
+			$nodes = $nodes;
+		});
+	}
+
 	let palette: string = 'plain';
 	$: {
-		if (invert) {
+		if (flow.invert) {
 			palette = 'accent-secondary';
 		} else {
 			palette = 'accent';
@@ -87,14 +113,14 @@
 	}
 </script>
 
-<div class={`top`} class:invert>
+<div class={`top`} class:invert={flow.invert}>
 	<div class={`content palette-${palette}`}>
-		<div class="text" class:focus>
+		<div class="text" class:focus={flowId == $focusId}>
 			<Text
 				on:blur={handleBlur}
 				on:focus={handleFocus}
 				on:keydown={handleKeydown}
-				on:beforeinput={handleBeforeinput}
+				on:beforeinput={handleBeforeInput}
 				bind:value={content}
 				bind:this={textarea}
 				nowrap
@@ -129,10 +155,10 @@
 		border-radius: var(--border-radius);
 
 		width: 100%;
+		transition: background var(--transition-speed);
 	}
 	.text.focus {
 		background-color: var(--this-background-active);
-		transition: background var(--transition-speed);
 	}
 	.button {
 		padding: var(--padding) 0;

@@ -4,29 +4,64 @@
 	import { getContext, onMount, tick } from 'svelte';
 	import { createEventDispatcher } from 'svelte';
 	import { activeMouse, flows, flowsChange, selected } from '$lib/models/store';
-	import { boxFromPath, newBox } from '$lib/models/flow';
-	import { isMergingFlows } from '$lib/models/sheetSharing';
-	import type { Box, Flow } from '$lib/models/node';
+	import {
+		type BoxId,
+		type FlowId,
+		nodes,
+		updateBox,
+		type Box2,
+		addNewBox,
+		deleteBox,
+		getAdjacentBox,
+		checkIdBox,
+		type Node,
+		type Flow2,
+		getParentFlowId,
+		addPendingAction,
+		updateWithoutResolve
+	} from '$lib/models/node';
 	import { createKeyDownHandler, type KeyComboOptionsIndex } from '$lib/models/key';
 
 	import { boxIn, boxOut, boxButtonIn, brIn, brOut } from '../models/transition';
+	import { history } from '$lib/models/history';
+	import { focusId, selectedFlowId } from '$lib/models/focus';
 
 	const dispatch = createEventDispatcher();
 
-	export let root = false;
+	export let id: BoxId | FlowId;
 	export let parentIsEmpty = false;
 
-	export let content: string = '';
-	export let children: Box[];
-	export let index: number;
-	export let level: number;
-	export let focus: boolean = false;
-	export let parentPath: number[] = [];
-	export let empty: boolean = false;
-	export let crossed: boolean = false;
-	export let placeholder: string = level == 1 && index == 0 ? 'type here' : '';
+	// export let content: string = '';
+	// export let children: Box[];
+	// export let index: number;
+	// export let level: number;
+	// export let focus: boolean = false;
+	// export let parentPath: number[] = [];
+	// export let empty: boolean = false;
+	// export let crossed: boolean = false;
+	// export let placeholder: string = level == 1 && index == 0 ? 'type here' : '';
 
-	$: path = root ? [] : [...parentPath, index];
+	let node: Node<Box2 | Flow2>;
+	let box: Box2 | null;
+	$: $nodes, updateNodeData();
+	function updateNodeData() {
+		// hold onto box and index value when it's deleted
+		if ($nodes[id] != null) {
+			node = $nodes[id];
+			if (node.value.tag == 'flow') {
+				box = null;
+			} else {
+				box = node.value;
+			}
+		}
+	}
+
+	let lastValidIndex: number;
+	function index() {
+		if ($nodes[node.parent] == null) return lastValidIndex;
+		lastValidIndex = (<BoxId[]>$nodes[node.parent].children).indexOf(<BoxId>id);
+		return lastValidIndex;
+	}
 
 	export let addSibling: (childIndex: number, direction: number) => boolean = () => false;
 	export let deleteSelf: (childIndex: number) => void = () => {};
@@ -57,42 +92,27 @@
 	}
 	let hasSentEdit: boolean = false;
 	function focusChange() {
-		if (focus) {
-			dispatchSelfFocus(index, true);
-			if (level >= 1) {
-				$flows[$selected].history.addFocus([...path]);
-				dispatch('saveFocus', path);
+		if ($focusId == id) {
+			dispatchSelfFocus(index(), true);
+			if (node.level >= 1) {
 				textarea && textarea.focus();
 			}
 		} else {
-			dispatchSelfFocus(index, false);
+			dispatchSelfFocus(index(), false);
 			hasSentEdit = false;
 		}
 	}
 	onMount(focusChange);
-	$: focus, focusChange();
-
-	function pathChange() {
-		if (focus) {
-			dispatchSelfFocus(index, true);
-			$flows[$selected].history.addFocus([...path]);
-		}
-	}
-	$: path, pathChange();
-
-	function preventBlur(e: Event) {
-		e.preventDefault();
-	}
-
-	function handleFocus() {
-		if (!focus) {
-			focusSelf();
-		}
-	}
+	$: $focusId, focusChange();
 
 	function handleBlur() {
-		if (focus) {
-			focus = false;
+		if ($focusId == id) {
+			$focusId = null;
+		}
+	}
+	function handleFocus() {
+		if ($focusId != id) {
+			$focusId = id;
 		}
 	}
 
@@ -106,7 +126,8 @@
 			Backspace: {
 				handle: () => {
 					blurSelf();
-					deleteSelf(index);
+					deleteSelf(index());
+					history.setPrevAfterFocus($focusId);
 				}
 			}
 		},
@@ -114,7 +135,11 @@
 			Enter: {
 				handle: () => {
 					blurSelf();
-					focusSiblingStrict(index, -1) || (addSibling(index, 0) && focusSibling(index, 0));
+					if (focusSiblingStrict(index(), -1)) return;
+					if (addSibling(index(), 0)) {
+						focusSibling(index(), 0);
+						history.setPrevAfterFocus($focusId);
+					}
 				}
 			}
 		},
@@ -122,13 +147,16 @@
 			Enter: {
 				handle: () => {
 					blurSelf();
-					addChild(0, 0) && focusChild(0, 0);
+					if (addChild(0, 0)) {
+						focusChild(0, 0);
+						history.setPrevAfterFocus($focusId);
+					}
 				}
 			},
 			Tab: {
 				handle: () => {
 					blurSelf();
-					focusSibling(index, -1);
+					focusSibling(index(), -1);
 				}
 			}
 		},
@@ -136,23 +164,28 @@
 			Enter: {
 				handle: () => {
 					blurSelf();
-					focusSiblingStrict(index, 1) || (addSibling(index, 1) && focusSibling(index, 1));
+					if (focusSiblingStrict(index(), 1)) return;
+					if (addSibling(index(), 1)) {
+						focusSibling(index(), 1);
+						history.setPrevAfterFocus($focusId);
+					}
 				}
 			},
 			Backspace: {
 				handle: () => {
 					blurSelf();
-					deleteSelf(index);
+					deleteSelf(index());
+					history.setPrevAfterFocus($focusId);
 				},
 				// only delete if content is empty and there are no children
-				require: () => content.length == 0 && children.length == 0
+				require: () => (box?.content.length ?? 0) == 0 && node.children.length == 0
 			},
 
 			ArrowUp: {
 				handle: () => {
 					blurSelf();
-					if (!focusAdjacent(-1)) {
-						if (level == 1) {
+					if (!focusAdjacent('up')) {
+						if (node.level == 1) {
 							focusParent();
 						} else {
 							focusSelf();
@@ -163,13 +196,13 @@
 			ArrowDown: {
 				handle: () => {
 					blurSelf();
-					focusAdjacent(1) || focusSelf();
+					focusAdjacent('down') || focusSelf();
 				}
 			},
 			Tab: {
 				handle: () => {
 					blurSelf();
-					focusSibling(index, 1);
+					focusSibling(index(), 1);
 				}
 			},
 			ArrowLeft: {
@@ -181,7 +214,7 @@
 			ArrowRight: {
 				handle: () => {
 					blurSelf();
-					if (children.length > 0) {
+					if (node.children.length > 0) {
 						focusChild(0, 0);
 					} else {
 						focusSelf();
@@ -191,43 +224,20 @@
 		}
 	};
 	let handleKeydown = createKeyDownHandler(keyComboOptionsIndex);
-	function handleBeforeinput(e: InputEvent) {
-		if (!hasSentEdit) {
-			$flows[$selected].history.addPending('edit', [...path], {
-				lastContent: content,
-				getNextContent: function () {
-					return content;
-				},
-				createEditBreak: function () {
-					hasSentEdit = false;
-				}
-			});
-		}
-		hasSentEdit = true;
-		flowsChange();
-	}
 
-	function crossSelf() {
-		crossed = !crossed;
-		$flows[$selected].history.add('cross', [...path], {
-			crossed: crossed
-		});
+	async function crossSelf() {
+		let value = <Box2>structuredClone(box);
+		value.crossed = !value.crossed;
+		updateBox($nodes, <BoxId>id, value);
+		node = node;
 	}
 
 	function addChild(childIndex: number, direction: number): boolean {
 		let newChildIndex = childIndex + direction;
 		// if not at end of column
-		if (level < columnCount) {
-			let childrenClone = [...children];
-			childrenClone.splice(newChildIndex, 0, newBox(newChildIndex, level + 1, true));
-			// fix childIndex
-			for (let i: number = newChildIndex; i < childrenClone.length; i++) {
-				childrenClone[i].index = i;
-			}
-			// add to history
-			$flows[$selected].history.add('add', [...path, newChildIndex]);
-
-			children = [...childrenClone];
+		if (node.level < columnCount) {
+			addNewBox($nodes, id, newChildIndex);
+			node = node;
 			return true;
 		} else {
 			// stay focused
@@ -237,40 +247,33 @@
 	}
 	async function deleteChild(childIndex: number) {
 		// if target isn't only child of first level
-		if (children.length > 1 || level >= 1) {
+		if (node.children.length > 1 || node.level >= 1) {
 			// delete self if empty
-			if (empty && children.length == 1) {
-				deleteSelf(index);
+			if (box?.empty && node.children.length == 1) {
+				deleteSelf(index());
 				return;
 			}
-			let childrenClone = [...children];
-			// add to history
-			$flows[$selected].history.add('deleteBox', [...path, childIndex], {
-				box: childrenClone[childIndex]
-			});
+
+			let deleteId = node.children[childIndex];
+
 			// unfocus target
-			childrenClone[childIndex].focus = false;
-			children = [...childrenClone];
+			if ($focusId == deleteId) {
+				$focusId = null;
+			}
 			await tick();
 
-			// delete target
-			childrenClone.splice(childIndex, 1);
-			// fix childIndex
-			for (let i = 0; i < childrenClone.length; i++) {
-				childrenClone[i].index = i;
-			}
-			children = [...childrenClone];
+			deleteBox($nodes, deleteId);
+			node = node;
 			// focus on previous child of deleted
-			if (children[childIndex - 1]) {
+			if (node.children[childIndex - 1]) {
 				focusChild(childIndex - 1, 0);
 				// focus on parent when empty
-			} else if (children.length == 0) {
+			} else if (node.children.length == 0) {
 				focusSelf();
 				// focus on first child if deleted first child
 			} else if (childIndex == 0) {
 				focusChild(0, 0);
 			}
-
 			return true;
 		} else {
 			focusChild(0, 0);
@@ -278,7 +281,6 @@
 		}
 	}
 	function focusChild(childIndex: number, direction: number) {
-		//TODO fix focusChild
 		let newChildIndex = childIndex + direction;
 		// focus on parent when childIndex is before children
 		if (newChildIndex < 0) {
@@ -286,122 +288,78 @@
 			return;
 		}
 		// if childIndex is beyond children
-		if (newChildIndex >= children.length) {
+		if (newChildIndex >= node.children.length) {
 			// if has grandchild
-			if (children[children.length - 1].children.length > 0) {
+			let lastChild = $nodes[node.children[node.children.length - 1]];
+			if (lastChild.children.length > 0) {
 				// focus on first grandchild that isn't empty
-				let grandChild = children[children.length - 1].children[0];
-				grandChild.focus = true;
+				let grandChildId = lastChild.children[0];
+				$focusId = grandChildId;
 			} else {
 				// stay focused
-				children[childIndex].focus = true;
+				$focusId = id;
 			}
 		} else {
 			// if is empty, skip
-			if (children[newChildIndex].empty && direction != 0) {
+			if ($nodes[node.children[newChildIndex]].value.empty && direction != 0) {
 				focusChild(newChildIndex, direction);
 			} else {
 				// focus on child
-				children[newChildIndex].focus = true;
+				$focusId = node.children[newChildIndex];
 			}
 		}
-		children = children;
+		node = node;
 	}
+	// only focus direct child
 	function focusChildStrict(childIndex: number, direction: number): boolean {
 		let newChildIndex = childIndex + direction;
-		if (newChildIndex < 0 || newChildIndex >= children.length) {
+		if (newChildIndex < 0 || newChildIndex >= node.children.length) {
 			return false;
 		}
 		// if is empty, skip
-		if (children[newChildIndex].empty && direction != 0) {
+		if ($nodes[node.children[newChildIndex]].value.empty && direction != 0) {
 			return focusChildStrict(newChildIndex, direction);
 		} else {
 			// focus on child
-			children[newChildIndex].focus = true;
-			children = children;
+			$focusId = node.children[newChildIndex];
+			node = node;
 			return true;
 		}
 	}
-	function reducePath(path: number[]): number[] | null {
-		if (path.length == 0) return null;
-		let last = path[path.length - 1];
-		if (last == 0) {
-			let parentPath: number[] | null = path.slice(0, path.length - 1);
-			while (true) {
-				// reduce parent path
-				parentPath = reducePath(parentPath);
-				// if no parent, return null
-				if (parentPath == null) return null;
-				let box = boxFromPath($flows[$selected], parentPath) as Box;
-				// if parent has last child, return parent path with last child
-				if (box.children.length > 0) {
-					return [...parentPath, box.children.length - 1];
-				}
-				// if parent has no children, keep reducing parentPath
-			}
-			// if no last child, return parent path
-		}
-		return [...path.slice(0, path.length - 1), last - 1];
-	}
-	function increasePath(path: number[]): number[] | null {
-		if (path.length == 0) return null;
-		let last = path[path.length - 1];
-		let parentBox = boxFromPath($flows[$selected], path.slice(0, path.length - 1)) as Box;
-		if (last == parentBox.children.length - 1) {
-			let parentPath: number[] | null = path.slice(0, path.length - 1);
-			while (true) {
-				// increase parent path
-				parentPath = increasePath(parentPath);
-				// if no parent, return null
-				if (parentPath == null) return null;
-				let box = boxFromPath($flows[$selected], parentPath) as Box;
-				// if parent has last child, return parent path with last child
-				if (box.children.length > 0) {
-					return [...parentPath, 0];
-				}
-				// if parent has no children, keep increasing parentPath
-			}
-			// if no last child, return parent path
-		}
-		return [...path.slice(0, path.length - 1), last + 1];
-	}
-	function focusAdjacent(direction: number): boolean {
-		let retPath: number[] | null = [...path];
+
+	function focusAdjacent(direction: 'up' | 'down'): boolean {
+		let boxId = checkIdBox($nodes, id);
+		if (boxId == null) return false;
 		while (true) {
-			// change path
-			if (direction == -1) {
-				retPath = reducePath(retPath);
-			} else if (direction == 1) {
-				retPath = increasePath(retPath);
-			}
-			if (retPath == null) return false;
-			// get box
-			let box = boxFromPath($flows[$selected], retPath) as Box;
-			if (box == null) return false;
-			if (box.empty) {
+			let adjacentBox = getAdjacentBox($nodes, boxId, direction);
+			if (adjacentBox == null) return false;
+			if ($nodes[adjacentBox].value.empty) {
 				// skip if empty
+				boxId = adjacentBox;
 				continue;
 			} else {
 				// if not empty, focus on box
-				box.focus = true;
+				$focusId = adjacentBox;
 				return true;
 			}
 		}
 	}
 	function focusSelf() {
-		if (empty) {
+		if (box?.empty) {
 			focusParent();
 		} else {
-			focus = true;
+			$focusId = id;
 		}
 	}
 	function blurSelf() {
-		focus = false;
+		if ($focusId == id) {
+			$focusId = null;
+		}
 	}
 	let palette: string;
 	let outsidePalette: string;
 	$: {
-		if ((level % 2 == 0 && !invert) || (level % 2 == 1 && invert)) {
+		if ((node.level % 2 == 0 && !invert) || (node.level % 2 == 1 && invert)) {
 			palette = 'accent-secondary';
 			outsidePalette = 'accent';
 		} else {
@@ -409,28 +367,55 @@
 			outsidePalette = 'accent-secondary';
 		}
 	}
+	function preventBlur(e: Event) {
+		e.preventDefault();
+	}
+
+	$: box, syncNodesToContent();
+	let content: string;
+	function syncNodesToContent() {
+		if (box == null) return;
+		if (content != box.content) {
+			content = box.content;
+		}
+	}
+
+	function handleBeforeInput() {
+		if (hasSentEdit) return;
+		hasSentEdit = true;
+		addPendingAction(function (nodes) {
+			if (box == null) return;
+			let value = { ...box, content };
+			let boxId = checkIdBox(nodes, id);
+			if (boxId == null) return;
+			history.setNextBeforeFocus(id, getParentFlowId(nodes, boxId).unwrap());
+			updateWithoutResolve(nodes, boxId, value);
+			history.setPrevAfterFocus(id, getParentFlowId(nodes, boxId).unwrap());
+			nodes = nodes;
+		});
+	}
 </script>
 
 <div
 	class={`top palette-${palette}`}
-	class:childless={children.length == 0}
-	class:empty
-	class:focus
+	class:childless={node.children.length == 0}
+	class:empty={box?.empty}
+	class:focus={$focusId == id}
 	class:childFocus
 	class:activeMouse={$activeMouse}
-	class:highlight={childFocus || focus}
-	in:boxIn={{ skip: root || isMergingFlows }}
-	out:boxOut={{ skip: root || isMergingFlows }}
+	class:highlight={childFocus || $focusId == id}
+	in:boxIn={{ skip: box == null }}
+	out:boxOut={{ skip: box == null }}
 >
-	{#if empty}
+	{#if box?.empty}
 		<div class="content" />
 	{:else}
 		<div
 			class="content"
-			class:root
+			class:root={box == null}
 			style={`--this-background: ${backgroundColor}`}
-			class:left={children.length > 0}
-			class:right={index == 0 && level > 1 && !parentIsEmpty}
+			class:left={node.children.length > 0}
+			class:right={index() == 0 && node.level > 1 && !parentIsEmpty}
 		>
 			<div class="barcontainer">
 				<!-- svelte-ignore a11y-click-events-have-key-events -->
@@ -438,27 +423,33 @@
 				<!-- we can ignore accesibility because you can use keyboard inside the cell for same function -->
 				<div
 					class="line above"
-					class:left={children.length > 0}
-					class:right={index == 0 && level > 1 && !parentIsEmpty}
+					class:left={node.children.length > 0}
+					class:right={index() == 0 && node.level > 1 && !parentIsEmpty}
 					in:brIn
 					out:brOut
 					on:click={() => {
-						addSibling(index, 0) && focusSibling(index, 0);
+						let couldAdd = addSibling(index(), 0);
+						if (couldAdd) {
+							focusSibling(index(), 0);
+							history.setPrevAfterFocus($focusId);
+						}
 					}}
 					on:mousedown={preventBlur}
 					role="separator"
 				/>
 
-				<div class="text" class:crossed>
-					<Text
-						on:keydown={handleKeydown}
-						on:beforeinput={handleBeforeinput}
-						on:blur={handleBlur}
-						on:focus={handleFocus}
-						bind:value={content}
-						bind:this={textarea}
-						{placeholder}
-					/>
+				<div class="text" class:crossed={box?.crossed}>
+					{#if box != null}
+						<Text
+							on:keydown={handleKeydown}
+							on:blur={handleBlur}
+							on:focus={handleFocus}
+							bind:value={content}
+							bind:this={textarea}
+							on:beforeinput={handleBeforeInput}
+							placeholder={box.placeholder ?? (node.level == 1 && index() == 0 ? 'type here' : '')}
+						/>
+					{/if}
 				</div>
 				<!-- svelte-ignore a11y-click-events-have-key-events -->
 				<!-- svelte-ignore a11y-no-noninteractive-element-interactions -->
@@ -468,13 +459,17 @@
 					in:brIn
 					out:brOut
 					on:click={() => {
-						addSibling(index, 1) && focusSibling(index, 1);
+						let couldAdd = addSibling(index(), 1);
+						if (couldAdd) {
+							focusSibling(index(), 1);
+							history.setPrevAfterFocus($focusId);
+						}
 					}}
 					on:mousedown={preventBlur}
 					role="separator"
 				/>
 			</div>
-			{#if children.length == 0 && level < columnCount}
+			{#if node.children.length == 0 && node.level < columnCount}
 				<button
 					class={`add palette-${outsidePalette}`}
 					on:click={() => {
@@ -491,24 +486,16 @@
 	{/if}
 
 	<ul class="children">
-		{#each children as child, _ (child)}
+		{#each node.children as childId, _ (childId)}
 			<svelte:self
-				bind:content={child.content}
-				bind:children={child.children}
-				bind:index={child.index}
-				bind:level={child.level}
-				bind:focus={child.focus}
-				bind:empty={child.empty}
-				bind:placeholder={child.placeholder}
-				bind:crossed={child.crossed}
+				id={childId}
 				addSibling={addChild}
 				deleteSelf={deleteChild}
 				focusSibling={focusChild}
 				focusSiblingStrict={focusChildStrict}
 				focusParent={focusSelf}
 				dispatchSelfFocus={onChildFocus}
-				parentPath={path}
-				parentIsEmpty={empty}
+				parentIsEmpty={box?.empty ?? false}
 				on:saveFocus
 			/>
 		{/each}

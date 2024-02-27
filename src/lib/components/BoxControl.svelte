@@ -1,137 +1,95 @@
 <script lang="ts">
 	import ButtonBar from './ButtonBar.svelte';
-	import { flows, selected } from '$lib/models/store';
-	import { boxFromPath, newBox } from '$lib/models/flow';
 	import { afterUpdate, onDestroy, tick, type ComponentProps } from 'svelte';
-	import type { Flow, Box } from '../models/node';
+	import {
+		type FlowId,
+		nodes,
+		deleteBox,
+		checkIdBox,
+		addNewBox,
+		updateBox,
+		type BoxId
+	} from '../models/node';
 	import type Button from './Button.svelte';
 	import { settings } from '$lib/models/settings';
+	import { history } from '$lib/models/history';
+	import { focusId, lastFocusIds, selectedFlowId } from '$lib/models/focus';
 
-	export let flow: Flow;
+	export let flowId: FlowId;
 
 	let disabledReason: string = 'no cell selected';
 
-	let validFocus: boolean = false;
-	async function setValidFocus() {
+	let targetId: BoxId | null = null;
+	async function setValidTargetId() {
 		// wait until its actually done updating
 		await tick();
-		if (flow.lastFocus && flow.lastFocus.length > 0) {
-			let box: Flow | Box | null = boxFromPath(flow, flow.lastFocus);
-			validFocus = box?.focus ?? false;
-		} else {
-			validFocus = false;
-		}
+		targetId = checkIdBox($nodes, $lastFocusIds[flowId]);
 	}
-	// $: flow.lastFocus, setValidFocus();
 	afterUpdate(function () {
-		setValidFocus();
+		setValidTargetId();
 	});
 
-	async function deleteBox() {
-		// cancel if disabled
-		if (!validFocus) return;
-		let parent: Box | Flow | null = boxFromPath(flow, flow.lastFocus, 1);
-		let target: Box | null = boxFromPath(flow, flow.lastFocus);
-		// cancel if parent or target is null
-		if (parent == null || target == null) return;
-		let childrenClone: Box[] = [...parent.children];
+	async function deleteBoxAndFocus() {
+		if (targetId == null) return;
+		let target = $nodes[targetId];
+		let parent = $nodes[target.parent];
 		// if target isn't only child of first level
-		if (childrenClone.length > 1 || parent.level >= 1) {
-			// add to history
-			flow.history.add('deleteBox', flow.lastFocus, {
-				box: childrenClone[target.index]
-			});
+		if (target.children.length > 1 || parent.level >= 1) {
 			// unfocus target
-			childrenClone[target.index].focus = false;
-			parent.children = [...childrenClone];
-			flow = flow;
+			$focusId = null;
+			$nodes = $nodes;
+
+			let targetIndex = $nodes[target.parent].children.indexOf(targetId);
 			await tick();
 
 			// delete target
-			childrenClone.splice(target.index, 1);
-			// fix index
-			for (let i = target.index; i < childrenClone.length; i++) {
-				childrenClone[i].index = i;
-			}
+			deleteBox($nodes, targetId);
 			// focus parent when empty
-			if (childrenClone.length <= 0) {
-				parent.focus = true;
-				// focus last child when last child deleted
-			} else if (target.index >= childrenClone.length) {
-				childrenClone[childrenClone.length - 1].focus = true;
-				// focus next child of deleted
-			} else {
-				childrenClone[target.index].focus = true;
+			if (target.children.length <= 0) {
+				$focusId = target.parent;
 			}
-
-			parent.children = [...childrenClone];
-			flow = flow;
+			// focus last child when last child deleted
+			else if (targetIndex >= parent.children.length) {
+				$focusId = parent.children[parent.children.length - 1];
+			}
+			// focus next child of deleted
+			else {
+				$focusId = parent.children[targetIndex];
+			}
+			history.setPrevAfterFocus($focusId);
+			$nodes = $nodes;
 		}
 	}
 
 	function addChild() {
-		// cancel if disabled
-		if (!validFocus) return;
+		if (targetId == null) return;
+		if ($selectedFlowId == null) return;
+		let target = $nodes[targetId];
 		// if not at end of column
-		let target: Box | null = boxFromPath(flow, flow.lastFocus);
-		// cancel if target is null
-		if (target == null) return;
-		let childrenClone: Box[] = [...target.children];
-		if (target.level < flow.columns.length) {
-			childrenClone.splice(0, 0, newBox(0, target.level + 1, false));
-			// fix index
-			for (let i = 0; i < childrenClone.length; i++) {
-				childrenClone[i].index = i;
-			}
-			// add to history
-			flow.history.add('add', [...flow.lastFocus, 0]);
-
-			target.children = [...childrenClone];
-			flow = flow;
+		if (target.level < $nodes[$selectedFlowId].value.columns.length) {
+			addNewBox($nodes, targetId, 0);
+			$nodes = $nodes;
 		}
 	}
 
 	function addSibling(direction: number) {
-		// cancel if disabled
-		if (!validFocus) return;
-		let parent: Flow | Box | null = boxFromPath(flow, flow.lastFocus, 1);
-		let target: Box | null = boxFromPath(flow, flow.lastFocus);
-		// cancel if parent or target is null
-		if (parent == null || target == null) return;
+		if (targetId == null) return;
+		let target = $nodes[targetId];
+		let parent = $nodes[target.parent];
 
-		let childrenClone: Box[] = [...parent.children];
-		childrenClone.splice(
-			target.index + direction,
-			0,
-			newBox(target.index + direction, target.level, false)
-		);
-		// fix index
-		for (let i = target.index; i < childrenClone.length; i++) {
-			childrenClone[i].index = i;
-		}
-		// add to history
-		let newPath = [...flow.lastFocus];
-		if (direction == 0) {
-			newPath[newPath.length - 1] -= 0;
-			flow.lastFocus[flow.lastFocus.length - 1] += 1;
-		} else {
-			newPath[newPath.length - 1] += 1;
-		}
-		flow.history.add('add', newPath);
-		parent.children = [...childrenClone];
-		flow = flow;
+		let targetIndex = parent.children.indexOf(targetId);
+		let newBoxIndex = targetIndex + direction;
+		addNewBox($nodes, target.parent, newBoxIndex);
+
+		$nodes = $nodes;
 	}
 	function toggleCrossed() {
-		// cancel if disabled
-		if (!validFocus) return;
-		let target: Box | null = boxFromPath(flow, flow.lastFocus);
-		// cancel if target is null
-		if (target == null) return;
-		target.crossed = !target.crossed;
-		$flows[$selected].history.add('cross', [...flow.lastFocus], {
-			crossed: target.crossed
-		});
-		flow = flow;
+		if (targetId == null) return;
+		let target = $nodes[targetId];
+		let value = structuredClone(target.value);
+		value.crossed = !value.crossed;
+		updateBox($nodes, targetId, value);
+		$nodes = $nodes;
 	}
 	function preventBlur(e: Event) {
 		e.preventDefault();
@@ -143,16 +101,22 @@
 			showUndoRedoButtons: [
 				{
 					icon: 'undo',
-					disabled: flow.history.index == -1,
-					onclick: () => flow.history.undo(),
+					disabled: !history.canUndo(flowId),
+					onclick: () => {
+						history.undo($nodes, flowId);
+						$nodes = $nodes;
+					},
 					tooltip: 'undo',
 					shortcut: ['commandControl', 'z'],
 					disabledReason: 'nothing to undo'
 				},
 				{
-					disabled: flow.history.index == flow.history.data.length - 1,
+					disabled: !history.canRedo(flowId),
 					icon: 'redo',
-					onclick: () => flow.history.redo(),
+					onclick: () => {
+						history.redo($nodes, flowId);
+						$nodes = $nodes;
+					},
 					tooltip: 'redo',
 					shortcut: ['commandControl', 'shift', 'z'],
 					disabledReason: 'nothing to redo'
@@ -162,7 +126,7 @@
 				{
 					icon: 'addRight',
 					onclick: addChild,
-					disabled: !validFocus,
+					disabled: targetId == null,
 					tooltip: 'add response',
 					shortcut: ['shift', 'return'],
 					disabledReason
@@ -170,7 +134,7 @@
 				{
 					icon: 'addUp',
 					onclick: () => addSibling(0),
-					disabled: !validFocus,
+					disabled: targetId == null,
 					tooltip: 'add argument above',
 					shortcut: ['option', 'return'],
 					disabledReason
@@ -178,15 +142,15 @@
 				{
 					icon: 'addDown',
 					onclick: () => addSibling(1),
-					disabled: !validFocus,
+					disabled: targetId == null,
 					tooltip: 'add argument below',
 					shortcut: ['return'],
 					disabledReason
 				},
 				{
 					icon: 'trash',
-					onclick: deleteBox,
-					disabled: !validFocus,
+					onclick: deleteBoxAndFocus,
+					disabled: targetId == null,
 					tooltip: 'delete selected',
 					shortcut: ['commandControl', 'delete'],
 					disabledReason
@@ -196,7 +160,7 @@
 				{
 					icon: 'cross',
 					onclick: toggleCrossed,
-					disabled: !validFocus,
+					disabled: targetId == null,
 					tooltip: 'toggle crossed out',
 					shortcut: ['commandControl', 'x'],
 					disabledReason
@@ -207,7 +171,7 @@
 	function updateButtonGroups() {
 		buttonGroups = getButtonGroups();
 	}
-	$: validFocus, flow, updateButtonGroups();
+	$: targetId, $nodes, updateButtonGroups();
 
 	let buttonGroupsShow: { [key: string]: boolean } = {};
 	for (let key of Object.keys(buttonGroups)) {

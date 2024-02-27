@@ -1,8 +1,17 @@
 <script lang="ts">
-	import type { Flow } from '../models/node';
+	import { nodes, type FlowId, type Flow2 } from '../models/node';
 
-	export let flow: Flow;
+	export let flowId: FlowId;
 	export let selected: boolean;
+
+	$: node = $nodes[flowId];
+	let flow: Flow2;
+	$: {
+		// hold onto flow when deleted
+		if (node != null) {
+			flow = node.value;
+		}
+	}
 
 	let palette: string;
 	$: {
@@ -16,11 +25,7 @@
 
 <div class={`top palette-${palette}`} class:invert={flow.invert}>
 	<button class:selected class:empty={flow.content.length == 0} on:click>
-		{#if flow.content}
-			{flow.content}
-		{:else}
-			no name
-		{/if}
+		{#if flow.content}{flow.content}{:else}no name{/if}
 	</button>
 </div>
 
@@ -42,6 +47,7 @@
 		overflow-wrap: break-word;
 		transition: background var(--transition-speed), transform var(--transition-speed) ease;
 		font-weight: var(--font-weight);
+		white-space: pre-wrap;
 	}
 	button.empty {
 		color: var(--this-text-weak);

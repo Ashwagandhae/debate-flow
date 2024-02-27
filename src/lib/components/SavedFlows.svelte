@@ -1,9 +1,9 @@
 <script lang="ts">
-	import { MAX_SAVED_FLOWS, type SavedFlowsDatas } from '$lib/models/autoSave';
+	import { MAX_SAVED_FLOWS, type SavedNodesDatas } from '$lib/models/autoSave';
 	import Button from './Button.svelte';
 	import SavedFlow from './SavedFlow.svelte';
 
-	export let savedFlowsDatas: SavedFlowsDatas;
+	export let savedFlowsDatas: SavedNodesDatas;
 	export let showTutorial: boolean = false;
 
 	$: sortedSavedFlowsDatas = Object.entries(savedFlowsDatas).sort(

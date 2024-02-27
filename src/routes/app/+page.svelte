@@ -14,32 +14,30 @@
 	import { dev } from '$app/environment';
 	import { openPopup } from '$lib/models/popup';
 
-	import type { Flow as FlowType, Box } from '$lib/models/node';
+	import type { FlowId } from '$lib/models/node';
 	import { onDestroy, onMount } from 'svelte';
 	import {
 		activeMouse,
 		flowsChange,
-		flows,
-		selected,
 		subscribeFlowsChange,
 		isSheetSharing
 	} from '$lib/models/store';
-	import { boxFromPath, newFlow } from '$lib/models/flow';
-	import { History } from '$lib/models/history';
 	import { createKeyDownHandler } from '$lib/models/key';
-	import { maybeStartSharing, stopSharing } from '$lib/models/sheetSharing';
 	import Prelude from '$lib/components/Prelude.svelte';
-	import { loadFlows } from '$lib/models/file';
+	// import { loadFlows } from '$lib/models/file';
 	import Timers from '$lib/components/Timers.svelte';
 	import Help from '$lib/components/Help.svelte';
 	import { settings } from '$lib/models/settings';
 	import SideDoc from '$lib/components/SideDoc.svelte';
+	import { addNewFlow, deleteFlow, moveFlow, nodes } from '$lib/models/node';
+	import { history } from '$lib/models/history';
+	import { focusId, lastFocusIds, selectedFlowId } from '$lib/models/focus';
 
 	let changesSaved = true;
 	subscribeFlowsChange(() => {
 		changesSaved = false;
 	});
-	$: unsavedChanges = $flows.length > 0 && !changesSaved;
+	$: unsavedChanges = $nodes.root.children.length > 0 && !changesSaved;
 
 	onMount(() => {
 		window.addEventListener(
@@ -74,78 +72,65 @@
 		})
 	);
 
-	function clickTab(index: number) {
+	function clickTab(id: FlowId) {
 		blurFlow();
-		$selected = index;
+		$selectedFlowId = id;
 		focusFlow();
 	}
 	function focusFlow() {
-		let lastFocus = boxFromPath<FlowType, Box>($flows[$selected], $flows[$selected]?.lastFocus);
+		if ($selectedFlowId == null) return;
+		let lastFocus = $lastFocusIds[$selectedFlowId];
 		if (lastFocus == null) {
-			lastFocus = $flows[$selected];
+			lastFocus = $selectedFlowId;
 		}
-		lastFocus.focus = true;
-		$flows = $flows;
+		$focusId = lastFocus;
 	}
 	function blurFlow() {
-		if ($flows.length > 0) {
-			let lastFocus = boxFromPath<FlowType, Box>($flows[$selected], $flows[$selected].lastFocus);
-			if (!lastFocus) {
-				lastFocus = $flows[$selected];
-			}
-			lastFocus.focus = false;
-			$flows = $flows;
-			(document.activeElement as HTMLElement).blur();
-		}
+		$focusId = null;
 	}
 
 	function addFlow(type: 'primary' | 'secondary') {
-		blurFlow();
-		let flow = newFlow($flows.length, type, switchSpeakers);
-		if (flow == null) return;
-		$flows.push(flow);
-		$selected = $flows.length - 1;
-		$flows = $flows;
+		let id = addNewFlow($nodes, $nodes.root.children.length, type, switchSpeakers);
+		$nodes = $nodes;
+		if (id != null) {
+			$selectedFlowId = id;
+			focusFlow();
+		}
 		flowsChange();
 	}
 
-	async function deleteFlow(index: number) {
+	async function deleteFlowAndFocus() {
+		if ($selectedFlowId == null) return;
+
 		blurFlow();
-		$flows.splice(index, 1);
-		if (index == 0) {
-			$selected = 0;
-		} else {
-			$selected = index - 1;
-		}
-		// fix indices
-		for (let i = index; i < $flows.length; i++) {
-			$flows[i].index = i;
-		}
-		$flows = $flows;
+
+		let oldIndex = $nodes.root.children.indexOf($selectedFlowId);
+		deleteFlow($nodes, $selectedFlowId);
+		$nodes = $nodes;
 		flowsChange();
-		if ($flows.length > 0) {
+
+		let nextIndex;
+		if (oldIndex == 0) {
+			nextIndex = 0;
+		} else {
+			nextIndex = oldIndex - 1;
+		}
+		if ($nodes.root.children.length > 0) {
+			$selectedFlowId = $nodes.root.children[nextIndex];
 			focusFlow();
+		} else {
+			$selectedFlowId = null;
 		}
 	}
 
 	function handleSort(e: { detail: { from: number; to: number } }) {
 		let { from, to } = e.detail;
-		let selectedId = $flows[$selected].id;
-		let newFlows = [...$flows];
-		// add to to if needed
 		if (from > to) {
 			to += 1;
 		}
-		let flow = newFlows.splice(from, 1)[0];
-		newFlows.splice(to, 0, flow);
-		// fix indices
-		for (let i = 0; i < newFlows.length; i++) {
-			newFlows[i].index = i;
-		}
-
-		$flows = newFlows;
+		moveFlow($nodes, $nodes.root.children[from], to);
+		$nodes = $nodes;
 		flowsChange();
-		$selected = $flows.findIndex((flow) => flow.id == selectedId);
 	}
 
 	function handleMouseMove(e: MouseEvent) {
@@ -161,34 +146,52 @@
 		'commandControl shift': {
 			z: {
 				handle: () => {
-					$flows[$selected].history.redo();
+					if ($selectedFlowId == null) return;
+					history.redo($nodes, $selectedFlowId);
+					$nodes = $nodes;
 				},
-				require: () => $flows.length > 0,
-				stopRepeat: false
+				require: () => {
+					if ($selectedFlowId == null) return false;
+					return history.canRedo($selectedFlowId);
+				},
+				stopRepeat: false,
+				preventDefault: 'always'
 			}
 		},
 		commandControl: {
 			z: {
-				handle: () => $flows[$selected].history.undo(),
-				require: () => $flows.length > 0,
-				stopRepeat: false
+				handle: () => {
+					if ($selectedFlowId == null) return;
+					history.undo($nodes, $selectedFlowId);
+					$nodes = $nodes;
+				},
+				require: () => {
+					if ($selectedFlowId == null) return false;
+					return history.canUndo($selectedFlowId);
+				},
+				stopRepeat: false,
+				preventDefault: 'always'
 			}
 		},
 		'commandControl alt': {
 			ArrowUp: {
 				handle: () => {
-					let newSelected = $selected - 1 < 0 ? $flows.length - 1 : $selected - 1;
-					clickTab(newSelected);
+					if ($selectedFlowId == null) return;
+					let index =
+						$nodes.root.children.indexOf($selectedFlowId) - (1 % $nodes.root.children.length);
+					clickTab($nodes.root.children[index]);
 				},
-				require: () => $flows.length > 0,
+				require: () => $nodes.root.children.length > 0,
 				stopRepeat: false
 			},
 			ArrowDown: {
 				handle: () => {
-					let newSelected = $selected + 1 >= $flows.length ? 0 : $selected + 1;
-					clickTab(newSelected);
+					if ($selectedFlowId == null) return;
+					let index =
+						$nodes.root.children.indexOf($selectedFlowId) + (1 % $nodes.root.children.length);
+					clickTab($nodes.root.children[index]);
 				},
-				require: () => $flows.length > 0,
+				require: () => $nodes.root.children.length > 0,
 				stopRepeat: false
 			}
 		}
@@ -240,21 +243,22 @@
 	}
 
 	async function handleUpload(data: string) {
-		let rawFlows: unknown[];
-		let newFlows: FlowType[] | null = null;
-		try {
-			newFlows = loadFlows(data);
-		} catch (e) {
-			openPopup(Error, 'File Error', {
-				props: { message: 'Invalid file' }
-			});
-		}
-		if (newFlows != null) {
-			if (!unsavedChanges || confirm('Are you sure you want to overwrite your current flows?')) {
-				$flows = newFlows;
-				$selected = 0;
-			}
-		}
+		// TODO: implement handleUpload
+		// let rawFlows: unknown[];
+		// let newFlows: FlowType[] | null = null;
+		// try {
+		// 	newFlows = loadFlows(data);
+		// } catch (e) {
+		// 	openPopup(Error, 'File Error', {
+		// 		props: { message: 'Invalid file' }
+		// 	});
+		// }
+		// if (newFlows != null) {
+		// 	if (!unsavedChanges || confirm('Are you sure you want to overwrite your current flows?')) {
+		// 		$flows = newFlows;
+		// 		$selected = 0;
+		// 	}
+		// }
 	}
 
 	let switchSpeakers = false;
@@ -273,7 +277,7 @@
 />
 <main class:activeMouse class="palette-plain">
 	<input id="uploadId" type="file" hidden on:change={readUpload} />
-	<div class="grid" class:showPrelude={$flows.length == 0}>
+	<div class="grid" class:showPrelude={$nodes.root.children.length == 0}>
 		<div class="sidebar">
 			<div class="header">
 				<ButtonBar
@@ -308,11 +312,11 @@
 			</div>
 			<div class="tabs">
 				<div class="tabScroll">
-					<SortableList list={$flows} key="id" on:sort={handleSort} let:index>
+					<SortableList list={$nodes.root.children} on:sort={handleSort} let:index>
 						<Tab
-							on:click={() => clickTab(index)}
-							bind:flow={$flows[index]}
-							selected={index == $selected}
+							on:click={() => clickTab($nodes.root.children[index])}
+							flowId={$nodes.root.children[index]}
+							selected={$selectedFlowId == $nodes.root.children[index]}
 						/>
 					</SortableList>
 					<AddTab {addFlow} bind:switchSpeakers />
@@ -322,23 +326,17 @@
 				<Timers />
 			</div>
 		</div>
-		{#if $flows.length > 0 && $flows[$selected]}
-			{#key $selected}
-				{#key $flows.length}
+		{#if $nodes.root.children.length > 0 && $selectedFlowId != null && $nodes[$selectedFlowId]}
+			{#key $selectedFlowId}
+				{#key $nodes.root.children.length}
 					<div class="title">
-						<Title
-							bind:content={$flows[$selected].content}
-							bind:children={$flows[$selected].children}
-							bind:focus={$flows[$selected].focus}
-							bind:invert={$flows[$selected].invert}
-							deleteSelf={() => deleteFlow($selected)}
-						/>
+						<Title flowId={$selectedFlowId} deleteSelf={() => deleteFlowAndFocus()} />
 					</div>
 					<div class="box-control">
-						<BoxControl bind:flow={$flows[$selected]} />
+						<BoxControl flowId={$selectedFlowId} />
 					</div>
 					<div class="flow">
-						<Flow on:focusFlow={focusFlow} bind:root={$flows[$selected]} />
+						<Flow on:focusFlow={focusFlow} flowId={$selectedFlowId} />
 					</div>
 					{#if showSideDoc}
 						<div class="side-doc">

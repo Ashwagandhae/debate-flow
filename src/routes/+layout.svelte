@@ -9,16 +9,15 @@
 	import { inject } from '@vercel/analytics';
 	import { onDestroy, onMount } from 'svelte';
 	import { appMinimized } from '$lib/models/store';
-	import { maybeStartSharing, stopSharing, unminimizeApp } from '$lib/models/sheetSharing';
 	import Button from '$lib/components/Button.svelte';
 	import Share from '$lib/components/Share.svelte';
 
-	onMount(() => {
-		maybeStartSharing(() => {
-			openPopup(Share, 'Sharing');
-		});
-	});
-	onDestroy(stopSharing);
+	// onMount(() => {
+	// 	maybeStartSharing(() => {
+	// 		openPopup(Share, 'Sharing');
+	// 	});
+	// });
+	// onDestroy(stopSharing);
 
 	inject({ mode: dev ? 'development' : 'production' });
 
@@ -144,7 +143,7 @@
 	/>
 	<link rel="canonical" href="https://debate-flow.vercel.app/" />
 </svelte:head>
-{#if $appMinimized}
+<!-- {#if $appMinimized}
 	<div class="minimized">
 		<Button
 			icon="undo"
@@ -154,39 +153,40 @@
 			}}
 		/>
 	</div>
-{:else}
-	<slot />
-	{#if $popups.length > 0}
-		<!-- we can ignore because pressing escape on window already has same functionality -->
-		<!-- svelte-ignore a11y-click-events-have-key-events -->
+{:else} -->
+<slot />
+{#if $popups.length > 0}
+	<!-- we can ignore because pressing escape on window already has same functionality -->
+	<!-- svelte-ignore a11y-click-events-have-key-events -->
+	<!-- svelte-ignore a11y-no-static-element-interactions -->
+	<div
+		class="screen"
+		on:click|self={() => {
+			closePopup(0);
+		}}
+		transition:screenTransition
+	>
 		<!-- svelte-ignore a11y-no-static-element-interactions -->
+		<!-- svelte-ignore a11y-click-events-have-key-events -->
 		<div
-			class="screen"
+			class="popups"
 			on:click|self={() => {
 				closePopup(0);
 			}}
-			transition:screenTransition
 		>
-			<!-- svelte-ignore a11y-no-static-element-interactions -->
-			<!-- svelte-ignore a11y-click-events-have-key-events -->
-			<div
-				class="popups"
-				on:click|self={() => {
-					closePopup(0);
-				}}
-			>
-				{#key $popups}
-					<Popup
-						component={$popups[0].component}
-						closeSelf={() => closePopup(0)}
-						title={$popups[0].title}
-						props={$popups[0].props}
-					/>
-				{/key}
-			</div>
+			{#key $popups}
+				<Popup
+					component={$popups[0].component}
+					closeSelf={() => closePopup(0)}
+					title={$popups[0].title}
+					props={$popups[0].props}
+				/>
+			{/key}
 		</div>
-	{/if}
+	</div>
 {/if}
+
+<!-- {/if} -->
 
 <style>
 	.screen {

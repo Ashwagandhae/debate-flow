@@ -1,36 +1,36 @@
-import type { Flow } from './node';
-import { flows, subscribeFlowsChange, isSheetSharing } from '$lib/models/store';
+import { subscribeFlowsChange, isSheetSharing } from '$lib/models/store';
 import type { Writable } from 'svelte/store';
 import { writable, derived } from 'svelte/store';
-import { getJson, loadFlows, downloadString } from './file';
+import { getJson, loadNodes, downloadString } from './file';
+import { nodes, type Nodes } from './node';
 
-let flowKey: FlowKey | null = null;
-const savedFlowsDatasMut: Writable<SavedFlowsDatas> = writable(getSavedFlowsDatas());
+let flowKey: NodeKey | null = null;
+const savedNodesDatasMut: Writable<SavedNodesDatas> = writable(getSavedNodesDatas());
 // export read-only version
-export const savedFlowsDatas = derived(savedFlowsDatasMut, (value) => value);
+export const savedNodesDatas = derived(savedNodesDatasMut, (value) => value);
 
 export const MAX_SAVED_FLOWS = 20;
 
-export type FlowKey = string;
+export type NodeKey = string;
 
-export type SavedFlowsData = {
+export type SavedNodesData = {
 	created: string;
 	modified: string;
 	flowInfos: { content: string; invert: boolean }[];
 };
 
-export type SavedFlowsDatas = {
-	[key: FlowKey]: SavedFlowsData;
+export type SavedNodesDatas = {
+	[key: NodeKey]: SavedNodesData;
 };
 
-function newFlowKey(): FlowKey {
+function newNodeKey(): NodeKey {
 	const uuid = crypto.randomUUID();
 	return `flow:${uuid}`;
 }
 
-let $flows: Flow[];
-flows.subscribe((value) => {
-	$flows = value;
+let $nodes: Nodes;
+nodes.subscribe((value) => {
+	$nodes = value;
 });
 
 let $isSheetSharing: boolean;
@@ -38,101 +38,100 @@ isSheetSharing.subscribe((value) => {
 	$isSheetSharing = value;
 });
 
-let $savedFlowsDatasMut: SavedFlowsDatas;
-savedFlowsDatasMut.subscribe((value) => {
-	$savedFlowsDatasMut = value;
-	localStorage.setItem('savedFlows', JSON.stringify(value));
+let $savedNodesDatasMut: SavedNodesDatas;
+savedNodesDatasMut.subscribe((value) => {
+	$savedNodesDatasMut = value;
+	localStorage.setItem('savedNodes', JSON.stringify(value));
 });
 
-let lastSaveTime: number = Date.now();
-export function maybeSaveFlows() {
-	if ($flows.length == 0) return;
-	if ($isSheetSharing) return;
-	// check if empty
-	if (
-		$flows.length == 1 &&
-		$flows[0].content.length == 0 &&
-		$flows[0].children.length == 1 &&
-		$flows[0].children[0].content.length == 0
-	) {
-		return;
-	}
-	const now = Date.now();
-	if (now - lastSaveTime < 5000) return;
-	lastSaveTime = now;
-	saveFlows($flows);
+// let lastSaveTime: number = Date.now();
+export function maybeSaveNodes() {
+	// if ($nodes.length == 0) return;
+	// if ($isSheetSharing) return;
+	// // check if empty
+	// if (
+	// 	$nodes.length == 1 &&
+	// 	$nodes[0].content.length == 0 &&
+	// 	$nodes[0].children.length == 1 &&
+	// 	$nodes[0].children[0].content.length == 0
+	// ) {
+	// 	return;
+	// }
+	// const now = Date.now();
+	// if (now - lastSaveTime < 5000) return;
+	// lastSaveTime = now;
+	// saveNodes($nodes);
 }
 
-subscribeFlowsChange(maybeSaveFlows);
+subscribeFlowsChange(maybeSaveNodes);
 
-export function getSavedFlowsDatas(): SavedFlowsDatas {
-	const raw = localStorage.getItem('savedFlows');
+export function getSavedNodesDatas(): SavedNodesDatas {
+	const raw = localStorage.getItem('savedNodes');
 	if (raw === null) {
-		localStorage.setItem('savedFlows', JSON.stringify({}));
+		localStorage.setItem('savedNodes', JSON.stringify({}));
 		return {};
 	}
 	return JSON.parse(raw);
 }
 
-export function loadSavedFlows(key: FlowKey, modifyOriginal = false) {
+export function loadSavedNodes(key: NodeKey, modifyOriginal = false) {
 	const raw = localStorage.getItem(key);
 	if (raw === null) return [];
-	const newFlows: Flow[] = loadFlows(raw);
-	flows.set(newFlows);
+	const newNodes: Nodes = loadNodes(raw);
+	nodes.set(newNodes);
 	if (modifyOriginal) {
 		flowKey = key;
 	}
 }
 
-export function deleteFlows(key: FlowKey) {
+export function deleteNodes(key: NodeKey) {
 	// update in case different tab
-	savedFlowsDatasMut.set(getSavedFlowsDatas());
+	savedNodesDatasMut.set(getSavedNodesDatas());
 
 	localStorage.removeItem(key);
-	if (Object.hasOwn($savedFlowsDatasMut, key)) {
-		delete $savedFlowsDatasMut[key];
-		savedFlowsDatasMut.set($savedFlowsDatasMut);
+	if (Object.hasOwn($savedNodesDatasMut, key)) {
+		delete $savedNodesDatasMut[key];
+		savedNodesDatasMut.set($savedNodesDatasMut);
 	}
 }
-export function saveFlows(flows: Flow[]) {
-	// update in case different tab
-	savedFlowsDatasMut.set(getSavedFlowsDatas());
-
-	const data: string = getJson(flows);
-	if (flowKey === null) {
-		const newKey = newFlowKey();
-		flowKey = newKey;
-	}
-	localStorage.setItem(flowKey, data);
-	// update saved flows
-	$savedFlowsDatasMut[flowKey] = {
-		created: $savedFlowsDatasMut[flowKey]?.created ?? new Date().toISOString(),
-		modified: new Date().toISOString(),
-		flowInfos: flows.map((flow) => {
-			return {
-				content: flow.content,
-				invert: flow.invert
-			};
-		})
-	};
-	// delete old flows
-	const keys = Object.keys($savedFlowsDatasMut);
-	if (keys.length > MAX_SAVED_FLOWS) {
-		const oldestKey = keys.reduce((a, b) => {
-			if ($savedFlowsDatasMut[a].modified < $savedFlowsDatasMut[b].modified) {
-				return a;
-			} else {
-				return b;
-			}
-		});
-		delete $savedFlowsDatasMut[oldestKey];
-		localStorage.removeItem(oldestKey);
-	}
-
-	savedFlowsDatasMut.set($savedFlowsDatasMut);
+export function saveNodes(nodes: Nodes) {
+	// TODO: implement saveNodes function
+	// // update in case different tab
+	// savedNodesDatasMut.set(getSavedNodesDatas());
+	// const data: string = getJson(nodes);
+	// if (flowKey === null) {
+	// 	const newKey = newNodeKey();
+	// 	flowKey = newKey;
+	// }
+	// localStorage.setItem(flowKey, data);
+	// // update saved nodes
+	// $savedNodesDatasMut[flowKey] = {
+	// 	created: $savedNodesDatasMut[flowKey]?.created ?? new Date().toISOString(),
+	// 	modified: new Date().toISOString(),
+	// 	flowInfos: nodes.map((flow) => {
+	// 		return {
+	// 			content: flow.content,
+	// 			invert: flow.invert
+	// 		};
+	// 	})
+	// };
+	// // delete old nodes
+	// const keys = Object.keys($savedNodesDatasMut);
+	// if (keys.length > MAX_SAVED_FLOWS) {
+	// 	const oldestKey = keys.reduce((a, b) => {
+	// 		if ($savedNodesDatasMut[a].modified < $savedNodesDatasMut[b].modified) {
+	// 			return a;
+	// 		} else {
+	// 			return b;
+	// 		}
+	// 	});
+	// 	delete $savedNodesDatasMut[oldestKey];
+	// 	localStorage.removeItem(oldestKey);
+	// }
+	// savedNodesDatasMut.set($savedNodesDatasMut);
 }
 
-export function downloadSavedFlows(key: FlowKey) {
+export function downloadSavedNodes(key: NodeKey) {
 	const raw = localStorage.getItem(key);
 	if (raw === null) return;
 	const data = JSON.parse(raw);

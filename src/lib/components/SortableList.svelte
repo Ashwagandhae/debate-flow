@@ -84,7 +84,7 @@
 
 	// PROPS
 	export let list: any[];
-	export let key: string;
+	export let key: string | null = null;
 
 	let element: HTMLElement;
 	async function changeHeight(reset = false) {

@@ -1,10 +1,10 @@
 <script lang="ts">
 	import Button from './Button.svelte';
 	import {
-		deleteFlows,
-		loadSavedFlows,
-		type SavedFlowsData,
-		downloadSavedFlows
+		deleteNodes,
+		loadSavedNodes,
+		type SavedNodesData,
+		downloadSavedNodes
 	} from '$lib/models/autoSave';
 	import { hiddenButtons, savedFlow } from '$lib/models/transition';
 
@@ -29,7 +29,7 @@
 			});
 		}
 	}
-	export let flowData: SavedFlowsData;
+	export let flowData: SavedNodesData;
 	export let key: string;
 
 	let showHidden = false;
@@ -60,7 +60,7 @@
 				icon="upload"
 				text="open"
 				on:click={() => {
-					loadSavedFlows(key, true);
+					loadSavedNodes(key, true);
 				}}
 			/>
 			<Button
@@ -76,7 +76,7 @@
 						text={'open copy'}
 						tooltip={'save changes in new'}
 						on:click={() => {
-							loadSavedFlows(key, false);
+							loadSavedNodes(key, false);
 						}}
 					/>
 					<Button
@@ -84,7 +84,7 @@
 						text={'download'}
 						tooltip={'download as JSON'}
 						on:click={() => {
-							downloadSavedFlows(key);
+							downloadSavedNodes(key);
 						}}
 					/>
 
@@ -93,7 +93,7 @@
 						text={'delete'}
 						tooltip={'delete flow data'}
 						on:click={() => {
-							deleteFlows(key);
+							deleteNodes(key);
 						}}
 					/>
 				</div>

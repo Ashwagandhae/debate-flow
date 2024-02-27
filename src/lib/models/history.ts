@@ -1,217 +1,138 @@
-import type { Box, Flow } from './node';
-import { boxFromPath, newBox } from './flow';
-import { flowsChange, flows } from './store';
+import {
+	type ActionBundle,
+	type BoxId,
+	type FlowId,
+	type Nodes,
+	type RootId,
+	resolveAllPending,
+	applyActionBundleAndSend
+} from '$lib/models/node';
+import { focusId } from './focus';
 
-// TODO better deep clone
-export function deepClone<T>(obj: T): T {
-	return JSON.parse(JSON.stringify(obj));
-}
-
-let $flows: Flow[];
-flows.subscribe((value) => {
-	$flows = value;
+let lastNonNullFocusId: FlowId | BoxId;
+focusId.subscribe((value) => {
+	if (value != null) {
+		lastNonNullFocusId = value;
+	}
 });
 
-type ActionLabel = 'add' | 'deleteBox' | 'edit' | 'addBox' | 'cross';
-type Action = {
-	type: ActionLabel;
-	path: number[];
-	lastFocus: number[] | null;
-	nextFocus: number[] | null;
-	pending: boolean;
-	other: any;
+type HistoryAction = {
+	// defaults to lastNonNullFocusId if not set by setNextBeforeFocus
+	beforeFocus: BoxId | FlowId;
+	// defaults to beforeFocus if not set by setPrevAfterFocus
+	afterFocus: BoxId | FlowId | null;
+	actionBundle: ActionBundle;
 };
-export class History {
-	index: number;
-	data: Action[];
-	lastFocus: number[] | null;
-	flow: Flow;
-	constructor(flow: Flow) {
-		this.index = -1;
-		this.data = [];
-		this.lastFocus = null;
-		this.flow = flow;
-	}
-	lastAction() {
-		return this.data[this.index];
-	}
-	add(type: ActionLabel, path: number[], other?: any) {
-		this.resolveAllPending();
-		const action: Action = {
-			type: type,
-			path: path,
-			lastFocus: this.lastFocus == null ? null : [...this.lastFocus],
-			nextFocus: null,
-			other: other,
-			pending: false
+
+export class HistoryHolder {
+	histories: { root: History } & {
+		[key: FlowId]: History;
+	};
+	lastAddedOwner: FlowId | RootId | null;
+	constructor() {
+		this.histories = {
+			root: new History()
 		};
-
-		this.data = this.data.slice(0, this.index + 1);
-		this.data.push(action);
-		this.index = this.data.length - 1;
-		flowsChange();
+		this.lastAddedOwner = null;
 	}
-	addPending(type: ActionLabel, path: number[], other?: any) {
-		this.data = this.data.slice(0, this.index + 1);
-		this.data.push({
-			type: type,
-			path: path,
-			lastFocus: null,
-			nextFocus: null,
-			other: other,
-			pending: true
-		});
-		this.index = this.data.length - 1;
-		flowsChange();
+	add(actionBundle: ActionBundle, owner: FlowId | RootId) {
+		if (!Object.prototype.hasOwnProperty.call(this.histories, owner)) {
+			this.histories[owner] = new History();
+		}
+		this.histories[owner].add(actionBundle);
+		this.lastAddedOwner = owner;
 	}
-	resolveAllPending() {
-		let actionHappened = false;
-		const tempData: (null | Action)[] = [...this.data];
-		for (let i = 0; i < this.data.length; i++) {
-			const pendingAction = this.data[i];
-			if (pendingAction.pending) {
-				const action: Action = {
-					type: pendingAction.type,
-					path: pendingAction.path,
-					lastFocus: pendingAction.path,
-					nextFocus: pendingAction.path,
-					other: pendingAction.other,
-					pending: false
-				};
-				let shouldAdd = true;
-				if (action.type == 'edit') {
-					action.other.lastContent = pendingAction.other.lastContent;
-					action.other.nextContent = pendingAction.other.getNextContent();
-					if (action.other.lastContent == action.other.nextContent) {
-						shouldAdd = false;
-					}
-					pendingAction.other.createEditBreak();
-				}
-				if (shouldAdd) {
-					actionHappened = true;
-					tempData[i] = action;
-				} else {
-					tempData[i] = null;
-					if (this.index >= i) {
-						this.index -= 1;
-					}
-				}
-			}
-		}
-		this.data = tempData.filter((el) => el != null) as Action[];
-		if (actionHappened) {
-			console.log('resolving all pending');
-		}
+	undo(nodes: Nodes, owner: FlowId | RootId) {
+		if (!Object.prototype.hasOwnProperty.call(this.histories, owner)) return;
+		this.histories[owner].undo(nodes);
 	}
-	addFocus(path: number[]) {
-		this.lastFocus = path;
-		if (this.lastAction()) {
-			if (this.lastAction().nextFocus == undefined) {
-				this.lastAction().nextFocus = path;
-			}
-		}
+	redo(nodes: Nodes, owner: FlowId | RootId) {
+		if (!Object.prototype.hasOwnProperty.call(this.histories, owner)) return;
+		this.histories[owner].redo(nodes);
 	}
-	undoAction(action: Action) {
-		console.log('undo', this.index, this.data);
-
-		// do opposite of action
-		if (action.type == 'add' || action.type == 'addBox' || action.type == 'deleteBox') {
-			const parent: Flow | Box | null = boxFromPath(this.flow, action.path, 1);
-			if (parent == null) {
-				throw new Error(`parent of box at path ${action.path} is null`);
-			}
-			const childIndex: number = action.path[action.path.length - 1];
-			const children: Box[] = [...parent.children];
-			if (action.type == 'add' || action.type == 'addBox') {
-				children.splice(childIndex, 1);
-			} else if (action.type == 'deleteBox') {
-				children.splice(childIndex, 0, action.other.box);
-			}
-			// fix index
-			for (let i = childIndex; i < children.length; i++) {
-				children[i].index = i;
-			}
-			parent.children = [...children];
-		} else if (action.type == 'edit') {
-			const box: Flow | Box | null = boxFromPath(this.flow, action.path);
-			if (box == null) {
-				throw new Error(`box at path ${action.path} is null`);
-			}
-			box.content = action.other.lastContent;
-		} else if (action.type == 'cross') {
-			// assume Box isn't Flow
-			const box: Box | null = boxFromPath(this.flow, action.path) as Box | null;
-			if (box == null) {
-				throw new Error(`box at path ${action.path} is null`);
-			}
-			box.crossed = !action.other.crossed;
-		}
+	canUndo(owner: FlowId | RootId) {
+		if (!Object.prototype.hasOwnProperty.call(this.histories, owner)) return false;
+		return this.histories[owner].canUndo();
 	}
-	redoAction(action: Action) {
-		console.log('redo', this.index, this.data);
-
-		// do opposite of action
-		if (action.type == 'add' || action.type == 'addBox' || action.type == 'deleteBox') {
-			const parent: Flow | Box | null = boxFromPath(this.flow, action.path, 1);
-			const childIndex: number = action.path[action.path.length - 1];
-			if (parent == null) {
-				throw new Error(`parent of box at path ${action.path} is null`);
-			}
-			const children: Box[] = [...parent.children];
-			if (action.type == 'add') {
-				children.splice(childIndex, 0, newBox(childIndex, parent.level + 1, false));
-			} else if (action.type == 'addBox') {
-				children.splice(childIndex, 0, deepClone(action.other.box));
-			} else if (action.type == 'deleteBox') {
-				children.splice(childIndex, 1);
-			}
-			// fix index
-			for (let i = childIndex; i < children.length; i++) {
-				children[i].index = i;
-			}
-			parent.children = [...children];
-		} else if (action.type == 'edit') {
-			const box: Flow | Box | null = boxFromPath(this.flow, action.path);
-			if (box == null) {
-				throw new Error(`box at path ${action.path} is null`);
-			}
-			box.content = action.other.nextContent;
-		} else if (action.type == 'cross') {
-			// assume Box isn't Flow
-			const box: Box | null = boxFromPath(this.flow, action.path) as Box | null;
-			if (box == null) {
-				throw new Error(`box at path ${action.path} is null`);
-			}
-			box.crossed = action.other.crossed;
-		}
+	canRedo(owner: FlowId | RootId) {
+		if (!Object.prototype.hasOwnProperty.call(this.histories, owner)) return false;
+		return this.histories[owner].canRedo();
 	}
-	focus(path: number[] | null) {
-		if (path == null) return;
-		const box = boxFromPath<Flow, Box>(this.flow, path);
-		if (box != null) {
-			box.focus = true;
+	setNextBeforeFocus(beforeFocus: BoxId | FlowId | null, owner: FlowId | RootId) {
+		if (!Object.prototype.hasOwnProperty.call(this.histories, owner)) {
+			this.histories[owner] = new History();
 		}
+		this.histories[owner].setNextBeforeFocus(beforeFocus);
 	}
-	undo() {
-		// resolve any pending changes if not in history
-		this.resolveAllPending();
-		if (this.index > -1) {
-			const action = this.lastAction();
-			this.undoAction(action);
-			this.focus(action.lastFocus); // assume its not null because of index
-			flows.set($flows);
-			this.index -= 1;
-		}
-	}
-	redo() {
-		// resolve any pending changes if not in history
-		this.resolveAllPending();
-		if (this.index < this.data.length - 1) {
-			this.index += 1;
-			const action = this.lastAction();
-			this.redoAction(action);
-			this.focus(action.nextFocus); // assume its not null because of index
-			flows.set($flows);
-		}
+	setPrevAfterFocus(afterFocus: BoxId | FlowId | null, owner?: FlowId | RootId) {
+		// try to use lastAddedOwner if owner is not set
+		const validOwner = owner ?? this.lastAddedOwner;
+		// if no owner is set, return
+		if (validOwner == null) return;
+		if (!Object.prototype.hasOwnProperty.call(this.histories, validOwner)) return;
+		this.histories[validOwner].setPrevAfterFocus(afterFocus);
 	}
 }
+
+export class History {
+	index: number;
+	actions: HistoryAction[];
+	// nextBeforeFocus is the focusId before the next action
+	nextBeforeFocus: BoxId | FlowId | null;
+	constructor() {
+		this.index = -1;
+		this.actions = [];
+		this.nextBeforeFocus = null;
+	}
+	setNextBeforeFocus(beforeFocus: BoxId | FlowId | null) {
+		// only allow setting nextBeforeFocus once
+		if (this.nextBeforeFocus != null) return;
+		this.nextBeforeFocus = beforeFocus;
+	}
+	setPrevAfterFocus(afterFocus: BoxId | FlowId | null) {
+		// only allow setting afterFocus once
+		if (this.actions[this.index].afterFocus != null) return;
+		this.actions[this.index].afterFocus = afterFocus;
+	}
+	add(actionBundle: ActionBundle) {
+		const action = {
+			beforeFocus: this.nextBeforeFocus ?? lastNonNullFocusId,
+			afterFocus: null,
+			actionBundle: actionBundle
+		};
+		// reset nextBeforeFocus
+		this.nextBeforeFocus = null;
+		// remove all actions after the current index
+		this.actions = this.actions.slice(0, this.index + 1);
+		this.actions.push(action);
+		this.index = this.actions.length - 1;
+	}
+	undo(nodes: Nodes) {
+		if (!this.canUndo()) return;
+
+		resolveAllPending(nodes);
+
+		const action = this.actions[this.index];
+		action.actionBundle = applyActionBundleAndSend(nodes, action.actionBundle);
+		focusId.set(action.beforeFocus);
+		this.index -= 1;
+	}
+	redo(nodes: Nodes) {
+		if (!this.canRedo()) return;
+
+		resolveAllPending(nodes);
+
+		this.index += 1;
+		const action = this.actions[this.index];
+		action.actionBundle = applyActionBundleAndSend(nodes, action.actionBundle);
+		focusId.set(action.afterFocus ?? action.beforeFocus);
+	}
+	canUndo() {
+		return this.index >= 0;
+	}
+	canRedo() {
+		return this.index < this.actions.length - 1;
+	}
+}
+
+export const history: HistoryHolder = new HistoryHolder();

@@ -46,7 +46,7 @@ export type KeyComboHandlerOptions = {
 	handle: () => void;
 	require?: () => boolean;
 	stopRepeat?: boolean;
-	preventDefault?: boolean;
+	preventDefault?: boolean | 'always';
 };
 const defaultKeyComboHandlerOptions = {
 	require: () => true,
@@ -59,10 +59,13 @@ function createKeyComboHandler(options: KeyComboHandlerOptions): (e: KeyboardEve
 		...options
 	};
 	return function (e: KeyboardEvent) {
+		if (preventDefault === 'always') {
+			e.preventDefault();
+		}
 		if (!require()) {
 			return false;
 		}
-		if (preventDefault) {
+		if (preventDefault === true) {
 			e.preventDefault();
 		}
 		if (stopRepeat && e.repeat == true) {
