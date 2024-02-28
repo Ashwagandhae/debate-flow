@@ -7,8 +7,11 @@
 		initGuestConnection,
 		giveGuestHostKey,
 		giveHostGuestKey,
-		connection
+		connection,
+		disconnect
 	} from '$lib/models/sharingConnection';
+	import ShareKey from './ShareKey.svelte';
+	import { localOffer } from '$lib/models/sharingConnectionOld';
 
 	function copyText(text: string) {
 		navigator.clipboard.writeText(text);
@@ -25,72 +28,121 @@
 </script>
 
 <div class="top palette-plain" class:isSheetSharing={$isSheetSharing}>
-	<h1>Sharing successful!</h1>
-	<p>
-		Sharing is new and probably has bugs. <a href="https://github.com/Ashwagandhae/debate-flow"
-			>Let me know!</a
-		>
-	</p>
 	{#if $connection.tag == 'empty'}
-		<Button
-			icon="dots"
-			text="init host"
-			on:click={() => {
-				initHostConnection();
-			}}
-		/>
-		<Button
-			icon="dots"
-			text="init guest"
-			on:click={() => {
-				initGuestConnection();
-			}}
-		/>
-	{:else if $connection.tag == 'hostCreatingKey'}
-		<p>host creating key</p>
-	{:else if $connection.tag == 'hostAwaitingGuestKey'}
-		<div class="codeScroll">
-			<code>{$connection.localOffer}</code>
+		<div class="hostGuestButtons">
+			<Button
+				palette="accent"
+				icon="add"
+				text="host new room"
+				on:click={() => {
+					initHostConnection();
+				}}
+			/>
+			<Button
+				palette="accent-secondary"
+				icon="dots"
+				text="join room as guest"
+				on:click={() => {
+					initGuestConnection();
+				}}
+			/>
 		</div>
-		<input type="text" bind:value={guestKey} />
-		<Button
-			icon="dots"
-			text="submit guest key"
-			on:click={() => {
-				giveHostGuestKey(guestKey);
-			}}
-		/>
-	{:else if $connection.tag == 'guestAwaitingHostKey'}
-		<input type="text" bind:value={hostKey} />
-		<Button
-			icon="dots"
-			text="submit host key"
-			on:click={() => {
-				giveGuestHostKey(hostKey);
-			}}
-		/>
-	{:else if $connection.tag == 'guestCreatingKey'}
-		<p>guest creating key</p>
-	{:else if $connection.tag == 'guestAwaitingChannel'}
-		<div class="codeScroll">
-			<code>{$connection.localOffer}</code>
+	{:else if $connection.tag == 'hostConnected' || $connection.tag == 'guestConnected'}
+		<p>Connected!</p>
+	{:else}
+		<div class="panels">
+			<div class="panel palette-accent">
+				<div class="above">
+					<h2>Host key</h2>
+					{#if $connection.tag == 'hostCreatingKey' || $connection.tag == 'hostAwaitingGuestKey'}
+						<Button
+							icon="copy"
+							text="copy"
+							disabled={$connection.tag != 'hostAwaitingGuestKey'}
+							tooltip="send this key to guest"
+							on:click={() => {
+								if ($connection.tag != 'hostAwaitingGuestKey') return;
+								copyText($connection.localOffer);
+							}}
+						/>
+					{:else if $connection.tag == 'guestCreatingKey' || $connection.tag == 'guestAwaitingHostKey' || $connection.tag == 'guestAwaitingChannel'}
+						<Button
+							icon="link"
+							text="submit"
+							on:click={() => {
+								giveGuestHostKey(hostKey);
+							}}
+							disabled={$connection.tag != 'guestAwaitingHostKey'}
+						/>
+					{/if}
+				</div>
+				{#if $connection.tag == 'hostCreatingKey' || $connection.tag == 'hostAwaitingGuestKey'}
+					<ShareKey
+						message={$connection.tag == 'hostCreatingKey' ? 'creating host key' : null}
+						content={$connection.tag == 'hostAwaitingGuestKey' ? $connection.localOffer : ''}
+						editable={false}
+					/>
+				{:else if $connection.tag == 'guestCreatingKey' || $connection.tag == 'guestAwaitingHostKey' || $connection.tag == 'guestAwaitingChannel'}
+					<ShareKey bind:content={hostKey} editable={$connection.tag == 'guestAwaitingHostKey'} />
+				{/if}
+			</div>
+			<div class="panel palette-accent-secondary">
+				<div class="above">
+					<h2>Guest key</h2>
+					{#if $connection.tag == 'hostCreatingKey' || $connection.tag == 'hostAwaitingGuestKey'}
+						<Button
+							icon="link"
+							text="submit"
+							on:click={() => {
+								giveHostGuestKey(guestKey);
+							}}
+						/>
+					{:else if $connection.tag == 'guestCreatingKey' || $connection.tag == 'guestAwaitingHostKey' || $connection.tag == 'guestAwaitingChannel'}
+						<Button
+							icon="copy"
+							text="copy"
+							disabled={$connection.tag != 'guestAwaitingChannel'}
+							tooltip="send this key to guest"
+							on:click={() => {
+								if ($connection.tag != 'guestAwaitingChannel') return;
+								copyText($connection.localOffer);
+							}}
+						/>
+					{/if}
+				</div>
+				{#if $connection.tag == 'hostCreatingKey' || $connection.tag == 'hostAwaitingGuestKey'}
+					<ShareKey bind:content={guestKey} editable={$connection.tag == 'hostAwaitingGuestKey'} />
+				{:else if $connection.tag == 'guestCreatingKey' || $connection.tag == 'guestAwaitingHostKey' || $connection.tag == 'guestAwaitingChannel'}
+					<ShareKey
+						message={$connection.tag == 'guestAwaitingHostKey'
+							? 'need host key to make guest key'
+							: $connection.tag == 'guestCreatingKey'
+							? 'guest creating key'
+							: null}
+						content={$connection.tag == 'guestAwaitingChannel' ? $connection.localOffer : ''}
+						editable={false}
+					/>
+				{/if}
+			</div>
 		</div>
-	{:else if $connection.tag == 'guestConnected' || $connection.tag == 'hostConnected'}
-		<input type="text" bind:value={message} />
-		<Button
-			icon="dots"
-			text="send"
-			on:click={() => {
-				sendMessage(message);
-			}}
-		/>
+	{/if}
+	{#if $connection.tag != 'empty'}
+		<div class="controls">
+			<Button
+				text={$connection.tag == 'hostConnected' || $connection.tag == 'guestConnected'
+					? 'disconnected'
+					: 'cancel'}
+				icon="delete"
+				on:click={() => disconnect()}
+			/>
+		</div>
 	{/if}
 </div>
 
 <style>
 	.top {
-		width: min(calc(100vw - var(--padding) * 2), 800px);
-		height: min(calc(100vh - var(--padding) * 2), 700px);
+		width: min(calc(100vw - var(--padding) * 2), 600px);
+		height: min(calc(100vh - var(--padding) * 2), min-content);
 		padding: calc(var(--button-size) + var(--padding) * 2) 0 0 0;
 		box-sizing: border-box;
 		display: flex;
@@ -105,82 +157,46 @@
 			var(--padding-big);
 		align-items: flex-start;
 	}
-	.explainContentScroll {
-		overflow: auto;
+	.hostGuestButtons {
 		display: flex;
+		flex-direction: row;
+		padding: var(--padding);
+	}
+
+	.panels {
+		display: flex;
+		flex-direction: row;
+		width: 100%;
+		padding: 0 var(--padding);
+
+		box-sizing: border-box;
+		gap: var(--padding);
+	}
+
+	.panel {
+		width: 100%;
+		height: 100%;
+		display: flex;
+		gap: var(--padding);
 		flex-direction: column;
-		gap: var(--padding-big);
-		padding: 0 var(--padding-big);
 	}
 
 	.controls {
-		display: flex;
-		flex-direction: row;
-		gap: var(--padding);
-		justify-content: center;
+		padding: 0 var(--padding) var(--padding) var(--padding);
+		box-sizing: border-box;
+		width: 100%;
 	}
-	div.codeScroll {
-		padding: var(--padding);
-		border-radius: var(--border-radius);
-		height: 6rem;
-		overflow: auto;
-		background: var(--background-indent);
-		position: relative;
-	}
+
 	.above {
 		display: flex;
 		flex-direction: row;
-		justify-content: space-between;
 		align-items: center;
-	}
-	.codeScroll code {
-		font-size: 0.6rem;
-		/* break all words */
-		word-break: break-all;
+		justify-content: space-between;
+		padding-left: var(--padding);
 	}
 
-	code {
-		font-size: inherit;
-		white-space: pre-wrap;
-		background: var(--background-indent);
-		padding: var(--padding-small);
-		font-family: var(--font-family);
-		border-radius: var(--border-radius);
-	}
-
-	h1 {
-		padding: var(--padding-big) 0 var(--padding) 0;
-	}
 	h2 {
-		padding: var(--padding-big) 0 var(--padding) 0;
-	}
-	p {
-		margin: var(--padding) 0;
-		line-height: 2;
-	}
-
-	button {
-		width: 100%;
-		border: none;
-		background: none;
-		padding: var(--padding);
-		border-radius: var(--border-radius);
-		text-align: left;
-		transition: background var(--transition-speed);
-		color: var(--text);
-		text-align: center;
-	}
-	button:hover {
-		background-color: var(--background-indent);
-	}
-	button:active,
-	button.selected {
-		background-color: var(--background-active);
-	}
-
-	.browserSelector {
-		display: flex;
-		flex-direction: row;
-		gap: var(--padding);
+		font-size: 0.9rem;
+		color: var(--this-text);
 	}
 </style>

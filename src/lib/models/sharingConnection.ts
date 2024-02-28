@@ -224,6 +224,16 @@ export function giveGuestHostKey(remoteOffer: string) {
 	});
 }
 
+export function disconnect() {
+	connection.update(function (oldConnection) {
+		if (oldConnection.tag == 'empty') return oldConnection;
+		oldConnection.pc.close();
+		return {
+			tag: 'empty'
+		};
+	});
+}
+
 function errHandler(err: Error) {
 	console.log(err);
 }
