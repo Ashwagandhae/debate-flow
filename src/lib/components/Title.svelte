@@ -75,7 +75,6 @@
 		} else {
 			resolveAllPending($nodes);
 			$nodes = $nodes;
-			hasSentEdit = false;
 		}
 	}
 	onMount(focusChange);
@@ -100,6 +99,7 @@
 			updateWithoutResolve(nodes, flowId, value);
 			history.setPrevAfterFocus(flowId, flowId);
 			$nodes = $nodes;
+			hasSentEdit = false;
 		});
 	}
 

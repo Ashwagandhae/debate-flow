@@ -13,7 +13,9 @@ export class Channel<SendMessage, RecieveMessage> {
 	}
 	send(message: SendMessage) {
 		const payload = JSON.stringify(message);
+		// setTimeout(() => {
 		this.#channel.send(payload);
+		// }, 5000);
 	}
 	onOpen(fn: () => void) {
 		this.#channel.addEventListener('open', fn);

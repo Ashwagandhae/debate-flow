@@ -615,6 +615,7 @@ setAddHostChannelHandler(function (channel: Channel<HostMessage, GuestMessage>) 
 				break;
 			case 'action':
 				nodes.update((nodes) => {
+					resolveAllPending(nodes);
 					applyActionBundle(nodes, message.action.actionBundle);
 					return nodes;
 				});
@@ -634,6 +635,7 @@ setAddGuestChannelHandler(function (channel: Channel<GuestMessage, HostMessage>)
 				break;
 			case 'action':
 				nodes.update((nodes) => {
+					resolveAllPending(nodes);
 					prediction.confirmed.push(structuredClone(message.action.actionBundle));
 					const actionInverse = applyActionBundle(nodes, message.action.actionBundle);
 					prediction.predictedInverse.push(actionInverse);
@@ -643,25 +645,31 @@ setAddGuestChannelHandler(function (channel: Channel<GuestMessage, HostMessage>)
 			case 'actionRecieved':
 				prediction.confirmed.push(prediction.actionsAwaitingConfirmation[message.actionId]);
 				delete prediction.actionsAwaitingConfirmation[message.actionId];
-				if (Object.keys(prediction.actionsAwaitingConfirmation).length == 0) {
-					nodes.update((nodes) => {
-						// undo all predicted actions
-						console.log('predicted actions:', prediction.predictedInverse);
-						for (const actionBundle of prediction.predictedInverse.toReversed()) {
-							applyActionBundle(nodes, actionBundle);
-						}
-						// do all confirmed actions
-						console.log('confirmed actions:', prediction.confirmed);
-						for (const actionBundle of prediction.confirmed) {
-							applyActionBundle(nodes, actionBundle);
-						}
+				nodes.update((nodes) => {
+					// check if it's possible that all awaiting actions have been confirmed
+					if (Object.keys(prediction.actionsAwaitingConfirmation).length != 0) return nodes;
+					// if there are no actions awaiting confirmation, resolve all pending actions, which might create new actions awaiting confirmation
+					resolveAllPending(nodes);
+					// check all awaiting actions have been confirmed
+					if (Object.keys(prediction.actionsAwaitingConfirmation).length != 0) return nodes;
 
-						return nodes;
-					});
+					// undo all predicted actions
+					console.log('predicted actions:', prediction.predictedInverse);
+					for (const actionBundle of prediction.predictedInverse.toReversed()) {
+						applyActionBundle(nodes, actionBundle);
+					}
+					// do all confirmed actions
+					console.log('confirmed actions:', prediction.confirmed);
+					for (const actionBundle of prediction.confirmed) {
+						applyActionBundle(nodes, actionBundle);
+					}
+
 					// reset prediction
 					prediction.predictedInverse = [];
 					prediction.confirmed = [];
-				}
+
+					return nodes;
+				});
 				break;
 		}
 	});

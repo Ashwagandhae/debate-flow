@@ -18,7 +18,8 @@
 		type Flow2,
 		getParentFlowId,
 		addPendingAction,
-		updateWithoutResolve
+		updateWithoutResolve,
+		resolveAllPending
 	} from '$lib/models/node';
 	import { createKeyDownHandler, type KeyComboOptionsIndex } from '$lib/models/key';
 
@@ -98,8 +99,8 @@
 				textarea && textarea.focus();
 			}
 		} else {
+			resolveAllPending($nodes);
 			dispatchSelfFocus(index(), false);
-			hasSentEdit = false;
 		}
 	}
 	onMount(focusChange);
@@ -392,6 +393,7 @@
 			updateWithoutResolve(nodes, boxId, value);
 			history.setPrevAfterFocus(id, getParentFlowId(nodes, boxId).unwrap());
 			nodes = nodes;
+			hasSentEdit = false;
 		});
 	}
 </script>

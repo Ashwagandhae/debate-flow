@@ -27,25 +27,39 @@
 	let guestKey: string = '';
 </script>
 
-<div class="top palette-plain" class:isSheetSharing={$isSheetSharing}>
+<div class="top palette-plain">
 	{#if $connection.tag == 'empty'}
-		<div class="hostGuestButtons">
-			<Button
-				palette="accent"
-				icon="add"
-				text="host new room"
-				on:click={() => {
-					initHostConnection();
-				}}
-			/>
-			<Button
-				palette="accent-secondary"
-				icon="dots"
-				text="join room as guest"
-				on:click={() => {
-					initGuestConnection();
-				}}
-			/>
+		<div class="start">
+			<div class="explain">
+				<h2>Sharing explained</h2>
+				<p>
+					Flower allows sharing through <a href="https://en.wikipedia.org/wiki/WebRTC">WebRTC</a> so
+					I don't have to pay for servers.
+				</p>
+				<p>
+					To collaborate, a host creates a room and sends a key (some copy-and-pasted text) to a
+					guest, through email, discord, or anything else. The guest then sends another key back to
+					the host. Once both keys are exchanged, the host and guest connect.
+				</p>
+			</div>
+			<div class="hostGuestButtons">
+				<Button
+					palette="accent"
+					icon="add"
+					text="host new room"
+					on:click={() => {
+						initHostConnection();
+					}}
+				/>
+				<Button
+					palette="accent-secondary"
+					icon="dots"
+					text="join room as guest"
+					on:click={() => {
+						initGuestConnection();
+					}}
+				/>
+			</div>
 		</div>
 	{:else if $connection.tag == 'hostConnected' || $connection.tag == 'guestConnected'}
 		<p>Connected!</p>
@@ -130,7 +144,7 @@
 		<div class="controls">
 			<Button
 				text={$connection.tag == 'hostConnected' || $connection.tag == 'guestConnected'
-					? 'disconnected'
+					? 'disconnect'
 					: 'cancel'}
 				icon="delete"
 				on:click={() => disconnect()}
@@ -150,17 +164,16 @@
 		align-items: center;
 		gap: var(--padding);
 	}
-	.top.isSheetSharing {
-		width: min(calc(100vw - var(--padding) * 2), min-content);
-		height: min(calc(100vh - var(--padding) * 2), min-content);
-		padding: calc(var(--button-size) + var(--padding) * 2) var(--padding-big) var(--padding-big)
-			var(--padding-big);
-		align-items: flex-start;
-	}
+
 	.hostGuestButtons {
 		display: flex;
+		flex-direction: column;
+		gap: var(--padding);
+	}
+	.start {
+		display: flex;
 		flex-direction: row;
-		padding: var(--padding);
+		padding: 0 var(--padding-big) var(--padding) var(--padding-big);
 	}
 
 	.panels {
@@ -196,7 +209,9 @@
 	}
 
 	h2 {
-		font-size: 0.9rem;
 		color: var(--this-text);
+	}
+	p {
+		line-height: 1.5em;
 	}
 </style>
