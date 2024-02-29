@@ -91,7 +91,6 @@ class Settings {
 					this.setValue(key, jsonData[key]);
 				}
 			} catch (e) {
-				console.log(e);
 				localStorage.setItem('settings', JSON.stringify({}));
 				this.resetToAuto();
 			}

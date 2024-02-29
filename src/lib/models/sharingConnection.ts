@@ -121,7 +121,6 @@ export function initHostConnection() {
 	});
 	pc.createOffer()
 		.then((des) => {
-			console.log('createOffer ok ');
 			pc.setLocalDescription(des)
 				.then(() => {
 					setTimeout(function () {
@@ -137,7 +136,6 @@ export function initHostConnection() {
 							});
 						}
 					}, 2000);
-					console.log('setLocalDescription ok');
 				})
 				.catch(errHandler);
 		})
@@ -158,7 +156,6 @@ export function giveHostGuestKey(remoteOffer: string) {
 		oldConnection.pc
 			.setRemoteDescription(_remoteOffer)
 			.then(function () {
-				console.log('setRemoteDescription ok');
 				connection.update(function (oldConnection) {
 					if (oldConnection.tag != 'hostAwaitingGuestKey') return oldConnection;
 					return {
@@ -195,11 +192,9 @@ export function giveGuestHostKey(remoteOffer: string) {
 		oldConnection.pc
 			.setRemoteDescription(_remoteOffer)
 			.then(function () {
-				console.log('setRemoteDescription ok');
 				oldConnection.pc
 					.createAnswer()
 					.then(function (description) {
-						console.log('createAnswer 200 ok \n', description);
 						oldConnection.pc.setLocalDescription(description).then().catch(errHandler);
 					})
 					.catch(errHandler);

@@ -271,7 +271,6 @@ export function timer(_node: HTMLElement) {
 
 export function instructionIn(node: HTMLElement, { reverse }: { reverse: boolean }) {
 	const w = node.clientWidth;
-	console.log(w);
 	return {
 		duration: settings.data.transitionSpeed.value as number,
 		css: (t: number) => {

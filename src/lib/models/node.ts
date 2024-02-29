@@ -241,13 +241,10 @@ function applyAction<Value extends Box2 | Flow2>(
 }
 
 export function applyActionBundle(nodes: Nodes, actions: ActionBundle): ActionBundle {
-	console.log('applied', actions);
 	const inverseActionBundle: ActionBundle = [];
 	for (const action of actions) {
-		console.log('before action change', structuredClone(nodes.root.children));
 		const inverseAction = applyAction(nodes, action);
 		inverseActionBundle.push(inverseAction);
-		console.log('single action change', structuredClone(nodes.root.children));
 	}
 	return inverseActionBundle.toReversed();
 }
@@ -654,12 +651,10 @@ setAddGuestChannelHandler(function (channel: Channel<GuestMessage, HostMessage>)
 					if (Object.keys(prediction.actionsAwaitingConfirmation).length != 0) return nodes;
 
 					// undo all predicted actions
-					console.log('predicted actions:', prediction.predictedInverse);
 					for (const actionBundle of prediction.predictedInverse.toReversed()) {
 						applyActionBundle(nodes, actionBundle);
 					}
 					// do all confirmed actions
-					console.log('confirmed actions:', prediction.confirmed);
 					for (const actionBundle of prediction.confirmed) {
 						applyActionBundle(nodes, actionBundle);
 					}
