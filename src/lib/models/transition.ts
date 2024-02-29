@@ -268,3 +268,38 @@ export function timer(_node: HTMLElement) {
 		}
 	};
 }
+
+export function instructionIn(node: HTMLElement, { reverse }: { reverse: boolean }) {
+	const w = node.clientWidth;
+	console.log(w);
+	return {
+		duration: settings.data.transitionSpeed.value as number,
+		css: (t: number) => {
+			const eased = quadOut(t);
+
+			return `
+				position: absolute;
+				width: ${w}px;
+				transform-origin: 0% 0%;
+				transform: translateX(${(1 - eased) * w * (reverse ? 1 : -1)}px);
+      `;
+		}
+	};
+}
+
+export function instructionOut(node: HTMLElement, { reverse }: { reverse: boolean }) {
+	const w = node.clientWidth;
+	return {
+		duration: settings.data.transitionSpeed.value as number,
+		css: (t: number) => {
+			const eased = quadIn(t);
+
+			return `
+				position: absolute;
+				width: ${w}px;
+				transform-origin: 0% 0%;
+				transform: translateX(${(1 - eased) * w * (reverse ? -1 : 1)}px);
+      `;
+		}
+	};
+}

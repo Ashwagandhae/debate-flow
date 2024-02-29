@@ -1,7 +1,5 @@
 <script lang="ts">
 	import Button from './Button.svelte';
-	// import { restartSyncInterval, minimizeApp } from '$lib/models/sheetSharing';
-	import { isSheetSharing } from '$lib/models/store';
 	import {
 		initHostConnection,
 		initGuestConnection,
@@ -11,35 +9,71 @@
 		disconnect
 	} from '$lib/models/sharingConnection';
 	import ShareKey from './ShareKey.svelte';
-	import { localOffer } from '$lib/models/sharingConnectionOld';
+	import { instructionIn, instructionOut } from '$lib/models/transition';
 
 	function copyText(text: string) {
 		navigator.clipboard.writeText(text);
 	}
 
-	function sendMessage(message: string) {
-		if ($connection.tag != 'guestConnected' && $connection.tag != 'hostConnected') return;
-	}
-
-	let message: string = '';
-
 	let hostKey: string = '';
 	let guestKey: string = '';
+
+	const hostInstructions: string[] = [
+		'copy the host key',
+		"send the host key to the person you're sharing with (through email, discord, etc.)",
+		"wait until they've sent back a guest key",
+		'submit the guest key in the guest key box and connect!'
+	];
+	const guestInstructions: string[] = [
+		'wait until the host has sent you the host key (through email, discord, etc.)',
+		'submit the host key in the host key box',
+		'copy the guest key',
+		'send the guest key to the host',
+		'wait until you connect!'
+	];
+
+	function getCurrentInstructions() {
+		if ($connection.tag == 'hostCreatingKey' || $connection.tag == 'hostAwaitingGuestKey') {
+			return hostInstructions;
+		} else {
+			return guestInstructions;
+		}
+	}
+
+	let instructionsIndex = 0;
+
+	let instructionsIndexChange: -1 | 1 = 1;
+	let oldInstructionsIndex = instructionsIndex;
+	$: {
+		if (oldInstructionsIndex < instructionsIndex) {
+			instructionsIndexChange = 1;
+		} else if (oldInstructionsIndex > instructionsIndex) {
+			instructionsIndexChange = -1;
+		}
+		oldInstructionsIndex = instructionsIndex;
+	}
+	$: {
+		// move to next instruction after clicking submit
+		if (
+			$connection.tag == 'guestAwaitingChannel' &&
+			(instructionsIndex == 0 || instructionsIndex == 1)
+		) {
+			instructionsIndex = 2;
+		}
+	}
+	$: reverseInstructionsTransition = instructionsIndexChange == 1;
 </script>
 
 <div class="top palette-plain">
 	{#if $connection.tag == 'empty'}
 		<div class="start">
 			<div class="explain">
-				<h2>Sharing explained</h2>
 				<p>
 					Flower allows sharing through <a href="https://en.wikipedia.org/wiki/WebRTC">WebRTC</a> so
-					I don't have to pay for servers.
-				</p>
-				<p>
-					To collaborate, a host creates a room and sends a key (some copy-and-pasted text) to a
-					guest, through email, discord, or anything else. The guest then sends another key back to
-					the host. Once both keys are exchanged, the host and guest connect.
+					I don't have to pay for servers. You can either
+					<span class="usePalette palette-accent">host</span>
+					a room to share your current flow, or edit someone else's flow as a
+					<span class="usePalette palette-accent-secondary">guest</span>.
 				</p>
 			</div>
 			<div class="hostGuestButtons">
@@ -64,8 +98,35 @@
 	{:else if $connection.tag == 'hostConnected' || $connection.tag == 'guestConnected'}
 		<p>Connected!</p>
 	{:else}
+		<div class="instructions">
+			<Button
+				icon="arrowLeft"
+				disabled={instructionsIndex == 0}
+				on:click={() => {
+					instructionsIndex -= 1;
+				}}
+			/>
+			<div class="instructionsText">
+				{#key instructionsIndex}
+					<h2
+						in:instructionIn={{ reverse: reverseInstructionsTransition }}
+						out:instructionOut={{ reverse: reverseInstructionsTransition }}
+					>
+						Step {instructionsIndex + 1}:
+						{getCurrentInstructions()[instructionsIndex]}
+					</h2>
+				{/key}
+			</div>
+			<Button
+				icon="arrowRight"
+				disabled={instructionsIndex == getCurrentInstructions().length - 1}
+				on:click={() => {
+					instructionsIndex += 1;
+				}}
+			/>
+		</div>
 		<div class="panels">
-			<div class="panel palette-accent">
+			<div class="panel palette-accent fade">
 				<div class="above">
 					<h2>Host key</h2>
 					{#if $connection.tag == 'hostCreatingKey' || $connection.tag == 'hostAwaitingGuestKey'}
@@ -77,6 +138,9 @@
 							on:click={() => {
 								if ($connection.tag != 'hostAwaitingGuestKey') return;
 								copyText($connection.localOffer);
+								if (instructionsIndex == 0) {
+									instructionsIndex += 1;
+								}
 							}}
 						/>
 					{:else if $connection.tag == 'guestCreatingKey' || $connection.tag == 'guestAwaitingHostKey' || $connection.tag == 'guestAwaitingChannel'}
@@ -97,7 +161,16 @@
 						editable={false}
 					/>
 				{:else if $connection.tag == 'guestCreatingKey' || $connection.tag == 'guestAwaitingHostKey' || $connection.tag == 'guestAwaitingChannel'}
-					<ShareKey bind:content={hostKey} editable={$connection.tag == 'guestAwaitingHostKey'} />
+					<ShareKey
+						bind:content={hostKey}
+						editable={$connection.tag == 'guestAwaitingHostKey'}
+						on:keypress={(event) => {
+							if (event.key == 'Enter') {
+								giveGuestHostKey(hostKey);
+							}
+						}}
+						placeholder={'paste host key here'}
+					/>
 				{/if}
 			</div>
 			<div class="panel palette-accent-secondary">
@@ -120,12 +193,24 @@
 							on:click={() => {
 								if ($connection.tag != 'guestAwaitingChannel') return;
 								copyText($connection.localOffer);
+								if (instructionsIndex == 2) {
+									instructionsIndex += 1;
+								}
 							}}
 						/>
 					{/if}
 				</div>
 				{#if $connection.tag == 'hostCreatingKey' || $connection.tag == 'hostAwaitingGuestKey'}
-					<ShareKey bind:content={guestKey} editable={$connection.tag == 'hostAwaitingGuestKey'} />
+					<ShareKey
+						bind:content={guestKey}
+						editable={$connection.tag == 'hostAwaitingGuestKey'}
+						on:keypress={(event) => {
+							if (event.key == 'Enter') {
+								giveHostGuestKey(guestKey);
+							}
+						}}
+						placeholder={'paste guest key here'}
+					/>
 				{:else if $connection.tag == 'guestCreatingKey' || $connection.tag == 'guestAwaitingHostKey' || $connection.tag == 'guestAwaitingChannel'}
 					<ShareKey
 						message={$connection.tag == 'guestAwaitingHostKey'
@@ -147,7 +232,12 @@
 					? 'disconnect'
 					: 'cancel'}
 				icon="delete"
-				on:click={() => disconnect()}
+				on:click={() => {
+					instructionsIndex = 0;
+					hostKey = '';
+					guestKey = '';
+					disconnect();
+				}}
 			/>
 		</div>
 	{/if}
@@ -167,13 +257,42 @@
 
 	.hostGuestButtons {
 		display: flex;
-		flex-direction: column;
+		flex-direction: row;
 		gap: var(--padding);
+		width: 100%;
+		justify-content: center;
 	}
 	.start {
 		display: flex;
-		flex-direction: row;
+		flex-direction: column;
 		padding: 0 var(--padding-big) var(--padding) var(--padding-big);
+	}
+
+	.instructions {
+		display: flex;
+		flex-direction: row;
+		align-items: center;
+		justify-content: space-between;
+		width: 100%;
+		height: 3rem;
+		padding: 0 var(--padding);
+		box-sizing: border-box;
+		gap: var(--padding);
+	}
+	.instructions h2 {
+		display: block;
+		text-align: center;
+		width: 100%;
+		font-size: 0.9rem;
+	}
+
+	.instructionsText {
+		display: flex;
+		flex-direction: row;
+		align-items: center;
+		justify-content: center;
+		width: 100%;
+		position: relative;
 	}
 
 	.panels {
@@ -208,9 +327,15 @@
 		padding-left: var(--padding);
 	}
 
-	h2 {
+	span.usePalette {
 		color: var(--this-text);
 	}
+
+	.above h2 {
+		color: var(--this-text);
+		font-size: 0.9rem;
+	}
+
 	p {
 		line-height: 1.5em;
 	}

@@ -4,13 +4,17 @@
 	export let message: string | null = null;
 	export let content: string;
 	export let editable: boolean;
+	export let placeholder: string | null = null;
 </script>
 
 <code>
 	{#if message != null}
 		<div class="message">{message}</div>
-	{:else if editable}
-		<textarea bind:value={content} />
+	{:else if placeholder != null && content.length == 0 && editable}
+		<div class="message">{placeholder}</div>
+	{/if}
+	{#if editable}
+		<textarea bind:value={content} on:keypress />
 	{:else}
 		<div class="text">
 			{content}
@@ -34,7 +38,9 @@
 		justify-content: center;
 	}
 	.message {
+		position: absolute;
 		color: var(--this-text-weak);
+		pointer-events: none;
 	}
 	textarea,
 	.text {
