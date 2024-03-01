@@ -1,11 +1,7 @@
 import { writable } from 'svelte/store';
-import type { Writable } from 'svelte/store';
-import type { Flow } from './node';
 
 export const tutorialStep = writable(0);
 export const activeMouse = writable(true);
-export const flows: Writable<Flow[]> = writable([]);
-export const selected = writable(0);
 export const tooltipState = writable({
 	open: false,
 	claimed: false

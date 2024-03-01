@@ -1,7 +1,6 @@
 <script lang="ts">
 	import Text from './Text.svelte';
 	import Button from './Button.svelte';
-	import { flows, flowsChange, selected } from '$lib/models/store';
 	import {
 		type FlowId,
 		nodes,

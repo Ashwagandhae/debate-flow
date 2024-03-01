@@ -234,3 +234,34 @@ export function disconnect() {
 function errHandler(err: Error) {
 	console.log(err);
 }
+
+function createLinkWithParam(param: string, value: string): string {
+	const currentUrl = new URL(location.pathname, location.href);
+	currentUrl.searchParams.set(param, value);
+	return currentUrl.href;
+}
+
+function readLinkParam(param: string): string | null {
+	const url = new URL(location.href);
+	const value = url.searchParams.get(param);
+	if (value) {
+		return value;
+	}
+	return null;
+}
+
+export function createJoinLink(hostKey: string): string {
+	return createLinkWithParam('join', hostKey);
+}
+
+export function createConfirmLink(guestKey: string): string {
+	return createLinkWithParam('confirm', guestKey);
+}
+
+export function parseJoinLink(): string | null {
+	return readLinkParam('join');
+}
+
+export function parseConfirmLink(): string | null {
+	return readLinkParam('confirm');
+}

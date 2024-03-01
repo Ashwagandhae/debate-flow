@@ -3,7 +3,7 @@
 
 	export let message: string | null = null;
 	export let content: string;
-	export let editable: boolean;
+	export let editable: boolean = false;
 	export let placeholder: string | null = null;
 </script>
 

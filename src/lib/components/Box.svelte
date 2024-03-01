@@ -3,7 +3,7 @@
 	import Icon from './Icon.svelte';
 	import { getContext, onMount, tick } from 'svelte';
 	import { createEventDispatcher } from 'svelte';
-	import { activeMouse, flows, flowsChange, selected } from '$lib/models/store';
+	import { activeMouse } from '$lib/models/store';
 	import {
 		type BoxId,
 		type FlowId,
@@ -31,16 +31,6 @@
 
 	export let id: BoxId | FlowId;
 	export let parentIsEmpty = false;
-
-	// export let content: string = '';
-	// export let children: Box[];
-	// export let index: number;
-	// export let level: number;
-	// export let focus: boolean = false;
-	// export let parentPath: number[] = [];
-	// export let empty: boolean = false;
-	// export let crossed: boolean = false;
-	// export let placeholder: string = level == 1 && index == 0 ? 'type here' : '';
 
 	let node: Node<Box2 | Flow2>;
 	let box: Box2 | null;

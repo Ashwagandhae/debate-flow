@@ -1,4 +1,4 @@
-import { subscribeFlowsChange, isSheetSharing } from '$lib/models/store';
+import { subscribeFlowsChange } from '$lib/models/store';
 import type { Writable } from 'svelte/store';
 import { writable, derived } from 'svelte/store';
 import { getJson, loadNodes, downloadString } from './file';
@@ -33,34 +33,37 @@ nodes.subscribe((value) => {
 	$nodes = value;
 });
 
-let $isSheetSharing: boolean;
-isSheetSharing.subscribe((value) => {
-	$isSheetSharing = value;
-});
-
 let $savedNodesDatasMut: SavedNodesDatas;
 savedNodesDatasMut.subscribe((value) => {
 	$savedNodesDatasMut = value;
 	localStorage.setItem('savedNodes', JSON.stringify(value));
 });
 
-// let lastSaveTime: number = Date.now();
+let lastSaveTime: number = Date.now();
 export function maybeSaveNodes() {
-	// if ($nodes.length == 0) return;
-	// if ($isSheetSharing) return;
-	// // check if empty
-	// if (
-	// 	$nodes.length == 1 &&
-	// 	$nodes[0].content.length == 0 &&
-	// 	$nodes[0].children.length == 1 &&
-	// 	$nodes[0].children[0].content.length == 0
-	// ) {
-	// 	return;
-	// }
-	// const now = Date.now();
-	// if (now - lastSaveTime < 5000) return;
-	// lastSaveTime = now;
-	// saveNodes($nodes);
+	if ($nodes.root.children.length == 0) return;
+	// check if empty
+	outer: {
+		if (
+			$nodes.root.children.length == 1
+			// check if that flow has no title
+		) {
+			const flow = $nodes[$nodes.root.children[0]];
+			// make sure flow has no title
+			if (flow.value.content != '') break outer;
+			// if it has no children, return
+			if (flow.children.length == 0) return;
+
+			// if it has exactly one child, make sure that child has no content and children and return
+			if (flow.children.length > 1) break outer;
+			const firstNode = $nodes[flow.children[0]];
+			if (firstNode.value.content == '' && firstNode.children.length == 0) return;
+		}
+	}
+	const now = Date.now();
+	if (now - lastSaveTime < 5000) return;
+	lastSaveTime = now;
+	saveNodes($nodes);
 }
 
 subscribeFlowsChange(maybeSaveNodes);
@@ -95,40 +98,39 @@ export function deleteNodes(key: NodeKey) {
 	}
 }
 export function saveNodes(nodes: Nodes) {
-	// TODO: implement saveNodes function
-	// // update in case different tab
-	// savedNodesDatasMut.set(getSavedNodesDatas());
-	// const data: string = getJson(nodes);
-	// if (flowKey === null) {
-	// 	const newKey = newNodeKey();
-	// 	flowKey = newKey;
-	// }
-	// localStorage.setItem(flowKey, data);
-	// // update saved nodes
-	// $savedNodesDatasMut[flowKey] = {
-	// 	created: $savedNodesDatasMut[flowKey]?.created ?? new Date().toISOString(),
-	// 	modified: new Date().toISOString(),
-	// 	flowInfos: nodes.map((flow) => {
-	// 		return {
-	// 			content: flow.content,
-	// 			invert: flow.invert
-	// 		};
-	// 	})
-	// };
-	// // delete old nodes
-	// const keys = Object.keys($savedNodesDatasMut);
-	// if (keys.length > MAX_SAVED_FLOWS) {
-	// 	const oldestKey = keys.reduce((a, b) => {
-	// 		if ($savedNodesDatasMut[a].modified < $savedNodesDatasMut[b].modified) {
-	// 			return a;
-	// 		} else {
-	// 			return b;
-	// 		}
-	// 	});
-	// 	delete $savedNodesDatasMut[oldestKey];
-	// 	localStorage.removeItem(oldestKey);
-	// }
-	// savedNodesDatasMut.set($savedNodesDatasMut);
+	// update in case different tab
+	savedNodesDatasMut.set(getSavedNodesDatas());
+	const data: string = getJson(nodes);
+	if (flowKey === null) {
+		const newKey = newNodeKey();
+		flowKey = newKey;
+	}
+	localStorage.setItem(flowKey, data);
+	// update saved nodes
+	$savedNodesDatasMut[flowKey] = {
+		created: $savedNodesDatasMut[flowKey]?.created ?? new Date().toISOString(),
+		modified: new Date().toISOString(),
+		flowInfos: nodes.root.children.map((flowId) => {
+			return {
+				content: nodes[flowId].value.content,
+				invert: nodes[flowId].value.invert
+			};
+		})
+	};
+	// delete old nodes
+	const keys = Object.keys($savedNodesDatasMut);
+	if (keys.length > MAX_SAVED_FLOWS) {
+		const oldestKey = keys.reduce((a, b) => {
+			if ($savedNodesDatasMut[a].modified < $savedNodesDatasMut[b].modified) {
+				return a;
+			} else {
+				return b;
+			}
+		});
+		delete $savedNodesDatasMut[oldestKey];
+		localStorage.removeItem(oldestKey);
+	}
+	savedNodesDatasMut.set($savedNodesDatasMut);
 }
 
 export function downloadSavedNodes(key: NodeKey) {

@@ -8,16 +8,14 @@
 	import { dev } from '$app/environment';
 	import { inject } from '@vercel/analytics';
 	import { onDestroy, onMount } from 'svelte';
-	import { appMinimized } from '$lib/models/store';
-	import Button from '$lib/components/Button.svelte';
+	import {
+		giveGuestHostKey,
+		initGuestConnection,
+		parseConfirmLink,
+		parseJoinLink
+	} from '$lib/models/sharingConnection';
 	import Share from '$lib/components/Share.svelte';
-
-	// onMount(() => {
-	// 	maybeStartSharing(() => {
-	// 		openPopup(Share, 'Sharing');
-	// 	});
-	// });
-	// onDestroy(stopSharing);
+	import CloseWindow from '$lib/components/CloseWindow.svelte';
 
 	inject({ mode: dev ? 'development' : 'production' });
 
@@ -133,6 +131,28 @@
 			document.body.style.setProperty(`--${name}`, `${value}${unit}`);
 		})
 	);
+
+	let closeWindow = false;
+	onMount(function () {
+		const hostKey = parseJoinLink();
+		const guestKey = parseConfirmLink();
+
+		if (hostKey != null) {
+			initGuestConnection();
+			giveGuestHostKey(hostKey);
+			openPopup(Share, 'Share');
+		} else if (guestKey != null) {
+			const channel = new BroadcastChannel('guestKeySend');
+			channel.postMessage(guestKey);
+			channel.addEventListener('message', function (event) {
+				// close this tab, because the host has already connected
+				if (event.data == 'recieved') {
+					closeWindow = true;
+					window.close();
+				}
+			});
+		}
+	});
 </script>
 
 <svelte:head>
@@ -143,18 +163,11 @@
 	/>
 	<link rel="canonical" href="https://debate-flow.vercel.app/" />
 </svelte:head>
-<!-- {#if $appMinimized}
-	<div class="minimized">
-		<Button
-			icon="undo"
-			text="unminimize"
-			on:click={() => {
-				unminimizeApp();
-			}}
-		/>
-	</div>
-{:else} -->
-<slot />
+{#if closeWindow}
+	<CloseWindow reason="confirm link information has been sent to host tab" />
+{:else}
+	<slot />
+{/if}
 {#if $popups.length > 0}
 	<!-- we can ignore because pressing escape on window already has same functionality -->
 	<!-- svelte-ignore a11y-click-events-have-key-events -->
@@ -186,8 +199,6 @@
 	</div>
 {/if}
 
-<!-- {/if} -->
-
 <style>
 	.screen {
 		background-color: var(--color-screen);
@@ -207,15 +218,5 @@
 		display: flex;
 		align-items: center;
 		justify-content: center;
-	}
-	.minimized {
-		display: flex;
-		align-items: center;
-		justify-content: center;
-		position: fixed;
-		width: 100%;
-		height: 100%;
-		background-color: var(--color-screen);
-		z-index: 999;
 	}
 </style>

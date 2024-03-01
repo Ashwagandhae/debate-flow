@@ -7,24 +7,20 @@
 	import Error from '$lib/components/Error.svelte';
 	import Settings from '$lib/components/Settings.svelte';
 	import SortableList from '$lib/components/SortableList.svelte';
-	import Tutorial from '$lib/components/Tutorial.svelte';
 	import AddTab from '$lib/components/AddTab.svelte';
 	import Share from '$lib/components/Share.svelte';
 	import Tab from '$lib/components/Tab.svelte';
 	import { dev } from '$app/environment';
 	import { openPopup } from '$lib/models/popup';
-
-	import type { FlowId } from '$lib/models/node';
+	// TODO: add link sharing instead of paste sharing
+	// TODO add popup that informs users of changes
+	// TODO add link to legacy version
+	import type { FlowId, Nodes } from '$lib/models/node';
 	import { onDestroy, onMount } from 'svelte';
-	import {
-		activeMouse,
-		flowsChange,
-		subscribeFlowsChange,
-		isSheetSharing
-	} from '$lib/models/store';
+	import { activeMouse, flowsChange, subscribeFlowsChange } from '$lib/models/store';
 	import { createKeyDownHandler } from '$lib/models/key';
 	import Prelude from '$lib/components/Prelude.svelte';
-	// import { loadFlows } from '$lib/models/file';
+	import { loadNodes } from '$lib/models/file';
 	import Timers from '$lib/components/Timers.svelte';
 	import Help from '$lib/components/Help.svelte';
 	import { settings } from '$lib/models/settings';
@@ -96,7 +92,6 @@
 			$selectedFlowId = id;
 			focusFlow();
 		}
-		flowsChange();
 	}
 
 	async function deleteFlowAndFocus() {
@@ -107,7 +102,6 @@
 		let oldIndex = $nodes.root.children.indexOf($selectedFlowId);
 		deleteFlow($nodes, $selectedFlowId);
 		$nodes = $nodes;
-		flowsChange();
 
 		let nextIndex;
 		if (oldIndex == 0) {
@@ -130,7 +124,6 @@
 		}
 		moveFlow($nodes, $nodes.root.children[from], to);
 		$nodes = $nodes;
-		flowsChange();
 	}
 
 	function handleMouseMove(e: MouseEvent) {
@@ -243,22 +236,21 @@
 	}
 
 	async function handleUpload(data: string) {
-		// TODO: implement handleUpload
-		// let rawFlows: unknown[];
-		// let newFlows: FlowType[] | null = null;
-		// try {
-		// 	newFlows = loadFlows(data);
-		// } catch (e) {
-		// 	openPopup(Error, 'File Error', {
-		// 		props: { message: 'Invalid file' }
-		// 	});
-		// }
-		// if (newFlows != null) {
-		// 	if (!unsavedChanges || confirm('Are you sure you want to overwrite your current flows?')) {
-		// 		$flows = newFlows;
-		// 		$selected = 0;
-		// 	}
-		// }
+		let newNodes: Nodes | null = null;
+		try {
+			newNodes = loadNodes(data);
+		} catch (e) {
+			openPopup(Error, 'File Error', {
+				props: { message: 'Invalid file' }
+			});
+		}
+		if (newNodes != null) {
+			if (!unsavedChanges || confirm('Are you sure you want to overwrite your current flows?')) {
+				$nodes = newNodes;
+				$selectedFlowId = null;
+				flowsChange();
+			}
+		}
 	}
 
 	let switchSpeakers = false;

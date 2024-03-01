@@ -11,6 +11,7 @@ import {
 	type Connection,
 	setAddGuestChannelHandler
 } from './sharingConnection';
+import { flowsChange } from './store';
 
 export function newNodeId(): NodeId {
 	return crypto.randomUUID() as NodeId;
@@ -87,9 +88,13 @@ export type Nodes = { root: Node<Root> } & {
 	[key: SelfIdFor<Flow2>]: Node<Flow2>;
 } & { [key: SelfIdFor<Box2>]: Node<Box2> };
 
-export const nodes: Writable<Nodes> = writable({
-	root: { value: { tag: 'root' }, level: -1, parent: null, children: [] }
-});
+export function newNodes(): Nodes {
+	return {
+		root: { value: { tag: 'root' }, level: -1, parent: null, children: [] }
+	};
+}
+
+export const nodes: Writable<Nodes> = writable(newNodes());
 
 const nodesAndFocusId = derived([nodes, focusId], function ([nodes, focusId]): [
 	Nodes,
@@ -154,6 +159,11 @@ type IdentityAction = {
 	tag: 'identity';
 };
 
+// constrains index to be within length
+function constrainIndex(index: number, length: number): number {
+	return Math.max(0, Math.min(index, length));
+}
+
 // applies action infallibly and returns inverse of actually applied action (if action fails, returns identity action)
 function applyAction<Value extends Box2 | Flow2>(
 	nodes: Nodes,
@@ -164,14 +174,21 @@ function applyAction<Value extends Box2 | Flow2>(
 			const parentRes = getNode(nodes, action.parent);
 			if (!parentRes.ok) return { tag: 'identity' };
 			const parent = parentRes.val;
+
 			const child: Node<Value> = {
 				value: action.value,
 				level: parent.level + 1,
 				parent: action.parent,
 				children: []
 			};
+
 			(<Node<Value>>nodes[action.id]) = child;
-			(<SelfIdFor<Value>[]>parent.children).splice(action.index, 0, <SelfIdFor<Value>>action.id);
+
+			(<SelfIdFor<Value>[]>parent.children).splice(
+				constrainIndex(action.index, parent.children.length),
+				0,
+				action.id
+			);
 			return {
 				tag: 'delete',
 				id: action.id
@@ -186,7 +203,7 @@ function applyAction<Value extends Box2 | Flow2>(
 			if (!parentRes.ok) return { tag: 'identity' };
 			const parent = parentRes.val;
 
-			const index = (<SelfIdFor<Value>[]>parent.children).indexOf(<SelfIdFor<Value>>action.id);
+			const index = (<SelfIdFor<Value>[]>parent.children).indexOf(action.id);
 			if (index == -1) return { tag: 'identity' };
 			(<SelfIdFor<Value>[]>parent.children).splice(index, 1);
 			delete nodes[action.id];
@@ -221,7 +238,7 @@ function applyAction<Value extends Box2 | Flow2>(
 			if (!parentRes.ok) return { tag: 'identity' };
 			const parent = parentRes.val;
 
-			const index = (<SelfIdFor<Value>[]>parent.children).indexOf(<SelfIdFor<Value>>action.id);
+			const index = (<SelfIdFor<Value>[]>parent.children).indexOf(action.id);
 			if (index == -1) return { tag: 'identity' };
 
 			const inverseAction: MoveAction<Value> = {
@@ -231,7 +248,11 @@ function applyAction<Value extends Box2 | Flow2>(
 			};
 
 			(<SelfIdFor<Value>[]>parent.children).splice(index, 1);
-			(<SelfIdFor<Value>[]>parent.children).splice(action.newIndex, 0, <SelfIdFor<Value>>action.id);
+			(<SelfIdFor<Value>[]>parent.children).splice(
+				constrainIndex(action.newIndex, parent.children.length),
+				0,
+				action.id
+			);
 
 			return inverseAction;
 		}
@@ -240,7 +261,14 @@ function applyAction<Value extends Box2 | Flow2>(
 	}
 }
 
-export function applyActionBundle(nodes: Nodes, actions: ActionBundle): ActionBundle {
+export function applyActionBundle(
+	nodes: Nodes,
+	actions: ActionBundle,
+	change = true
+): ActionBundle {
+	if (change) {
+		flowsChange();
+	}
 	const inverseActionBundle: ActionBundle = [];
 	for (const action of actions) {
 		const inverseAction = applyAction(nodes, action);
@@ -509,8 +537,6 @@ export function addNewEmpty(nodes: Nodes, flowId: FlowId, level: number): BoxId 
 	doActionBundle(nodes, actions, flowId);
 	return finalBoxAction.id;
 }
-
-// let joe = getNode('joe' as FlowId);
 
 export type ActionId = string & { readonly ActionId: unique symbol };
 

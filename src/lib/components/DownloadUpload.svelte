@@ -1,7 +1,7 @@
 <script lang="ts">
-	import { flows } from '$lib/models/store';
+	import { nodes, resolveAllPending } from '$lib/models/node';
 	import Button from './Button.svelte';
-	// import { downloadJson, downloadXlsx } from '$lib/models/file';
+	import { downloadJson, downloadXlsx } from '$lib/models/file';
 
 	export let closePopup: () => void;
 
@@ -19,10 +19,11 @@
 			tooltip="saves JSON file on your computer"
 			tooltipLayout="top"
 			on:click={() => {
-				// downloadJson($flows);
+				resolveAllPending($nodes);
+				downloadJson($nodes);
 				closePopup();
 			}}
-			disabled={$flows.length == 0}
+			disabled={$nodes.root.children.length == 0}
 			disabledReason={'nothing to download'}
 			palette="accent"
 		/>
@@ -36,10 +37,11 @@
 			tooltip="saves XLSX file on your computer"
 			tooltipLayout="top"
 			on:click={() => {
-				// downloadXlsx($flows);
+				resolveAllPending($nodes);
+				downloadXlsx($nodes);
 				closePopup();
 			}}
-			disabled={$flows.length == 0}
+			disabled={$nodes.root.children.length == 0}
 			disabledReason={'nothing to download'}
 			palette="accent-secondary"
 		/>
