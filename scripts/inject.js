@@ -5,7 +5,7 @@
  */
 
 (async function () {
-	const URL = 'https://debate-flow.vercel.app/app';
+	const URL = 'https://debate-flow-git-sheet-sharing-ashwagandhae.vercel.app/app/';
 	// const URL = 'http://localhost:5173/app';
 	const VERSION = '0.0.1';
 	const GOTO_INPUT_SELECT =
