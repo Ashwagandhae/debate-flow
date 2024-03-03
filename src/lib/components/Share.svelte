@@ -79,8 +79,7 @@
 					Sheet; it loses access when you {#if browser == 'arc'}disable the boost{:else}reload the
 						page{/if}. It can't access the document's title, your email, other sheets tabs, etc. See
 					the unminified version
-					<a
-						href="https://raw.githubusercontent.com/Ashwagandhae/debate-flow/main/scripts/inject.js"
+					<a href="https://github.com/Ashwagandhae/debate-flow/blob/sheet-sharing/scripts/inject.js"
 						>here</a
 					>.
 				</p>
