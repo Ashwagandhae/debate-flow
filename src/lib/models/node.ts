@@ -6,10 +6,11 @@ import { debateStyles, debateStyleMap } from './debateStyle';
 import { settings } from './settings';
 import { focusId, lastFocusIds } from './focus';
 import {
-	connection,
+	connections,
 	setAddHostChannelHandler,
-	type Connection,
-	setAddGuestChannelHandler
+	type Connections,
+	setAddGuestChannelHandler,
+	type ConnectionId
 } from './sharingConnection';
 import { flowsChange } from './store';
 
@@ -546,24 +547,28 @@ export type SendAction = {
 };
 export type HostMessage =
 	| {
-			kind: 'sync';
+			tag: 'sync';
 			nodes: Nodes;
 	  }
 	| {
-			kind: 'action';
+			tag: 'action';
 			action: SendAction;
 	  }
 	| {
-			kind: 'actionRecieved';
+			tag: 'actionRecieved';
 			actionId: ActionId;
+	  }
+	| {
+			tag: 'name';
+			name: string;
 	  };
 
 export type GuestMessage =
 	| {
-			kind: 'requestSync';
+			tag: 'requestSync';
 	  }
 	| {
-			kind: 'action';
+			tag: 'action';
 			action: SendAction;
 	  };
 
@@ -571,9 +576,9 @@ function newActionId(): ActionId {
 	return crypto.randomUUID() as ActionId;
 }
 
-let $connection: Connection;
-connection.subscribe((connection) => {
-	$connection = connection;
+let $connections: Connections;
+connections.subscribe((connections) => {
+	$connections = connections;
 });
 
 const prediction: {
@@ -587,18 +592,22 @@ const prediction: {
 };
 
 export function sendActionBundle(actionBundle: ActionBundle, inverseActionBundle: ActionBundle) {
-	if ($connection.tag === 'hostConnected') {
-		$connection.channel.send({
-			kind: 'action',
+	if ($connections.tag === 'host') {
+		const id = newActionId();
+		const message: HostMessage = {
+			tag: 'action',
 			action: {
-				id: newActionId(),
+				id,
 				actionBundle
 			}
-		});
-	} else if ($connection.tag === 'guestConnected') {
+		};
+		for (const connectionId of Object.keys($connections.holder)) {
+			$connections.holder[<ConnectionId>connectionId].channel.send(message);
+		}
+	} else if ($connections.tag === 'guest' && $connections.connection.tag === 'guestConnected') {
 		const id = newActionId();
-		$connection.channel.send({
-			kind: 'action',
+		$connections.connection.channel.send({
+			tag: 'action',
 			action: {
 				id,
 				actionBundle
@@ -621,18 +630,18 @@ nodes.subscribe((nodes) => {
 	$nodes = nodes;
 });
 
-setAddHostChannelHandler(function (channel: Channel<HostMessage, GuestMessage>) {
+setAddHostChannelHandler(function (channel: Channel<HostMessage, GuestMessage>, id: ConnectionId) {
 	channel.onOpen(() => {
 		channel.send({
-			kind: 'sync',
+			tag: 'sync',
 			nodes: $nodes
 		});
 	});
 	channel.onMessage((message) => {
-		switch (message.kind) {
+		switch (message.tag) {
 			case 'requestSync':
 				channel.send({
-					kind: 'sync',
+					tag: 'sync',
 					nodes: $nodes
 				});
 				break;
@@ -642,8 +651,15 @@ setAddHostChannelHandler(function (channel: Channel<HostMessage, GuestMessage>) 
 					applyActionBundle(nodes, message.action.actionBundle);
 					return nodes;
 				});
+
+				if ($connections.tag != 'host') return;
+				for (const otherId of Object.keys($connections.holder)) {
+					if (id == otherId) continue;
+					$connections.holder[<ConnectionId>otherId].channel.send(message);
+				}
+
 				channel.send({
-					kind: 'actionRecieved',
+					tag: 'actionRecieved',
 					actionId: message.action.id
 				});
 				break;
@@ -652,9 +668,17 @@ setAddHostChannelHandler(function (channel: Channel<HostMessage, GuestMessage>) 
 });
 setAddGuestChannelHandler(function (channel: Channel<GuestMessage, HostMessage>) {
 	channel.onMessage((message) => {
-		switch (message.kind) {
+		switch (message.tag) {
 			case 'sync':
 				nodes.set(message.nodes);
+				break;
+			case 'name':
+				connections.update(function (connections) {
+					if (connections.tag == 'guest' && connections.connection.tag == 'guestConnected') {
+						connections.connection.name = message.name;
+					}
+					return connections;
+				});
 				break;
 			case 'action':
 				nodes.update((nodes) => {

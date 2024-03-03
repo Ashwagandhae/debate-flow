@@ -4,7 +4,7 @@
 	import BoxControl from '$lib/components/BoxControl.svelte';
 	import ButtonBar from '$lib/components/ButtonBar.svelte';
 	import DownloadUpload from '$lib/components/DownloadUpload.svelte';
-	import Error from '$lib/components/Error.svelte';
+	import Message from '$lib/components/Message.svelte';
 	import Settings from '$lib/components/Settings.svelte';
 	import SortableList from '$lib/components/SortableList.svelte';
 	import AddTab from '$lib/components/AddTab.svelte';
@@ -12,9 +12,6 @@
 	import Tab from '$lib/components/Tab.svelte';
 	import { dev } from '$app/environment';
 	import { openPopup } from '$lib/models/popup';
-	// TODO: add link sharing instead of paste sharing
-	// TODO add popup that informs users of changes
-	// TODO add link to legacy version
 	import type { FlowId, Nodes } from '$lib/models/node';
 	import { onDestroy, onMount } from 'svelte';
 	import { activeMouse, flowsChange, subscribeFlowsChange } from '$lib/models/store';
@@ -28,6 +25,7 @@
 	import { addNewFlow, deleteFlow, moveFlow, nodes } from '$lib/models/node';
 	import { history } from '$lib/models/history';
 	import { focusId, lastFocusIds, selectedFlowId } from '$lib/models/focus';
+	import { isChangelogVersionCurrent } from '$lib/models/version';
 
 	let changesSaved = true;
 	subscribeFlowsChange(() => {
@@ -171,7 +169,10 @@
 				handle: () => {
 					if ($selectedFlowId == null) return;
 					let index =
-						$nodes.root.children.indexOf($selectedFlowId) - (1 % $nodes.root.children.length);
+						($nodes.root.children.indexOf($selectedFlowId) - 1) % $nodes.root.children.length;
+					if (index < 0) {
+						index = $nodes.root.children.length - 1;
+					}
 					clickTab($nodes.root.children[index]);
 				},
 				require: () => $nodes.root.children.length > 0,
@@ -181,7 +182,7 @@
 				handle: () => {
 					if ($selectedFlowId == null) return;
 					let index =
-						$nodes.root.children.indexOf($selectedFlowId) + (1 % $nodes.root.children.length);
+						($nodes.root.children.indexOf($selectedFlowId) + 1) % $nodes.root.children.length;
 					clickTab($nodes.root.children[index]);
 				},
 				require: () => $nodes.root.children.length > 0,
@@ -213,8 +214,8 @@
 		} else if (file.type == 'application/json') {
 			reader.readAsText(file, 'UTF-8');
 		} else {
-			openPopup(Error, 'File Error', {
-				props: { message: 'Invalid file' }
+			openPopup(Message, 'File Message', {
+				props: { message: 'Invalid file', error: true }
 			});
 		}
 	}
@@ -240,8 +241,8 @@
 		try {
 			newNodes = loadNodes(data);
 		} catch (e) {
-			openPopup(Error, 'File Error', {
-				props: { message: 'Invalid file' }
+			openPopup(Message, 'File Message', {
+				props: { message: 'Invalid file', error: true }
 			});
 		}
 		if (newNodes != null) {
@@ -269,7 +270,7 @@
 />
 <main class:activeMouse class="palette-plain">
 	<input id="uploadId" type="file" hidden on:change={readUpload} />
-	<div class="grid" class:showPrelude={$nodes.root.children.length == 0}>
+	<div class="grid" class:showPrelude={!($nodes.root.children.length > 0)}>
 		<div class="sidebar">
 			<div class="header">
 				<ButtonBar
@@ -278,8 +279,9 @@
 						{
 							icon: 'link',
 							onclick: () => openPopup(Help, 'Help'),
-							tooltip: 'help',
-							tutorialHighlight: 1
+							tooltip: $isChangelogVersionCurrent ? 'help' : 'new updates',
+							tutorialHighlight: 1,
+							notification: !$isChangelogVersionCurrent
 						},
 						{
 							icon: 'gear',
@@ -318,25 +320,27 @@
 				<Timers />
 			</div>
 		</div>
-		{#if $nodes.root.children.length > 0 && $selectedFlowId != null && $nodes[$selectedFlowId]}
-			{#key $selectedFlowId}
-				{#key $nodes.root.children.length}
-					<div class="title">
-						<Title flowId={$selectedFlowId} deleteSelf={() => deleteFlowAndFocus()} />
-					</div>
-					<div class="box-control">
-						<BoxControl flowId={$selectedFlowId} />
-					</div>
-					<div class="flow">
-						<Flow on:focusFlow={focusFlow} flowId={$selectedFlowId} />
-					</div>
-					{#if showSideDoc}
-						<div class="side-doc">
-							<SideDoc />
+		{#if $nodes.root.children.length > 0}
+			{#if $selectedFlowId != null && $nodes[$selectedFlowId]}
+				{#key $selectedFlowId}
+					{#key $nodes.root.children.length}
+						<div class="title">
+							<Title flowId={$selectedFlowId} deleteSelf={() => deleteFlowAndFocus()} />
 						</div>
-					{/if}
+						<div class="box-control">
+							<BoxControl flowId={$selectedFlowId} />
+						</div>
+						<div class="flow">
+							<Flow on:focusFlow={focusFlow} flowId={$selectedFlowId} />
+						</div>
+						{#if showSideDoc}
+							<div class="side-doc">
+								<SideDoc />
+							</div>
+						{/if}
+					{/key}
 				{/key}
-			{/key}
+			{/if}
 		{:else}
 			<div class="prelude">
 				<Prelude />

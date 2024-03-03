@@ -1,10 +1,14 @@
 <script lang="ts">
 	import {
-		connection,
 		createConfirmLink,
 		createJoinLink,
-		giveHostGuestKey
+		giveHostGuestKey,
+		type Broadcast,
+		type Guest,
+		type Host,
+		type HostBroadcast
 	} from '$lib/models/sharingConnection';
+	import { onDestroy } from 'svelte';
 	import Button from './Button.svelte';
 	import CopyBox from './CopyBox.svelte';
 
@@ -12,20 +16,13 @@
 		navigator.clipboard.writeText(text);
 	}
 
-	let broadcastChannel = new BroadcastChannel('guestKeySend');
-	broadcastChannel.addEventListener('message', (event) => {
-		if ($connection.tag == 'hostAwaitingGuestKey') {
-			giveHostGuestKey(event.data);
-			broadcastChannel.postMessage('recieved');
-			broadcastChannel.close();
-		}
-	});
+	export let connection: Host | Guest;
 </script>
 
 <div class="top">
-	{#if $connection.tag == 'hostCreatingKey'}
+	{#if connection.tag == 'hostCreatingKey'}
 		<p>creating join link</p>
-	{:else if $connection.tag == 'hostAwaitingGuestKey'}
+	{:else if connection.tag == 'hostAwaitingGuestKey'}
 		<div class="above">
 			<p>
 				copy this <span class="usePalette palette-accent">join link</span> and send it to partners, through
@@ -36,42 +33,42 @@
 				text="copy"
 				palette="accent"
 				on:click={() => {
-					if ($connection.tag == 'hostAwaitingGuestKey') {
-						copyText(createJoinLink($connection.localOffer));
+					if (connection.tag == 'hostAwaitingGuestKey') {
+						copyText(createJoinLink(connection.key));
 					}
 				}}
 			/>
 		</div>
 		<div class="palette-accent">
-			<CopyBox content={createJoinLink($connection.localOffer)} />
+			<CopyBox content={createJoinLink(connection.key)} />
 		</div>
 		<p>
 			then, click on <span class="usePalette palette-accent-secondary">confirm links</span> sent to you
 			by your partners to connect.
 		</p>
-	{:else if $connection.tag == 'guestAwaitingHostKey'}
+	{:else if connection.tag == 'guestAwaitingHostKey'}
 		<p>reading URL for host key</p>
-	{:else if $connection.tag == 'guestCreatingKey'}
+	{:else if connection.tag == 'guestCreatingKey'}
 		<p>creating confirm link</p>
-	{:else if $connection.tag == 'guestAwaitingChannel'}
+	{:else if connection.tag == 'guestAwaitingChannel'}
 		<div class="above">
 			<p>
 				copy this <span class="usePalette palette-accent-secondary">confirm link</span> and send it to
-				the host.
+				the host, through discord, email, etc..
 			</p>
 			<Button
 				icon="copy"
 				text="copy"
 				palette="accent-secondary"
 				on:click={() => {
-					if ($connection.tag == 'guestAwaitingChannel') {
-						copyText(createConfirmLink($connection.localOffer));
+					if (connection.tag == 'guestAwaitingChannel') {
+						copyText(createConfirmLink(connection.key));
 					}
 				}}
 			/>
 		</div>
 		<div class="palette-accent-secondary">
-			<CopyBox content={createConfirmLink($connection.localOffer)} />
+			<CopyBox content={createConfirmLink(connection.key)} />
 		</div>
 		<p>
 			then, wait for the <span class="usePalette palette-accent">host</span> to click on the

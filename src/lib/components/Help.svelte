@@ -1,5 +1,8 @@
 <script lang="ts">
+	import { openPopup } from '$lib/models/popup';
+	import { isChangelogVersionCurrent } from '$lib/models/version';
 	import Button from './Button.svelte';
+	import Changelog from './Changelog.svelte';
 
 	export let closePopup: () => void;
 
@@ -21,6 +24,17 @@
 				text="code"
 				link="https://github.com/Ashwagandhae/debate-flow"
 				target="_blank"
+			/>
+			<Button
+				icon="delta"
+				text="changelog"
+				on:click={() => {
+					closePopup();
+					openPopup(Changelog, 'Changelog');
+				}}
+				target="_blank"
+				tooltip={$isChangelogVersionCurrent ? undefined : 'see new updates'}
+				notification={!$isChangelogVersionCurrent}
 			/>
 		</ul>
 	</section>

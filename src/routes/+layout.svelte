@@ -12,10 +12,12 @@
 		giveGuestHostKey,
 		initGuestConnection,
 		parseConfirmLink,
-		parseJoinLink
+		parseJoinLink,
+		type Broadcast
 	} from '$lib/models/sharingConnection';
 	import Share from '$lib/components/Share.svelte';
 	import CloseWindow from '$lib/components/CloseWindow.svelte';
+	import Message from '$lib/components/Message.svelte';
 
 	inject({ mode: dev ? 'development' : 'production' });
 
@@ -143,14 +145,35 @@
 			openPopup(Share, 'Share');
 		} else if (guestKey != null) {
 			const channel = new BroadcastChannel('guestKeySend');
-			channel.postMessage(guestKey);
+			const message: Broadcast = {
+				tag: 'guestKey',
+				key: guestKey
+			};
+			channel.postMessage(message);
+			let mismatch = false;
 			channel.addEventListener('message', function (event) {
+				const response: Broadcast = event.data;
 				// close this tab, because the host has already connected
-				if (event.data == 'recieved') {
+				if (response.tag == 'guestKeyRecieved') {
+					if (response.broadcastId != guestKey.broadcastId) return;
 					closeWindow = true;
 					window.close();
+				} else if (response.tag == 'guestKeyMismatch') {
+					if (response.broadcastId != guestKey.broadcastId) return;
+					mismatch = true;
 				}
 			});
+			setTimeout(function () {
+				if (mismatch && !closeWindow) {
+					openPopup(Message, 'Connection Message', {
+						props: { message: 'Connection id mismatch', error: true }
+					});
+				} else {
+					openPopup(Message, 'Connection Message', {
+						props: { message: 'No host awaiting guests', error: true }
+					});
+				}
+			}, 1000);
 		}
 	});
 </script>

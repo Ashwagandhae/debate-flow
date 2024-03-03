@@ -194,6 +194,12 @@
 <path d="M72 31L93 50L72 69" stroke="currentColor" stroke-width="10" stroke-linecap="round" stroke-linejoin="round"/>
 <path d="M42 78.9556L57.5291 21" stroke="currentColor" stroke-width="10" stroke-linecap="round" stroke-linejoin="round"/>
 			`
+		},
+		{
+			name: 'delta',
+			svg: `
+<path d="M54.3301 24.5L80.3109 69.5C82.2354 72.8333 79.8298 77 75.9808 77H24.0192C20.1702 77 17.7646 72.8333 19.6891 69.5L45.6699 24.5C47.5944 21.1667 52.4056 21.1667 54.3301 24.5Z" stroke="currentColor" stroke-width="10"/>
+			`
 		}
 	];
 	let displayIcon: { name: string; svg: string } | null;

@@ -1,10 +1,17 @@
 <script lang="ts">
 	import CopyBox from './CopyBox.svelte';
 	import { instructionIn, instructionOut } from '$lib/models/transition';
-	import { connection, giveGuestHostKey, giveHostGuestKey } from '$lib/models/sharingConnection';
+	import {
+		giveGuestHostKey,
+		giveHostGuestKey,
+		type Guest,
+		type Host
+	} from '$lib/models/sharingConnection';
 	import Button from './Button.svelte';
+
+	export let connection: Host | Guest;
 	function getCurrentInstructions() {
-		if ($connection.tag == 'hostCreatingKey' || $connection.tag == 'hostAwaitingGuestKey') {
+		if (connection.tag == 'hostCreatingKey' || connection.tag == 'hostAwaitingGuestKey') {
 			return hostInstructions;
 		} else {
 			return guestInstructions;
@@ -23,10 +30,11 @@
 		}
 		oldInstructionsIndex = instructionsIndex;
 	}
-	$: {
-		// move to next instruction after clicking submit
+	$: connection, onConnectionChange();
+
+	function onConnectionChange() {
 		if (
-			$connection.tag == 'guestAwaitingChannel' &&
+			connection.tag == 'guestAwaitingChannel' &&
 			(instructionsIndex == 0 || instructionsIndex == 1)
 		) {
 			instructionsIndex = 2;
@@ -88,44 +96,44 @@
 		<div class="panel palette-accent fade">
 			<div class="above">
 				<h2>Host key</h2>
-				{#if $connection.tag == 'hostCreatingKey' || $connection.tag == 'hostAwaitingGuestKey'}
+				{#if connection.tag == 'hostCreatingKey' || connection.tag == 'hostAwaitingGuestKey'}
 					<Button
 						icon="copy"
 						text="copy"
-						disabled={$connection.tag != 'hostAwaitingGuestKey'}
+						disabled={connection.tag != 'hostAwaitingGuestKey'}
 						tooltip="send this key to guest"
 						on:click={() => {
-							if ($connection.tag != 'hostAwaitingGuestKey') return;
-							copyText($connection.localOffer);
+							if (connection.tag != 'hostAwaitingGuestKey') return;
+							copyText(JSON.stringify(connection.key));
 							if (instructionsIndex == 0) {
 								instructionsIndex += 1;
 							}
 						}}
 					/>
-				{:else if $connection.tag == 'guestCreatingKey' || $connection.tag == 'guestAwaitingHostKey' || $connection.tag == 'guestAwaitingChannel'}
+				{:else if connection.tag == 'guestCreatingKey' || connection.tag == 'guestAwaitingHostKey' || connection.tag == 'guestAwaitingChannel'}
 					<Button
 						icon="link"
 						text="submit"
 						on:click={() => {
-							giveGuestHostKey(hostKey);
+							giveGuestHostKey(JSON.parse(hostKey));
 						}}
-						disabled={$connection.tag != 'guestAwaitingHostKey'}
+						disabled={connection.tag != 'guestAwaitingHostKey'}
 					/>
 				{/if}
 			</div>
-			{#if $connection.tag == 'hostCreatingKey' || $connection.tag == 'hostAwaitingGuestKey'}
+			{#if connection.tag == 'hostCreatingKey' || connection.tag == 'hostAwaitingGuestKey'}
 				<CopyBox
-					message={$connection.tag == 'hostCreatingKey' ? 'creating host key' : null}
-					content={$connection.tag == 'hostAwaitingGuestKey' ? $connection.localOffer : ''}
+					message={connection.tag == 'hostCreatingKey' ? 'creating host key' : null}
+					content={connection.tag == 'hostAwaitingGuestKey' ? JSON.stringify(connection.key) : ''}
 					editable={false}
 				/>
-			{:else if $connection.tag == 'guestCreatingKey' || $connection.tag == 'guestAwaitingHostKey' || $connection.tag == 'guestAwaitingChannel'}
+			{:else if connection.tag == 'guestCreatingKey' || connection.tag == 'guestAwaitingHostKey' || connection.tag == 'guestAwaitingChannel'}
 				<CopyBox
 					bind:content={hostKey}
-					editable={$connection.tag == 'guestAwaitingHostKey'}
+					editable={connection.tag == 'guestAwaitingHostKey'}
 					on:keypress={(event) => {
 						if (event.key == 'Enter') {
-							giveGuestHostKey(hostKey);
+							giveGuestHostKey(JSON.parse(hostKey));
 						}
 					}}
 					placeholder={'paste host key here'}
@@ -135,23 +143,23 @@
 		<div class="panel palette-accent-secondary">
 			<div class="above">
 				<h2>Guest key</h2>
-				{#if $connection.tag == 'hostCreatingKey' || $connection.tag == 'hostAwaitingGuestKey'}
+				{#if connection.tag == 'hostCreatingKey' || connection.tag == 'hostAwaitingGuestKey'}
 					<Button
 						icon="link"
 						text="submit"
 						on:click={() => {
-							giveHostGuestKey(guestKey);
+							giveHostGuestKey(JSON.parse(guestKey));
 						}}
 					/>
-				{:else if $connection.tag == 'guestCreatingKey' || $connection.tag == 'guestAwaitingHostKey' || $connection.tag == 'guestAwaitingChannel'}
+				{:else if connection.tag == 'guestCreatingKey' || connection.tag == 'guestAwaitingHostKey' || connection.tag == 'guestAwaitingChannel'}
 					<Button
 						icon="copy"
 						text="copy"
-						disabled={$connection.tag != 'guestAwaitingChannel'}
+						disabled={connection.tag != 'guestAwaitingChannel'}
 						tooltip="send this key to guest"
 						on:click={() => {
-							if ($connection.tag != 'guestAwaitingChannel') return;
-							copyText($connection.localOffer);
+							if (connection.tag != 'guestAwaitingChannel') return;
+							copyText(JSON.stringify(connection.key));
 							if (instructionsIndex == 2) {
 								instructionsIndex += 1;
 							}
@@ -159,25 +167,25 @@
 					/>
 				{/if}
 			</div>
-			{#if $connection.tag == 'hostCreatingKey' || $connection.tag == 'hostAwaitingGuestKey'}
+			{#if connection.tag == 'hostCreatingKey' || connection.tag == 'hostAwaitingGuestKey'}
 				<CopyBox
 					bind:content={guestKey}
-					editable={$connection.tag == 'hostAwaitingGuestKey'}
+					editable={connection.tag == 'hostAwaitingGuestKey'}
 					on:keypress={(event) => {
 						if (event.key == 'Enter') {
-							giveHostGuestKey(guestKey);
+							giveHostGuestKey(JSON.parse(guestKey));
 						}
 					}}
 					placeholder={'paste guest key here'}
 				/>
-			{:else if $connection.tag == 'guestCreatingKey' || $connection.tag == 'guestAwaitingHostKey' || $connection.tag == 'guestAwaitingChannel'}
+			{:else if connection.tag == 'guestCreatingKey' || connection.tag == 'guestAwaitingHostKey' || connection.tag == 'guestAwaitingChannel'}
 				<CopyBox
-					message={$connection.tag == 'guestAwaitingHostKey'
+					message={connection.tag == 'guestAwaitingHostKey'
 						? 'need host key to make guest key'
-						: $connection.tag == 'guestCreatingKey'
+						: connection.tag == 'guestCreatingKey'
 						? 'guest creating key'
 						: null}
-					content={$connection.tag == 'guestAwaitingChannel' ? $connection.localOffer : ''}
+					content={connection.tag == 'guestAwaitingChannel' ? JSON.stringify(connection.key) : ''}
 					editable={false}
 				/>
 			{/if}

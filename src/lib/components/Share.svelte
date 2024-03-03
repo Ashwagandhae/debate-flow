@@ -1,50 +1,88 @@
 <script lang="ts">
 	import Button from './Button.svelte';
 	import {
-		initHostConnection,
 		initGuestConnection,
-		connection,
-		disconnect
+		connections,
+		disconnect,
+		initHost,
+		addHostConnection,
+		cancelBuilding,
+		type Guest,
+		type Host,
+		type ConnectionId
 	} from '$lib/models/sharingConnection';
 	import ConnectManual from './ConnectManual.svelte';
 	import ConnectLink from './ConnectLink.svelte';
+	import ConnectStatus from './ConnectStatus.svelte';
+	import { openPopup } from '$lib/models/popup';
+	import Changelog from './Changelog.svelte';
+	import Help from './Help.svelte';
+
+	export let closePopup = () => {};
 
 	let connectionMode: 'manual' | 'link' = 'link';
+
+	let buildingConnection: Host | Guest | null = null;
+	$: {
+		if ($connections.tag == 'guest' && $connections.building) {
+			buildingConnection = $connections.connection;
+		} else if ($connections.tag == 'host' && $connections.building != null) {
+			buildingConnection = $connections.holder[$connections.building];
+		} else {
+			buildingConnection = null;
+		}
+	}
+
+	function asConnectionIds(ids: string[]): ConnectionId[] {
+		return ids as ConnectionId[];
+	}
 </script>
 
 <div class="top palette-plain">
-	{#if $connection.tag == 'empty'}
+	{#if $connections.tag == 'empty'}
 		<div class="start">
 			<div class="explain">
 				<p>
-					Flower allows sharing through <a href="https://en.wikipedia.org/wiki/WebRTC">WebRTC</a> so
-					I don't have to pay for servers. You can either
+					Flower allows sharing through <a href="https://en.wikipedia.org/wiki/WebRTC">WebRTC</a>.
+					You can either
 					<span class="usePalette palette-accent">host</span>
 					a room to share your current flow, or edit someone else's flow as a
 					<span class="usePalette palette-accent-secondary">guest</span>.
 				</p>
+				<p>
+					Please <Button
+						text="contact"
+						icon="link"
+						on:click={() => {
+							closePopup();
+							openPopup(Help, 'Help');
+						}}
+						target="_blank"
+						inline
+					/> me about any issues with sharing. Looking for sheet sharing? See the
+					<Button
+						icon="delta"
+						text="changelog"
+						on:click={() => {
+							closePopup();
+							openPopup(Changelog, 'Changelog');
+						}}
+						target="_blank"
+						inline
+					/> for more info.
+				</p>
 			</div>
 			<div class="hostGuestButtons">
-				<Button
-					icon="gear"
-					text={connectionMode == 'manual' ? 'using manual connect' : 'using link connect'}
-					tooltip={connectionMode == 'manual'
-						? 'switch to link connect'
-						: 'switch to manual connect'}
-					on:click={() => {
-						connectionMode = connectionMode == 'manual' ? 'link' : 'manual';
-					}}
-				/>
 				<div class="buttons">
+					<Button
+						palette="accent"
+						icon="add"
+						text="host new room"
+						on:click={() => {
+							initHost();
+						}}
+					/>
 					{#if connectionMode == 'manual'}
-						<Button
-							palette="accent"
-							icon="add"
-							text="host new room"
-							on:click={() => {
-								initHostConnection();
-							}}
-						/>
 						<Button
 							palette="accent-secondary"
 							icon="dots"
@@ -53,39 +91,78 @@
 								initGuestConnection();
 							}}
 						/>
-					{:else}
-						<Button
-							palette="accent"
-							icon="add"
-							text="host new room"
-							on:click={() => {
-								initHostConnection();
-							}}
-						/>
 					{/if}
 				</div>
 			</div>
 		</div>
-	{:else if $connection.tag == 'hostConnected' || $connection.tag == 'guestConnected'}
-		<p>Connected!</p>
-	{:else if connectionMode == 'manual'}
-		<ConnectManual />
-	{:else}
-		<ConnectLink />
+	{:else if $connections.tag == 'host' || $connections.tag == 'guest'}
+		{#if buildingConnection == null}
+			{#if $connections.tag == 'host'}
+				{#if Object.keys($connections.holder).length > 0}
+					<div class="statuses">
+						{#each asConnectionIds(Object.keys($connections.holder)) as id}
+							<ConnectStatus
+								connection={$connections.holder[id]}
+								close={() => {
+									if ($connections.tag != 'host') return;
+									$connections.holder[id].pc.close();
+									delete $connections.holder[id];
+									$connections = $connections;
+								}}
+							/>
+						{/each}
+					</div>
+				{/if}
+				<Button
+					palette="accent"
+					icon="add"
+					text="add guest"
+					on:click={() => {
+						addHostConnection();
+					}}
+				/>
+			{:else if $connections.tag == 'guest'}
+				<ConnectStatus connection={$connections.connection} />
+			{/if}
+		{:else if connectionMode == 'manual'}
+			<ConnectManual connection={buildingConnection} />
+		{:else}
+			<ConnectLink connection={buildingConnection} />
+		{/if}
 	{/if}
-	{#if $connection.tag != 'empty'}
-		<div class="controls">
-			<Button
-				text={$connection.tag == 'hostConnected' || $connection.tag == 'guestConnected'
-					? 'disconnect'
-					: 'cancel'}
-				icon="delete"
-				on:click={() => {
-					disconnect();
-				}}
-			/>
-		</div>
-	{/if}
+	<div class="controls">
+		<Button
+			icon="gear"
+			text={connectionMode == 'manual' ? 'using manual connect' : 'using link connect (default)'}
+			tooltip={connectionMode == 'manual' ? 'switch to link connect' : 'switch to manual connect'}
+			on:click={() => {
+				connectionMode = connectionMode == 'manual' ? 'link' : 'manual';
+			}}
+		/>
+		{#if $connections.tag != 'empty'}
+			{#if buildingConnection == null}
+				<Button
+					text={$connections.tag == 'host'
+						? Object.keys($connections.holder).length == 0
+							? 'cancel'
+							: 'disconnect all'
+						: 'disconnect'}
+					icon="delete"
+					on:click={() => {
+						disconnect();
+					}}
+				/>
+			{:else}
+				<Button
+					text={'cancel'}
+					icon="delete"
+					on:click={() => {
+						cancelBuilding();
+					}}
+				/>
+			{/if}
+		{/if}
+	</div>
 </div>
 
 <style>
@@ -100,18 +177,21 @@
 		gap: var(--padding);
 	}
 
+
+
 	.hostGuestButtons {
 		display: flex;
 		flex-direction: row;
 		gap: var(--padding);
 		width: 100%;
-		justify-content: space-between;
+		justify-content: center;
 	}
 	.start {
 		display: flex;
 		flex-direction: column;
-		padding: 0 var(--padding) var(--padding) var(--padding);
+		padding: 0 var(--padding) 0 var(--padding);
 	}
+
 
 	span.usePalette {
 		color: var(--this-text);
@@ -120,10 +200,15 @@
 	p {
 		line-height: 1.5em;
 	}
+
 	.controls {
 		padding: 0 var(--padding) var(--padding) var(--padding);
 		box-sizing: border-box;
 		width: 100%;
+		display: flex;
+		flex-direction: row;
+		gap: var(--padding);
+		justify-content: space-between;
 	}
 
 	.buttons {
@@ -131,5 +216,14 @@
 		flex-direction: row;
 		gap: var(--padding);
 		justify-content: center;
+	}
+
+	.statuses {
+		display: flex;
+		flex-direction: row;
+		gap: var(--padding);
+		flex-wrap: wrap;
+		justify-content: center;
+		padding: 0 var(--padding);
 	}
 </style>

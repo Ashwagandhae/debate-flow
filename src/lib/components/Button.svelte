@@ -17,6 +17,10 @@
 	export let tutorialHighlight: number | null = null;
 	export let onclick: () => void = () => {};
 
+	export let notification: boolean = false;
+
+	export let inline: boolean = false;
+
 	export let preventBlur: boolean = true;
 	function handleMouseDown(e: MouseEvent) {
 		if (preventBlur) {
@@ -35,12 +39,17 @@
 		<Link {link} {target}>
 			<button
 				class={`top ${palette ? 'palette-' + palette : ''}`}
+				class:notification
 				class:disabled
 				on:click
 				on:click={onclick}
 				on:mousedown={handleMouseDown}
+				class:inline
 				disabled={!!disabled}
 			>
+				{#if notification}
+					<div class="dot" />
+				{/if}
 				<Icon name={icon} size="var(--button-size)" />
 				{#if text != null}
 					<p>{text}</p>
@@ -72,13 +81,20 @@
 		color: var(--this-text);
 		transition: background var(--transition-speed);
 	}
+
+	.top.inline {
+		display: inline-flex;
+		padding: var(--padding-small);
+		vertical-align: middle;
+	}
 	.top.disabled {
 		color: var(--this-text-weak);
 	}
 	p {
 		display: block;
 	}
-	.top:hover {
+	.top:hover,
+	.top.notification {
 		background-color: var(--this-background-indent);
 	}
 	.top.disabled:hover,
@@ -88,5 +104,17 @@
 	.top:active {
 		transition: none;
 		background-color: var(--this-background-active);
+	}
+	.top.notification {
+		position: relative;
+	}
+	.dot {
+		width: 6px;
+		height: 6px;
+		border-radius: 50%;
+		background: var(--color-accent);
+		position: absolute;
+		right: calc(var(--border-radius) / 2);
+		top: calc(var(--border-radius) / 2);
 	}
 </style>
