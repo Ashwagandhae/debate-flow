@@ -16,20 +16,12 @@ export class Channel<SendMessage, RecieveMessage> {
 		this.queuedMessages = [];
 	}
 	send(message: SendMessage) {
-		console.log('creating json payload');
 		const payload = JSON.stringify(message);
-		console.log('done creating json payload');
 		if (this.#channel.readyState == 'open') {
-			console.log('channel readState is open, sending message');
 			const channel = this.#channel;
-			console.log('sending');
 			channel.send(payload);
-			console.log('done sending');
 		} else {
-			console.log('channel readState is not open, instead it is', this.#channel.readyState);
-			console.log('queuing message');
 			this.queuedMessages.push(message);
-			console.log('done queuing message');
 		}
 	}
 	onOpen(fn: () => void) {
@@ -278,7 +270,7 @@ export function addHostConnection(): ConnectionId {
 									return connections;
 								});
 							}
-						}, 2000);
+						}, 3000);
 					})
 					.catch(errHandler);
 			})

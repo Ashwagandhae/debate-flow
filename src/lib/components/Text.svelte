@@ -28,6 +28,7 @@
 	});
 	onDestroy(settings.subscribe(['fontSize'], autoHeight));
 	export const focus = () => {
+		// only focus if not already focused
 		textarea.focus();
 	};
 </script>

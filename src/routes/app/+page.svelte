@@ -85,6 +85,7 @@
 	}
 
 	function addFlow(type: 'primary' | 'secondary') {
+		blurFlow();
 		let id = addNewFlow($nodes, $nodes.root.children.length, type, switchSpeakers);
 		$nodes = $nodes;
 		if (id != null) {
@@ -332,22 +333,20 @@
 		{#if $nodes.root.children.length > 0}
 			{#if $selectedFlowId != null && $nodes[$selectedFlowId]}
 				{#key $selectedFlowId}
-					{#key $nodes.root.children.length}
-						<div class="title">
-							<Title flowId={$selectedFlowId} deleteSelf={() => deleteFlowAndFocus()} />
+					<div class="title">
+						<Title flowId={$selectedFlowId} deleteSelf={() => deleteFlowAndFocus()} />
+					</div>
+					<div class="box-control">
+						<BoxControl flowId={$selectedFlowId} />
+					</div>
+					<div class="flow">
+						<Flow on:focusFlow={focusFlow} flowId={$selectedFlowId} />
+					</div>
+					{#if showSideDoc}
+						<div class="side-doc">
+							<SideDoc />
 						</div>
-						<div class="box-control">
-							<BoxControl flowId={$selectedFlowId} />
-						</div>
-						<div class="flow">
-							<Flow on:focusFlow={focusFlow} flowId={$selectedFlowId} />
-						</div>
-						{#if showSideDoc}
-							<div class="side-doc">
-								<SideDoc />
-							</div>
-						{/if}
-					{/key}
+					{/if}
 				{/key}
 			{/if}
 		{:else}

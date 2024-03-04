@@ -1,11 +1,11 @@
 <script lang="ts">
-	import { nodes, type FlowId, type Flow2 } from '../models/node';
+	import { nodes, type FlowId, type Flow } from '../models/node';
 
 	export let flowId: FlowId;
 	export let selected: boolean;
 
 	$: node = $nodes[flowId];
-	let flow: Flow2;
+	let flow: Flow;
 	$: {
 		// hold onto flow when deleted
 		if (node != null) {

@@ -26,9 +26,23 @@ export function newFlowId(): FlowId {
 	return newNodeId() as FlowId;
 }
 
+export let pendingActions: PendingAction[] = [];
+export type PendingAction = (nodes: Nodes) => void;
+export function addPendingAction(action: PendingAction) {
+	pendingActions.push(action);
+}
+
+export function resolveAllPending(nodes: Nodes) {
+	const oldPendingActions = [...pendingActions];
+	for (const action of oldPendingActions) {
+		action(nodes);
+	}
+	pendingActions = [];
+}
+
 export type Root = { tag: 'root' };
 
-export type Box2 = {
+export type Box = {
 	tag: 'box';
 
 	content: string;
@@ -39,7 +53,7 @@ export type Box2 = {
 	crossed?: boolean;
 };
 
-export type Flow2 = {
+export type Flow = {
 	tag: 'flow';
 
 	content: string;
@@ -50,23 +64,23 @@ export type Flow2 = {
 
 type SelfIdFor<T> = T extends Root
 	? RootId
-	: T extends Flow2
+	: T extends Flow
 	? FlowId
-	: T extends Box2
+	: T extends Box
 	? BoxId
 	: never;
 type ParentIdFor<T> = T extends Root
 	? null
-	: T extends Flow2
+	: T extends Flow
 	? RootId
-	: T extends Box2
+	: T extends Box
 	? BoxId | FlowId
 	: never;
 type ChildIdFor<T> = T extends Root
 	? FlowId
-	: T extends Flow2
+	: T extends Flow
 	? BoxId
-	: T extends Box2
+	: T extends Box
 	? BoxId
 	: never;
 
@@ -86,8 +100,8 @@ export type FlowId = NodeId & { readonly FlowId: unique symbol };
 export type AnyId = RootId | BoxId | FlowId;
 
 export type Nodes = { root: Node<Root> } & {
-	[key: SelfIdFor<Flow2>]: Node<Flow2>;
-} & { [key: SelfIdFor<Box2>]: Node<Box2> };
+	[key: SelfIdFor<Flow>]: Node<Flow>;
+} & { [key: SelfIdFor<Box>]: Node<Box> };
 
 export function newNodes(): Nodes {
 	return {
@@ -96,6 +110,11 @@ export function newNodes(): Nodes {
 }
 
 export const nodes: Writable<Nodes> = writable(newNodes());
+
+let $nodes: Nodes;
+nodes.subscribe((nodes) => {
+	$nodes = nodes;
+});
 
 const nodesAndFocusId = derived([nodes, focusId], function ([nodes, focusId]): [
 	Nodes,
@@ -114,6 +133,14 @@ nodesAndFocusId.subscribe(([nodes, focusId]) => {
 	});
 });
 
+let $focusId: FlowId | BoxId | null = null;
+focusId.subscribe((newFocusId) => {
+	if ($focusId != newFocusId) {
+		resolveAllPending($nodes);
+		$focusId = newFocusId;
+	}
+});
+
 export type IdError = { tag: 'invalid'; id: AnyId };
 
 export function getNode<T extends AnyId>(nodes: Nodes, id: T): Result<Nodes[T], IdError> {
@@ -123,14 +150,14 @@ export function getNode<T extends AnyId>(nodes: Nodes, id: T): Result<Nodes[T], 
 	return Ok(nodes[id]);
 }
 
-export type Action<Value extends Flow2 | Box2> =
+export type Action<Value extends Flow | Box> =
 	| AddAction<Value>
 	| DeleteAction<Value>
 	| UpdateAction<Value>
 	| MoveAction<Value>
 	| IdentityAction;
 
-export type ActionBundle = Action<Flow2 | Box2>[];
+export type ActionBundle = Action<Flow | Box>[];
 
 type AddAction<Value> = {
 	tag: 'add';
@@ -166,10 +193,7 @@ function constrainIndex(index: number, length: number): number {
 }
 
 // applies action infallibly and returns inverse of actually applied action (if action fails, returns identity action)
-function applyAction<Value extends Box2 | Flow2>(
-	nodes: Nodes,
-	action: Action<Value>
-): Action<Value> {
+function applyAction<Value extends Box | Flow>(nodes: Nodes, action: Action<Value>): Action<Value> {
 	switch (action.tag) {
 		case 'add': {
 			const parentRes = getNode(nodes, action.parent);
@@ -278,7 +302,7 @@ export function applyActionBundle(
 	return inverseActionBundle.toReversed();
 }
 
-function toBundle(actions: Action<Flow2 | Box2> | ActionBundle): ActionBundle {
+function toBundle(actions: Action<Flow | Box> | ActionBundle): ActionBundle {
 	if (Array.isArray(actions)) {
 		return actions;
 	} else {
@@ -294,7 +318,7 @@ export function applyActionBundleAndSend(nodes: Nodes, actionBundle: ActionBundl
 
 function doActionBundle(
 	nodes: Nodes,
-	actions: Action<Flow2 | Box2> | ActionBundle,
+	actions: Action<Flow | Box> | ActionBundle,
 	owner: FlowId | RootId
 ) {
 	const inverseActionBundle = applyActionBundleAndSend(nodes, toBundle(structuredClone(actions)));
@@ -312,26 +336,15 @@ export function getParentFlowId(nodes: Nodes, id: BoxId | FlowId): Result<FlowId
 			return Ok(<FlowId>id);
 	}
 }
-export let pendingActions: PendingAction[] = [];
-export type PendingAction = (nodes: Nodes) => void;
-export function addPendingAction(action: PendingAction) {
-	pendingActions.push(action);
-}
-export function resolveAllPending(nodes: Nodes) {
-	const oldPendingActions = [...pendingActions];
-	for (const action of oldPendingActions) {
-		action(nodes);
-	}
-	pendingActions = [];
-}
+
 export function newBoxAction(
 	nodes: Nodes,
 	parent: FlowId | BoxId,
 	parentFlowId: FlowId,
 	index: number,
 	placeholder?: string
-): AddAction<Box2> {
-	const addAction: AddAction<Box2> = {
+): AddAction<Box> {
+	const addAction: AddAction<Box> = {
 		tag: 'add',
 		parent,
 		id: newBoxId(),
@@ -376,7 +389,7 @@ export function addNewFlow(
 		columns = style.columns;
 	}
 	const id = newFlowId();
-	const addAction: AddAction<Flow2> = {
+	const addAction: AddAction<Flow> = {
 		tag: 'add',
 		parent: 'root',
 		id,
@@ -388,7 +401,7 @@ export function addNewFlow(
 			columns
 		}
 	};
-	const actionBundle: Action<Flow2 | Box2>[] = [addAction];
+	const actionBundle: Action<Flow | Box>[] = [addAction];
 	if (starterBoxes != null) {
 		starterBoxes.forEach((placeholder, index) => {
 			actionBundle.push(newBoxAction(nodes, id, id, index, placeholder));
@@ -400,12 +413,12 @@ export function addNewFlow(
 	return id;
 }
 
-export function updateBox(nodes: Nodes, id: BoxId, value: Box2) {
+export function updateBox(nodes: Nodes, id: BoxId, value: Box) {
 	resolveAllPending(nodes);
 	updateWithoutResolve(nodes, id, value);
 }
 
-export function updateWithoutResolve<Value extends Flow2 | Box2>(
+export function updateWithoutResolve<Value extends Flow | Box>(
 	nodes: Nodes,
 	id: SelfIdFor<Value>,
 	value: Value
@@ -420,11 +433,11 @@ export function updateWithoutResolve<Value extends Flow2 | Box2>(
 	doActionBundle(nodes, updateAction, getParentFlowId(nodes, id).unwrap());
 }
 
-export function updateFlow(nodes: Nodes, id: FlowId, value: Flow2) {
+export function updateFlow(nodes: Nodes, id: FlowId, value: Flow) {
 	resolveAllPending(nodes);
 	const flow = getNode(nodes, id).unwrap();
 	if (flow == null) return;
-	const updateAction: UpdateAction<Flow2> = {
+	const updateAction: UpdateAction<Flow> = {
 		tag: 'update',
 		id: id,
 		newValue: value
@@ -472,7 +485,7 @@ export function deleteFlow(nodes: Nodes, id: FlowId) {
 
 export function moveFlow(nodes: Nodes, id: FlowId, newIndex: number) {
 	resolveAllPending(nodes);
-	const moveAction: MoveAction<Flow2> = {
+	const moveAction: MoveAction<Flow> = {
 		tag: 'move',
 		id: id,
 		newIndex: newIndex
@@ -519,7 +532,7 @@ export function addNewEmpty(nodes: Nodes, flowId: FlowId, level: number): BoxId 
 	let parentId: BoxId | FlowId = flowId;
 	for (let i = 0; i < level; i++) {
 		const newId = newBoxId();
-		const addAction: AddAction<Box2> = {
+		const addAction: AddAction<Box> = {
 			tag: 'add',
 			parent: parentId,
 			id: newId,
@@ -627,11 +640,6 @@ interface Channel<SendMessage, RecieveMessage> {
 	onMessage(fn: (event: RecieveMessage) => void): void;
 }
 
-let $nodes: Nodes;
-nodes.subscribe((nodes) => {
-	$nodes = nodes;
-});
-
 setAddHostChannelHandler(function (channel: Channel<HostMessage, GuestMessage>, id: ConnectionId) {
 	channel.onOpen(() => {
 		channel.send({
@@ -641,48 +649,40 @@ setAddHostChannelHandler(function (channel: Channel<HostMessage, GuestMessage>, 
 		});
 	});
 	channel.onMessage((message) => {
-		console.log('got message', message);
 		switch (message.tag) {
 			case 'requestSync':
-				console.log('got request sync');
-				console.log('sending sync');
 				channel.send({
 					tag: 'sync',
 					first: false,
 					nodes: $nodes
 				});
-				console.log('done sending sync');
 				break;
-			case 'action':
-				console.log('got action');
-				console.log('updating nodes');
+			case 'action': {
+				if ($connections.tag != 'host') return;
+
+				// unfocus before action, refocus after action
+				const oldFocusId = $focusId;
+				focusId.set(null);
+
 				nodes.update((nodes) => {
-					console.log('resolving all pending');
 					resolveAllPending(nodes);
 					applyActionBundle(nodes, message.action.actionBundle);
 					return nodes;
 				});
-				console.log('done updating nodes');
 
-				if ($connections.tag != 'host') return;
-				console.log('connections tag', $connections.tag);
-				console.log('looping through object ids');
+				focusId.set(oldFocusId);
+
 				for (const otherId of Object.keys($connections.holder)) {
-					console.log('other id', otherId);
-					console.log('id', id);
 					if (id == otherId) continue;
-					console.log('sending action');
 					$connections.holder[<ConnectionId>otherId].channel.send(message);
-					console.log('done sending action');
 				}
 
-				console.log('sending actionRecieved');
 				channel.send({
 					tag: 'actionRecieved',
 					actionId: message.action.id
 				});
-				console.log('done sending actionRecieved');
 				break;
+			}
 		}
 	});
 });
@@ -701,7 +701,10 @@ setAddGuestChannelHandler(function (channel: Channel<GuestMessage, HostMessage>)
 					return connections;
 				});
 				break;
-			case 'action':
+			case 'action': {
+				// unfocus before action, refocus after action
+				const oldFocusId = $focusId;
+				focusId.set(null);
 				nodes.update((nodes) => {
 					resolveAllPending(nodes);
 					prediction.confirmed.push(structuredClone(message.action.actionBundle));
@@ -709,10 +712,15 @@ setAddGuestChannelHandler(function (channel: Channel<GuestMessage, HostMessage>)
 					prediction.predictedInverse.push(actionInverse);
 					return nodes;
 				});
+				focusId.set(oldFocusId);
 				break;
-			case 'actionRecieved':
+			}
+			case 'actionRecieved': {
 				prediction.confirmed.push(prediction.actionsAwaitingConfirmation[message.actionId]);
 				delete prediction.actionsAwaitingConfirmation[message.actionId];
+				// unfocus before action, refocus after action
+				const oldFocusId = $focusId;
+				focusId.set(null);
 				nodes.update((nodes) => {
 					// check if it's possible that all awaiting actions have been confirmed
 					if (Object.keys(prediction.actionsAwaitingConfirmation).length != 0) return nodes;
@@ -736,7 +744,9 @@ setAddGuestChannelHandler(function (channel: Channel<GuestMessage, HostMessage>)
 
 					return nodes;
 				});
+				focusId.set(oldFocusId);
 				break;
+			}
 		}
 	});
 });

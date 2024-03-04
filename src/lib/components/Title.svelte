@@ -5,27 +5,20 @@
 		type FlowId,
 		nodes,
 		type Node,
-		type Flow2,
-		updateFlow,
+		type Flow,
 		addPendingAction,
-		checkIdBox,
 		getNode,
-		updateWithoutResolve,
-		resolveAllPending
+		updateWithoutResolve
 	} from '../models/node';
-	import { onMount } from 'svelte';
+	import { onMount, tick } from 'svelte';
 	import { createKeyDownHandler } from '$lib/models/key';
 	import { focusId } from '$lib/models/focus';
 	import { history } from '$lib/models/history';
 
-	// export let content: string;
-	// export let children: Box[];
-	// export let focus: boolean;
-	// export let invert: boolean;
 	export let flowId: FlowId;
 	export let deleteSelf: () => void = () => {};
 
-	let node: Node<Flow2>;
+	let node: Node<Flow>;
 	$: {
 		// hold onto node when it's deleted
 		if ($nodes[flowId] != null) {
@@ -40,7 +33,8 @@
 			$focusId = null;
 		}
 	}
-	function handleFocus() {
+	async function handleFocus() {
+		await tick();
 		if ($focusId != flowId) {
 			$focusId = flowId;
 		}
@@ -71,9 +65,6 @@
 	function focusChange() {
 		if ($focusId == flowId) {
 			textarea && textarea.focus();
-		} else {
-			resolveAllPending($nodes);
-			$nodes = $nodes;
 		}
 	}
 	onMount(focusChange);
@@ -97,7 +88,7 @@
 			history.setNextBeforeFocus(flowId, flowId);
 			updateWithoutResolve(nodes, flowId, value);
 			history.setPrevAfterFocus(flowId, flowId);
-			$nodes = $nodes;
+			nodes = nodes;
 			hasSentEdit = false;
 		});
 	}

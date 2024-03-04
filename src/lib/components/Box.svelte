@@ -9,31 +9,28 @@
 		type FlowId,
 		nodes,
 		updateBox,
-		type Box2,
+		type Box,
 		addNewBox,
 		deleteBox,
 		getAdjacentBox,
 		checkIdBox,
 		type Node,
-		type Flow2,
+		type Flow,
 		getParentFlowId,
 		addPendingAction,
-		updateWithoutResolve,
-		resolveAllPending
+		updateWithoutResolve
 	} from '$lib/models/node';
 	import { createKeyDownHandler, type KeyComboOptionsIndex } from '$lib/models/key';
 
 	import { boxIn, boxOut, boxButtonIn, brIn, brOut } from '../models/transition';
 	import { history } from '$lib/models/history';
-	import { focusId, selectedFlowId } from '$lib/models/focus';
-
-	const dispatch = createEventDispatcher();
+	import { focusId } from '$lib/models/focus';
 
 	export let id: BoxId | FlowId;
 	export let parentIsEmpty = false;
 
-	let node: Node<Box2 | Flow2>;
-	let box: Box2 | null;
+	let node: Node<Box | Flow>;
+	let box: Box | null;
 	$: $nodes, updateNodeData();
 	function updateNodeData() {
 		// hold onto box and index value when it's deleted
@@ -82,16 +79,18 @@
 		}
 	}
 	let hasSentEdit: boolean = false;
+
+	let lastFocus = $focusId;
 	function focusChange() {
 		if ($focusId == id) {
 			dispatchSelfFocus(index(), true);
 			if (node.level >= 1) {
 				textarea && textarea.focus();
 			}
-		} else {
-			resolveAllPending($nodes);
+		} else if (lastFocus == id) {
 			dispatchSelfFocus(index(), false);
 		}
+		lastFocus = $focusId;
 	}
 	onMount(focusChange);
 	$: $focusId, focusChange();
@@ -217,7 +216,7 @@
 	let handleKeydown = createKeyDownHandler(keyComboOptionsIndex);
 
 	async function crossSelf() {
-		let value = <Box2>structuredClone(box);
+		let value = <Box>structuredClone(box);
 		value.crossed = !value.crossed;
 		updateBox($nodes, <BoxId>id, value);
 		node = node;
