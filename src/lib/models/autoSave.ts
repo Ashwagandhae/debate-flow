@@ -36,7 +36,7 @@ nodes.subscribe((value) => {
 let $savedNodesDatasMut: SavedNodesDatas;
 savedNodesDatasMut.subscribe((value) => {
 	$savedNodesDatasMut = value;
-	localStorage.setItem('savedNodes', JSON.stringify(value));
+	localStorage.setItem('savedFlows', JSON.stringify(value));
 });
 
 let lastSaveTime: number = Date.now();
@@ -74,9 +74,9 @@ export function unsetFlowKey() {
 subscribeFlowsChange(maybeSaveNodes);
 
 export function getSavedNodesDatas(): SavedNodesDatas {
-	const raw = localStorage.getItem('savedNodes');
+	const raw = localStorage.getItem('savedFlows');
 	if (raw === null) {
-		localStorage.setItem('savedNodes', JSON.stringify({}));
+		localStorage.setItem('savedFlows', JSON.stringify({}));
 		return {};
 	}
 	return JSON.parse(raw);
