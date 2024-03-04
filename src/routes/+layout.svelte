@@ -164,16 +164,18 @@
 				}
 			});
 			setTimeout(function () {
-				if (mismatch && !closeWindow) {
-					openPopup(Message, 'Connection Message', {
-						message: 'Connection id mismatch',
-						error: true
-					});
-				} else {
-					openPopup(Message, 'Connection Message', {
-						message: 'No host awaiting guests',
-						error: true
-					});
+				if (!closeWindow) {
+					if (mismatch) {
+						openPopup(Message, 'Connection Message', {
+							message: 'Connection id mismatch',
+							error: true
+						});
+					} else {
+						openPopup(Message, 'Connection Message', {
+							message: 'No host awaiting guests',
+							error: true
+						});
+					}
 				}
 			}, 1000);
 		}

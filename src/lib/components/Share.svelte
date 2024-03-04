@@ -59,7 +59,7 @@
 					<span class="usePalette palette-accent-secondary">guest</span>.
 				</p>
 				<p>
-					Please <Button
+					If you encounter any issues, first update your browser, then <Button
 						text="contact me"
 						icon="link"
 						on:click={() => {

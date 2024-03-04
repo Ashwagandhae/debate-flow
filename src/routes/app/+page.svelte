@@ -267,6 +267,8 @@
 	// TODO
 	// don't allow editing before sync
 	// een for guest sync
+	// make popups that open from other popups close and show their parent popups
+	// better closing handling
 </script>
 
 <svelte:body
