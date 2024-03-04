@@ -189,6 +189,9 @@ type MoveAction<Value> = {
 type IdentityAction = {
 	tag: 'identity';
 };
+// TODO prevent loading new file while sharing
+// TODO Uncaught Error: Worksheet name AC: Calzones have bread cannot include any of the following characters: * ? : \ / [ ]
+// TODO deal with addTab button height bug when replacing flow
 
 // constrains index to be within length
 function constrainIndex(index: number, length: number): number {

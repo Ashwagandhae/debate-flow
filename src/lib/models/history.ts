@@ -4,7 +4,6 @@ import {
 	type FlowId,
 	type Nodes,
 	type RootId,
-	resolveAllPending,
 	applyActionBundleAndSend
 } from '$lib/models/node';
 import { focusId } from './focus';

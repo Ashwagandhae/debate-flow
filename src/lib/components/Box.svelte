@@ -168,7 +168,9 @@
 					history.setPrevAfterFocus($focusId);
 				},
 				// only delete if content is empty and there are no children
-				require: () => (box?.content.length ?? 0) == 0 && node.children.length == 0
+				// TODO: make this work with resolveAllPending
+				// TODO add cool sharing animations
+				require: () => (content?.length ?? 1) == 0 && node.children.length == 0
 			},
 
 			ArrowUp: {
