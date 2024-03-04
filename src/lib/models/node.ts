@@ -136,7 +136,10 @@ nodesAndFocusId.subscribe(([nodes, focusId]) => {
 let $focusId: FlowId | BoxId | null = null;
 focusId.subscribe((newFocusId) => {
 	if ($focusId != newFocusId) {
-		resolveAllPending($nodes);
+		nodes.update((nodes) => {
+			resolveAllPending(nodes);
+			return nodes;
+		});
 		$focusId = newFocusId;
 	}
 });

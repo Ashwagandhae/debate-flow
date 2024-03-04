@@ -110,8 +110,6 @@ export class History {
 	undo(nodes: Nodes) {
 		if (!this.canUndo()) return;
 
-		resolveAllPending(nodes);
-
 		const action = this.actions[this.index];
 		action.actionBundle = applyActionBundleAndSend(nodes, action.actionBundle);
 		focusId.set(action.beforeFocus);
@@ -119,8 +117,6 @@ export class History {
 	}
 	redo(nodes: Nodes) {
 		if (!this.canRedo()) return;
-
-		resolveAllPending(nodes);
 
 		this.index += 1;
 		const action = this.actions[this.index];

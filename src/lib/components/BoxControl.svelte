@@ -8,7 +8,8 @@
 		checkIdBox,
 		addNewBox,
 		updateBox,
-		type BoxId
+		type BoxId,
+		resolveAllPending
 	} from '../models/node';
 	import type Button from './Button.svelte';
 	import { settings } from '$lib/models/settings';
@@ -103,6 +104,8 @@
 					icon: 'undo',
 					disabled: !history.canUndo(flowId),
 					onclick: () => {
+						resolveAllPending($nodes);
+						$nodes = $nodes;
 						history.undo($nodes, flowId);
 						$nodes = $nodes;
 					},
@@ -114,6 +117,8 @@
 					disabled: !history.canRedo(flowId),
 					icon: 'redo',
 					onclick: () => {
+						resolveAllPending($nodes);
+						$nodes = $nodes;
 						history.redo($nodes, flowId);
 						$nodes = $nodes;
 					},

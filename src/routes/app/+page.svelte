@@ -22,7 +22,7 @@
 	import Help from '$lib/components/Help.svelte';
 	import { settings } from '$lib/models/settings';
 	import SideDoc from '$lib/components/SideDoc.svelte';
-	import { addNewFlow, deleteFlow, moveFlow, nodes } from '$lib/models/node';
+	import { addNewFlow, deleteFlow, moveFlow, nodes, resolveAllPending } from '$lib/models/node';
 	import { history } from '$lib/models/history';
 	import { focusId, lastFocusIds, selectedFlowId } from '$lib/models/focus';
 	import { isChangelogVersionCurrent } from '$lib/models/version';
@@ -140,6 +140,8 @@
 			z: {
 				handle: () => {
 					if ($selectedFlowId == null) return;
+					resolveAllPending($nodes);
+					$nodes = $nodes;
 					history.redo($nodes, $selectedFlowId);
 					$nodes = $nodes;
 				},
@@ -155,10 +157,13 @@
 			z: {
 				handle: () => {
 					if ($selectedFlowId == null) return;
+					resolveAllPending($nodes);
+					$nodes = $nodes;
 					history.undo($nodes, $selectedFlowId);
 					$nodes = $nodes;
 				},
 				require: () => {
+					// TODO fix this for first action (it doesn't work if first action is pending)
 					if ($selectedFlowId == null) return false;
 					return history.canUndo($selectedFlowId);
 				},

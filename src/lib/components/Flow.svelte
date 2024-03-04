@@ -1,13 +1,19 @@
 <script lang="ts">
 	import Box from './Box.svelte';
 	import Header from './Header.svelte';
-	import { nodes, type FlowId, addNewEmpty } from '../models/node';
+	import { nodes, type FlowId, addNewEmpty, type Node, type Flow } from '../models/node';
 
 	import { setContext } from 'svelte';
 	import { focusId } from '$lib/models/focus';
 
 	export let flowId: FlowId;
-	$: node = $nodes[flowId];
+	let node: Node<Flow>;
+	$: {
+		// hold onto node when it's deleted
+		if ($nodes[flowId] != null) {
+			node = $nodes[flowId];
+		}
+	}
 	$: flow = node.value;
 
 	setContext('invert', () => {
