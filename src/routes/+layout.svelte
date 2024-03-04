@@ -1,8 +1,7 @@
 <script lang="ts">
 	import './global.css';
 	import { settings } from '$lib/models/settings';
-	import { popups, closePopup, openPopup } from '$lib/models/popup';
-	import Popup from '$lib/components/Popup.svelte';
+	import { popups, closePopup, openPopup, type Popup as PopupType } from '$lib/models/popup';
 	import { screenTransition } from '$lib/models/transition';
 
 	import { dev } from '$app/environment';
@@ -18,6 +17,7 @@
 	import Share from '$lib/components/Share.svelte';
 	import CloseWindow from '$lib/components/CloseWindow.svelte';
 	import Message from '$lib/components/Message.svelte';
+	import Popup from '$lib/components/Popup.svelte';
 
 	inject({ mode: dev ? 'development' : 'production' });
 
@@ -166,16 +166,30 @@
 			setTimeout(function () {
 				if (mismatch && !closeWindow) {
 					openPopup(Message, 'Connection Message', {
-						props: { message: 'Connection id mismatch', error: true }
+						message: 'Connection id mismatch',
+						error: true
 					});
 				} else {
 					openPopup(Message, 'Connection Message', {
-						props: { message: 'No host awaiting guests', error: true }
+						message: 'No host awaiting guests',
+						error: true
 					});
 				}
 			}, 1000);
 		}
 	});
+
+	let popupsUpdate: boolean = true;
+
+	let oldFirstPopup: PopupType | undefined = undefined;
+	function onPopupsChange() {
+		// only update if first element changed
+		if (oldFirstPopup == $popups[0]) return;
+		oldFirstPopup = $popups[0];
+		popupsUpdate = !popupsUpdate;
+	}
+
+	$: $popups, onPopupsChange();
 </script>
 
 <svelte:head>
@@ -210,7 +224,7 @@
 				closePopup(0);
 			}}
 		>
-			{#key $popups}
+			{#key popupsUpdate}
 				<Popup
 					component={$popups[0].component}
 					closeSelf={() => closePopup(0)}

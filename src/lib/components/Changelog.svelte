@@ -24,12 +24,12 @@
 						closePopup();
 						openPopup(Share, 'Share');
 					}}
-					target="_blank"
 					inline
 				/> to try it out! You can now collaborate on your flows live with as many people as you want.
 			</li>
 			<li>
-				removed sheet sharing. You can still access sheet sharing in the <a href=""
+				removed sheet sharing. You can still access sheet sharing in the <a
+					href="https://debate-flow-git-sheet-sharing-ashwagandhae.vercel.app/app/"
 					>legacy version</a
 				>, but please <Button
 					text="let me know"
@@ -38,10 +38,8 @@
 						closePopup();
 						openPopup(Help, 'Help');
 					}}
-					target="_blank"
 					inline
 				/> why WebRTC sharing doesn't working for you.
-				<!-- TODO: add legacy link -->
 			</li>
 		</ul>
 	</section>

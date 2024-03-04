@@ -548,6 +548,7 @@ export type SendAction = {
 export type HostMessage =
 	| {
 			tag: 'sync';
+			first: boolean;
 			nodes: Nodes;
 	  }
 	| {
@@ -634,6 +635,7 @@ setAddHostChannelHandler(function (channel: Channel<HostMessage, GuestMessage>, 
 	channel.onOpen(() => {
 		channel.send({
 			tag: 'sync',
+			first: true,
 			nodes: $nodes
 		});
 	});
@@ -642,6 +644,7 @@ setAddHostChannelHandler(function (channel: Channel<HostMessage, GuestMessage>, 
 			case 'requestSync':
 				channel.send({
 					tag: 'sync',
+					first: false,
 					nodes: $nodes
 				});
 				break;
@@ -671,6 +674,7 @@ setAddGuestChannelHandler(function (channel: Channel<GuestMessage, HostMessage>)
 		switch (message.tag) {
 			case 'sync':
 				nodes.set(message.nodes);
+				flowsChange();
 				break;
 			case 'name':
 				connections.update(function (connections) {

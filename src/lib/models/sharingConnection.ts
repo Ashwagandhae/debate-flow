@@ -354,9 +354,7 @@ export function addConnectionStateUpdater(
 		connections.update((connections) => connections);
 		if (pc.connectionState == 'failed' || pc.connectionState == 'closed') {
 			openPopup(Message, 'Disconnected', {
-				props: {
-					message: `Disconnected from ${name}`
-				}
+				message: `Disconnected from ${name}`
 			});
 			cleanup(pc.connectionState);
 		}
@@ -460,7 +458,7 @@ export function cancelBuilding() {
 		if (connections.tag == 'host' && connections.building != null) {
 			connections.holder[connections.building].pc.close();
 			delete connections.holder[connections.building];
-		} else if (connections.tag == 'guest' && !connections.building) {
+		} else if (connections.tag == 'guest' && connections.building) {
 			connections.connection.pc.close();
 			connections = {
 				tag: 'empty'

@@ -30,6 +30,7 @@ type OldAction = {
 	lastFocus: number[] | null;
 	nextFocus: number[] | null;
 	pending: boolean;
+	// eslint-disable-next-line @typescript-eslint/no-explicit-any
 	other: any;
 };
 

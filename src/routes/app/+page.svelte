@@ -26,6 +26,7 @@
 	import { history } from '$lib/models/history';
 	import { focusId, lastFocusIds, selectedFlowId } from '$lib/models/focus';
 	import { isChangelogVersionCurrent } from '$lib/models/version';
+	import { unsetFlowKey } from '$lib/models/autoSave';
 
 	let changesSaved = true;
 	subscribeFlowsChange(() => {
@@ -215,7 +216,8 @@
 			reader.readAsText(file, 'UTF-8');
 		} else {
 			openPopup(Message, 'File Message', {
-				props: { message: 'Invalid file', error: true }
+				message: 'Invalid file',
+				error: true
 			});
 		}
 	}
@@ -242,11 +244,13 @@
 			newNodes = loadNodes(data);
 		} catch (e) {
 			openPopup(Message, 'File Message', {
-				props: { message: 'Invalid file', error: true }
+				message: 'Invalid file',
+				error: true
 			});
 		}
 		if (newNodes != null) {
 			if (!unsavedChanges || confirm('Are you sure you want to overwrite your current flows?')) {
+				unsetFlowKey();
 				$nodes = newNodes;
 				$selectedFlowId = null;
 				flowsChange();
@@ -260,6 +264,9 @@
 	// add command K
 	// add command f
 	// add capitalization
+	// TODO
+	// don't allow editing before sync
+	// een for guest sync
 </script>
 
 <svelte:body

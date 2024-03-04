@@ -9,7 +9,10 @@
 		cancelBuilding,
 		type Guest,
 		type Host,
-		type ConnectionId
+		type ConnectionId,
+		parseJoinLink,
+		type HostKey,
+		giveGuestHostKey
 	} from '$lib/models/sharingConnection';
 	import ConnectManual from './ConnectManual.svelte';
 	import ConnectLink from './ConnectLink.svelte';
@@ -17,6 +20,7 @@
 	import { openPopup } from '$lib/models/popup';
 	import Changelog from './Changelog.svelte';
 	import Help from './Help.svelte';
+	import { onMount } from 'svelte';
 
 	export let closePopup = () => {};
 
@@ -36,6 +40,11 @@
 	function asConnectionIds(ids: string[]): ConnectionId[] {
 		return ids as ConnectionId[];
 	}
+
+	let joinLinkHostKey: null | HostKey = null;
+	onMount(function () {
+		joinLinkHostKey = parseJoinLink();
+	});
 </script>
 
 <div class="top palette-plain">
@@ -51,7 +60,7 @@
 				</p>
 				<p>
 					Please <Button
-						text="contact"
+						text="contact me"
 						icon="link"
 						on:click={() => {
 							closePopup();
@@ -59,7 +68,7 @@
 						}}
 						target="_blank"
 						inline
-					/> me about any issues with sharing. Looking for sheet sharing? See the
+					/> about any issues with sharing. Looking for sheet sharing? See the
 					<Button
 						icon="delta"
 						text="changelog"
@@ -85,10 +94,21 @@
 					{#if connectionMode == 'manual'}
 						<Button
 							palette="accent-secondary"
-							icon="dots"
-							text="join room as guest"
+							icon="redo"
+							text="join room"
 							on:click={() => {
 								initGuestConnection();
+							}}
+						/>
+					{:else if connectionMode == 'link' && joinLinkHostKey != null}
+						<Button
+							palette="accent-secondary"
+							icon="link"
+							text="join room from join link"
+							on:click={() => {
+								if (joinLinkHostKey == null) return;
+								initGuestConnection();
+								giveGuestHostKey(joinLinkHostKey);
 							}}
 						/>
 					{/if}
@@ -123,6 +143,17 @@
 				/>
 			{:else if $connections.tag == 'guest'}
 				<ConnectStatus connection={$connections.connection} />
+				<Button
+					palette="accent-secondary"
+					icon="download"
+					text="sync"
+					tooltip="use if flows get out of sync"
+					on:click={() => {
+						if ($connections.tag != 'guest') return;
+						if ($connections.connection.tag != 'guestConnected') return;
+						$connections.connection.channel.send({ tag: 'requestSync' });
+					}}
+				/>
 			{/if}
 		{:else if connectionMode == 'manual'}
 			<ConnectManual connection={buildingConnection} />
@@ -177,8 +208,6 @@
 		gap: var(--padding);
 	}
 
-
-
 	.hostGuestButtons {
 		display: flex;
 		flex-direction: row;
@@ -191,7 +220,6 @@
 		flex-direction: column;
 		padding: 0 var(--padding) 0 var(--padding);
 	}
-
 
 	span.usePalette {
 		color: var(--this-text);

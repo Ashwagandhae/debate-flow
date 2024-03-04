@@ -1,13 +1,14 @@
-import type { SvelteComponent } from 'svelte';
+import type { ComponentProps, ComponentType, SvelteComponent } from 'svelte';
 import { writable, type Writable } from 'svelte/store';
 
-export const popups: Writable<
-	{
-		component: typeof SvelteComponent;
-		title: string;
-		props: any;
-	}[]
-> = writable([]);
+export type PopupGen<Component extends SvelteComponent> = {
+	component: ComponentType<Component>;
+	title: string;
+	props: ComponentProps<Component>;
+};
+
+export type Popup = PopupGen<SvelteComponent>;
+export const popups: Writable<Popup[]> = writable([]);
 
 export function closePopup(index: number) {
 	popups.update((popups) => {
@@ -15,6 +16,10 @@ export function closePopup(index: number) {
 		return popups;
 	});
 }
-export function openPopup(component: any, title: string, { props = {} } = {}) {
+export function openPopup<P extends object>(
+	component: ComponentType<SvelteComponent<P>>,
+	title: string,
+	props?: P
+) {
 	popups.update((popups) => [...popups, { component, props, title }]);
 }

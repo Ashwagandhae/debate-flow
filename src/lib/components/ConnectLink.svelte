@@ -44,7 +44,7 @@
 		</div>
 		<p>
 			then, click on <span class="usePalette palette-accent-secondary">confirm links</span> sent to you
-			by your partners to connect.
+			by your partners to connect (make sure to open it in the same browser as this tab).
 		</p>
 	{:else if connection.tag == 'guestAwaitingHostKey'}
 		<p>reading URL for host key</p>

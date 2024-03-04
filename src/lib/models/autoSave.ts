@@ -66,6 +66,11 @@ export function maybeSaveNodes() {
 	saveNodes($nodes);
 }
 
+// used to indicate that a new flow was created, it's should be put in different save
+export function unsetFlowKey() {
+	flowKey = null;
+}
+
 subscribeFlowsChange(maybeSaveNodes);
 
 export function getSavedNodesDatas(): SavedNodesDatas {
