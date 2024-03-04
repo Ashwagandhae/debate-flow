@@ -59,7 +59,7 @@
 					<span class="usePalette palette-accent-secondary">guest</span>.
 				</p>
 				<p>
-					If you encounter any issues, first update your browser, then <Button
+					If you encounter any issues with sharing, first update your browser, then <Button
 						text="contact me"
 						icon="link"
 						on:click={() => {
@@ -68,7 +68,7 @@
 						}}
 						target="_blank"
 						inline
-					/> about any issues with sharing. Looking for sheet sharing? See the
+					/>. Looking for sheet sharing? See the
 					<Button
 						icon="delta"
 						text="changelog"

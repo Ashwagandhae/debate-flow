@@ -641,31 +641,47 @@ setAddHostChannelHandler(function (channel: Channel<HostMessage, GuestMessage>, 
 		});
 	});
 	channel.onMessage((message) => {
+		console.log('got message', message);
 		switch (message.tag) {
 			case 'requestSync':
+				console.log('got request sync');
+				console.log('sending sync');
 				channel.send({
 					tag: 'sync',
 					first: false,
 					nodes: $nodes
 				});
+				console.log('done sending sync');
 				break;
 			case 'action':
+				console.log('got action');
+				console.log('updating nodes');
 				nodes.update((nodes) => {
+					console.log('resolving all pending');
 					resolveAllPending(nodes);
 					applyActionBundle(nodes, message.action.actionBundle);
 					return nodes;
 				});
+				console.log('done updating nodes');
 
 				if ($connections.tag != 'host') return;
+				console.log('connections tag', $connections.tag);
+				console.log('looping through object ids');
 				for (const otherId of Object.keys($connections.holder)) {
+					console.log('other id', otherId);
+					console.log('id', id);
 					if (id == otherId) continue;
+					console.log('sending action');
 					$connections.holder[<ConnectionId>otherId].channel.send(message);
+					console.log('done sending action');
 				}
 
+				console.log('sending actionRecieved');
 				channel.send({
 					tag: 'actionRecieved',
 					actionId: message.action.id
 				});
+				console.log('done sending actionRecieved');
 				break;
 		}
 	});
