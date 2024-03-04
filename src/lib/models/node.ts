@@ -312,16 +312,17 @@ export function getParentFlowId(nodes: Nodes, id: BoxId | FlowId): Result<FlowId
 			return Ok(<FlowId>id);
 	}
 }
-export const pendingActions: PendingAction[] = [];
+export let pendingActions: PendingAction[] = [];
 export type PendingAction = (nodes: Nodes) => void;
 export function addPendingAction(action: PendingAction) {
 	pendingActions.push(action);
 }
 export function resolveAllPending(nodes: Nodes) {
-	while (pendingActions.length > 0) {
-		const action = pendingActions.pop();
-		if (action != null) action(nodes);
+	const oldPendingActions = [...pendingActions];
+	for (const action of oldPendingActions) {
+		action(nodes);
 	}
+	pendingActions = [];
 }
 export function newBoxAction(
 	nodes: Nodes,
