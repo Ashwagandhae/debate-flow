@@ -1,19 +1,13 @@
 <script lang="ts">
 	import Text from './Text.svelte';
 	import Button from './Button.svelte';
-	import {
-		type FlowId,
-		nodes,
-		type Node,
-		type Flow,
-		addPendingAction,
-		getNode,
-		updateWithoutResolve
-	} from '../models/node';
+	import type { FlowId, Node, Flow } from '../models/node';
 	import { onMount, tick } from 'svelte';
 	import { createKeyDownHandler } from '$lib/models/key';
 	import { focusId } from '$lib/models/focus';
 	import { history } from '$lib/models/history';
+	import { nodes, pendingAction } from '$lib/models/store';
+	import { newUpdateAction } from '$lib/models/nodeDecorateAction';
 
 	export let flowId: FlowId;
 	export let deleteSelf: () => void = () => {};
@@ -21,8 +15,9 @@
 	let node: Node<Flow>;
 	$: {
 		// hold onto node when it's deleted
-		if ($nodes[flowId] != null) {
-			node = $nodes[flowId];
+		let newNode = $nodes[flowId];
+		if (newNode != null) {
+			node = newNode;
 		}
 	}
 	$: flow = node.value;
@@ -41,7 +36,10 @@
 	}
 
 	function focusFirstChild() {
-		let childId = $nodes[flowId].children.find((childId) => !$nodes[childId].value.empty);
+		let childId = node.children.find((childId) => {
+			const child = $nodes[childId];
+			return child && !child.value.empty;
+		});
 		if (childId) {
 			$focusId = childId;
 		}
@@ -61,7 +59,6 @@
 		}
 	});
 
-	let hasSentEdit: boolean = false;
 	function focusChange() {
 		if ($focusId == flowId) {
 			textarea && textarea.focus();
@@ -77,20 +74,20 @@
 			content = flow.content;
 		}
 	}
+
+	let editAlreadyPending: boolean = false;
 	function handleBeforeInput() {
-		if (hasSentEdit) return;
-		hasSentEdit = true;
-		addPendingAction(function (nodes) {
-			if (flow == null) return;
-			let value = { ...flow, content };
-			let flowIdRes = getNode(nodes, flowId);
-			if (!flowIdRes.ok) return;
-			history.setNextBeforeFocus(flowId, flowId);
-			updateWithoutResolve(nodes, flowId, value);
-			history.setPrevAfterFocus(flowId, flowId);
-			nodes = nodes;
-			hasSentEdit = false;
-		});
+		if (editAlreadyPending) return;
+		editAlreadyPending = true;
+		$pendingAction = {
+			beforeFocusId: flowId,
+			afterFocusId: flowId,
+			ownerId: flowId,
+			action: function () {
+				editAlreadyPending = false;
+				return newUpdateAction(flowId, { ...flow, content });
+			}
+		};
 	}
 
 	let palette: string = 'plain';

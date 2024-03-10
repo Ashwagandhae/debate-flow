@@ -1,18 +1,19 @@
-import {
-	type ActionBundle,
-	type BoxId,
-	type FlowId,
-	type Nodes,
-	type RootId,
-	applyActionBundleAndSend
-} from '$lib/models/node';
+import type { BoxId, FlowId, Nodes, RootId } from '$lib/models/node';
 import { focusId } from './focus';
+import { applyActionBundleAndSend, type ActionBundle } from './nodeAction';
+import { resolvePendingAction, type PendingAction } from './nodePendingAction';
+import { nodes } from './store';
 
 let lastNonNullFocusId: FlowId | BoxId;
 focusId.subscribe((value) => {
 	if (value != null) {
 		lastNonNullFocusId = value;
 	}
+});
+
+let $nodes: Nodes;
+nodes.subscribe((nodes) => {
+	$nodes = nodes;
 });
 
 type HistoryAction = {
@@ -41,19 +42,25 @@ export class HistoryHolder {
 		this.histories[owner].add(actionBundle);
 		this.lastAddedOwner = owner;
 	}
-	undo(nodes: Nodes, owner: FlowId | RootId) {
-		if (!Object.prototype.hasOwnProperty.call(this.histories, owner)) return;
-		this.histories[owner].undo(nodes);
+	undo(owner: FlowId | RootId, pendingAction: PendingAction | null) {
+		if (!this.canUndo(owner, pendingAction)) return;
+		resolvePendingAction($nodes);
+		this.histories[owner].undo();
 	}
-	redo(nodes: Nodes, owner: FlowId | RootId) {
-		if (!Object.prototype.hasOwnProperty.call(this.histories, owner)) return;
-		this.histories[owner].redo(nodes);
+	redo(owner: FlowId | RootId, pendingAction: PendingAction | null) {
+		if (!this.canRedo(owner, pendingAction)) return;
+		resolvePendingAction($nodes);
+		this.histories[owner].redo();
 	}
-	canUndo(owner: FlowId | RootId) {
+	canUndo(owner: FlowId | RootId, pendingAction: PendingAction | null) {
+		// if has pendingAction, then calling undo will resolve the pendingAction, creating a new undoable action
+		if (pendingAction?.ownerId == owner) return true;
 		if (!Object.prototype.hasOwnProperty.call(this.histories, owner)) return false;
 		return this.histories[owner].canUndo();
 	}
-	canRedo(owner: FlowId | RootId) {
+	canRedo(owner: FlowId | RootId, pendingAction: PendingAction | null) {
+		// if has pendingAction, then calling redo will resolve the pendingAction, deleting any redos
+		if (pendingAction?.ownerId == owner) return false;
 		if (!Object.prototype.hasOwnProperty.call(this.histories, owner)) return false;
 		return this.histories[owner].canRedo();
 	}
@@ -106,20 +113,22 @@ export class History {
 		this.actions.push(action);
 		this.index = this.actions.length - 1;
 	}
-	undo(nodes: Nodes) {
+	undo() {
 		if (!this.canUndo()) return;
-
 		const action = this.actions[this.index];
-		action.actionBundle = applyActionBundleAndSend(nodes, action.actionBundle);
+		const actionBundle = applyActionBundleAndSend(structuredClone(action.actionBundle));
+		if (actionBundle == null) return;
+		action.actionBundle = actionBundle;
 		focusId.set(action.beforeFocus);
 		this.index -= 1;
 	}
-	redo(nodes: Nodes) {
+	redo() {
 		if (!this.canRedo()) return;
-
 		this.index += 1;
 		const action = this.actions[this.index];
-		action.actionBundle = applyActionBundleAndSend(nodes, action.actionBundle);
+		const actionBundle = applyActionBundleAndSend(structuredClone(action.actionBundle));
+		if (actionBundle == null) return;
+		action.actionBundle = actionBundle;
 		focusId.set(action.afterFocus ?? action.beforeFocus);
 	}
 	canUndo() {

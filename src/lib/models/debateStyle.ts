@@ -1,3 +1,4 @@
+import { settings } from './settings';
 import type { TimerSpeech } from './timer';
 
 export const debateStyleMap = [
@@ -12,21 +13,20 @@ export const debateStyleMap = [
 
 export type DebateStyleKey = (typeof debateStyleMap)[number];
 
+export function currentDebateStyle(): DebateStyle {
+	return debateStyles[debateStyleMap[settings.data.debateStyle.value as number]];
+}
+
+export type DebateStyleFlow = {
+	name: string;
+	columns: string[];
+	columnsSwitch?: string[];
+	invert: boolean;
+	starterBoxes?: string[];
+};
 export type DebateStyle = {
-	primary: {
-		name: string;
-		columns: string[];
-		columnsSwitch?: string[];
-		invert: boolean;
-		starterBoxes?: string[];
-	};
-	secondary?: {
-		name: string;
-		columns: string[];
-		columnsSwitch?: string[];
-		invert: boolean;
-		starterBoxes?: string[];
-	};
+	primary: DebateStyleFlow;
+	secondary?: DebateStyleFlow;
 	timerSpeeches: TimerSpeech[];
 	prepTime?: number;
 };
@@ -373,7 +373,7 @@ export const debateStyles: {
 		},
 		secondary: {
 			name: 'con',
-			columns: ['CC','PR','CR'],
+			columns: ['CC', 'PR', 'CR'],
 			invert: true
 		},
 		timerSpeeches: [

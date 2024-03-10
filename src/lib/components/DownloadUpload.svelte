@@ -1,7 +1,8 @@
 <script lang="ts">
-	import { nodes, resolveAllPending } from '$lib/models/node';
 	import Button from './Button.svelte';
 	import { downloadJson, downloadXlsx } from '$lib/models/file';
+	import { nodes } from '$lib/models/store';
+	import { resolvePendingAction } from '$lib/models/nodePendingAction';
 
 	export let closePopup: () => void;
 
@@ -19,7 +20,7 @@
 			tooltip="saves JSON file on your computer"
 			tooltipLayout="top"
 			on:click={() => {
-				resolveAllPending($nodes);
+				resolvePendingAction($nodes);
 				downloadJson($nodes);
 				closePopup();
 			}}
@@ -37,7 +38,7 @@
 			tooltip="saves XLSX file on your computer"
 			tooltipLayout="top"
 			on:click={() => {
-				resolveAllPending($nodes);
+				resolvePendingAction($nodes);
 				downloadXlsx($nodes);
 				closePopup();
 			}}

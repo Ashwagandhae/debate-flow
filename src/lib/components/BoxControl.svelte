@@ -1,20 +1,13 @@
 <script lang="ts">
 	import ButtonBar from './ButtonBar.svelte';
 	import { afterUpdate, onDestroy, tick, type ComponentProps } from 'svelte';
-	import {
-		type FlowId,
-		nodes,
-		deleteBox,
-		checkIdBox,
-		addNewBox,
-		updateBox,
-		type BoxId,
-		resolveAllPending
-	} from '../models/node';
+	import { type FlowId, type BoxId, checkIdBox } from '../models/node';
 	import type Button from './Button.svelte';
 	import { settings } from '$lib/models/settings';
 	import { history } from '$lib/models/history';
 	import { focusId, lastFocusIds, selectedFlowId } from '$lib/models/focus';
+	import { nodes, pendingAction } from '$lib/models/store';
+	import { addNewBox, deleteBox, toggleBoxCross } from '$lib/models/nodeDecorateAction';
 
 	export let flowId: FlowId;
 
@@ -33,18 +26,19 @@
 	async function deleteBoxAndFocus() {
 		if (targetId == null) return;
 		let target = $nodes[targetId];
+		if (target == null) return;
 		let parent = $nodes[target.parent];
+		if (parent == null) return;
 		// if target isn't only child of first level
 		if (target.children.length > 1 || parent.level >= 1) {
 			// unfocus target
 			$focusId = null;
-			$nodes = $nodes;
 
-			let targetIndex = $nodes[target.parent].children.indexOf(targetId);
+			let targetIndex = parent.children.indexOf(targetId);
 			await tick();
 
 			// delete target
-			deleteBox($nodes, targetId);
+			deleteBox(targetId);
 			// focus parent when empty
 			if (target.children.length <= 0) {
 				$focusId = target.parent;
@@ -58,7 +52,6 @@
 				$focusId = parent.children[targetIndex];
 			}
 			history.setPrevAfterFocus($focusId);
-			$nodes = $nodes;
 		}
 	}
 
@@ -66,31 +59,29 @@
 		if (targetId == null) return;
 		if ($selectedFlowId == null) return;
 		let target = $nodes[targetId];
+		if (target == null) return;
+		let currentFlow = $nodes[$selectedFlowId];
+		if (currentFlow == null) return;
 		// if not at end of column
-		if (target.level < $nodes[$selectedFlowId].value.columns.length) {
-			addNewBox($nodes, targetId, 0);
-			$nodes = $nodes;
+		if (target.level < currentFlow.value.columns.length) {
+			addNewBox(targetId, 0);
 		}
 	}
 
 	function addSibling(direction: number) {
 		if (targetId == null) return;
 		let target = $nodes[targetId];
+		if (target == null) return;
 		let parent = $nodes[target.parent];
+		if (parent == null) return;
 
 		let targetIndex = parent.children.indexOf(targetId);
 		let newBoxIndex = targetIndex + direction;
-		addNewBox($nodes, target.parent, newBoxIndex);
-
-		$nodes = $nodes;
+		addNewBox(target.parent, newBoxIndex);
 	}
 	function toggleCrossed() {
 		if (targetId == null) return;
-		let target = $nodes[targetId];
-		let value = structuredClone(target.value);
-		value.crossed = !value.crossed;
-		updateBox($nodes, targetId, value);
-		$nodes = $nodes;
+		toggleBoxCross(targetId);
 	}
 	function preventBlur(e: Event) {
 		e.preventDefault();
@@ -102,25 +93,19 @@
 			showUndoRedoButtons: [
 				{
 					icon: 'undo',
-					disabled: !history.canUndo(flowId),
+					disabled: !history.canUndo(flowId, $pendingAction),
 					onclick: () => {
-						resolveAllPending($nodes);
-						$nodes = $nodes;
-						history.undo($nodes, flowId);
-						$nodes = $nodes;
+						history.undo(flowId, $pendingAction);
 					},
 					tooltip: 'undo',
 					shortcut: ['commandControl', 'z'],
 					disabledReason: 'nothing to undo'
 				},
 				{
-					disabled: !history.canRedo(flowId),
+					disabled: !history.canRedo(flowId, $pendingAction),
 					icon: 'redo',
 					onclick: () => {
-						resolveAllPending($nodes);
-						$nodes = $nodes;
-						history.redo($nodes, flowId);
-						$nodes = $nodes;
+						history.redo(flowId, $pendingAction);
 					},
 					tooltip: 'redo',
 					shortcut: ['commandControl', 'shift', 'z'],
@@ -176,7 +161,7 @@
 	function updateButtonGroups() {
 		buttonGroups = getButtonGroups();
 	}
-	$: targetId, $nodes, updateButtonGroups();
+	$: targetId, $nodes, $pendingAction, updateButtonGroups();
 
 	let buttonGroupsShow: { [key: string]: boolean } = {};
 	for (let key of Object.keys(buttonGroups)) {

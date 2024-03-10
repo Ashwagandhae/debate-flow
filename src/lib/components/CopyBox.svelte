@@ -1,13 +1,11 @@
 <script lang="ts">
-	import Text from './Text.svelte';
-
 	export let message: string | null = null;
 	export let content: string;
 	export let editable: boolean = false;
 	export let placeholder: string | null = null;
 </script>
 
-<code>
+<code class="copyBox">
 	{#if message != null}
 		<div class="message">{message}</div>
 	{:else if placeholder != null && content.length == 0 && editable}

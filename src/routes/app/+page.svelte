@@ -14,7 +14,7 @@
 	import { openPopup } from '$lib/models/popup';
 	import type { FlowId, Nodes } from '$lib/models/node';
 	import { onDestroy, onMount } from 'svelte';
-	import { activeMouse, flowsChange, subscribeFlowsChange } from '$lib/models/store';
+	import { activeMouse, flowsChange, nodes, pendingAction } from '$lib/models/store';
 	import { createKeyDownHandler } from '$lib/models/key';
 	import Prelude from '$lib/components/Prelude.svelte';
 	import { loadNodes } from '$lib/models/file';
@@ -22,17 +22,13 @@
 	import Help from '$lib/components/Help.svelte';
 	import { settings } from '$lib/models/settings';
 	import SideDoc from '$lib/components/SideDoc.svelte';
-	import { addNewFlow, deleteFlow, moveFlow, nodes, resolveAllPending } from '$lib/models/node';
 	import { history } from '$lib/models/history';
 	import { focusId, lastFocusIds, selectedFlowId } from '$lib/models/focus';
 	import { isChangelogVersionCurrent } from '$lib/models/version';
-	import { unsetFlowKey } from '$lib/models/autoSave';
+	import { addNewFlow, deleteFlow, moveFlow, replaceNodes } from '$lib/models/nodeDecorateAction';
+	import { currentDebateStyle, type DebateStyleFlow } from '$lib/models/debateStyle';
 
-	let changesSaved = true;
-	subscribeFlowsChange(() => {
-		changesSaved = false;
-	});
-	$: unsavedChanges = $nodes.root.children.length > 0 && !changesSaved;
+	$: unsavedChanges = $nodes.root.children.length > 0;
 
 	onMount(() => {
 		window.addEventListener(
@@ -84,10 +80,9 @@
 		$focusId = null;
 	}
 
-	function addFlow(type: 'primary' | 'secondary') {
+	function addFlow(style: DebateStyleFlow) {
 		blurFlow();
-		let id = addNewFlow($nodes, $nodes.root.children.length, type, switchSpeakers);
-		$nodes = $nodes;
+		let id = addNewFlow($nodes.root.children.length, style, switchSpeakers);
 		if (id != null) {
 			$selectedFlowId = id;
 			focusFlow();
@@ -100,8 +95,7 @@
 		blurFlow();
 
 		let oldIndex = $nodes.root.children.indexOf($selectedFlowId);
-		deleteFlow($nodes, $selectedFlowId);
-		$nodes = $nodes;
+		deleteFlow($selectedFlowId);
 
 		let nextIndex;
 		if (oldIndex == 0) {
@@ -122,8 +116,7 @@
 		if (from > to) {
 			to += 1;
 		}
-		moveFlow($nodes, $nodes.root.children[from], to);
-		$nodes = $nodes;
+		moveFlow($nodes.root.children[from], to);
 	}
 
 	function handleMouseMove(e: MouseEvent) {
@@ -131,23 +124,27 @@
 	}
 	const keyDownHandler = createKeyDownHandler({
 		control: {
-			n: { handle: () => addFlow('primary') }
+			n: { handle: () => addFlow(currentDebateStyle()['primary']) }
 		},
 		'control shift': {
-			n: { handle: () => addFlow('secondary') }
+			n: {
+				handle: () => {
+					const style = currentDebateStyle()['secondary'];
+					if (style == null) return;
+					addFlow(style);
+				},
+				require: () => currentDebateStyle()['secondary'] != null
+			}
 		},
 		'commandControl shift': {
 			z: {
 				handle: () => {
 					if ($selectedFlowId == null) return;
-					resolveAllPending($nodes);
-					$nodes = $nodes;
-					history.redo($nodes, $selectedFlowId);
-					$nodes = $nodes;
+					history.redo($selectedFlowId, $pendingAction);
 				},
 				require: () => {
 					if ($selectedFlowId == null) return false;
-					return history.canRedo($selectedFlowId);
+					return history.canRedo($selectedFlowId, $pendingAction);
 				},
 				stopRepeat: false,
 				preventDefault: 'always'
@@ -157,15 +154,11 @@
 			z: {
 				handle: () => {
 					if ($selectedFlowId == null) return;
-					resolveAllPending($nodes);
-					$nodes = $nodes;
-					history.undo($nodes, $selectedFlowId);
-					$nodes = $nodes;
+					history.undo($selectedFlowId, $pendingAction);
 				},
 				require: () => {
-					// TODO fix this for first action (it doesn't work if first action is pending)
 					if ($selectedFlowId == null) return false;
-					return history.canUndo($selectedFlowId);
+					return history.canUndo($selectedFlowId, $pendingAction);
 				},
 				stopRepeat: false,
 				preventDefault: 'always'
@@ -256,8 +249,7 @@
 		}
 		if (newNodes != null) {
 			if (!unsavedChanges || confirm('Are you sure you want to overwrite your current flows?')) {
-				unsetFlowKey();
-				$nodes = newNodes;
+				replaceNodes(newNodes);
 				$selectedFlowId = null;
 				flowsChange();
 			}
@@ -270,11 +262,6 @@
 	// add command K
 	// add command f
 	// add capitalization
-	// TODO
-	// don't allow editing before sync
-	// een for guest sync
-	// make popups that open from other popups close and show their parent popups
-	// better closing handling
 </script>
 
 <svelte:body

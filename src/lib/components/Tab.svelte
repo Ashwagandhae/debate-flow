@@ -1,5 +1,6 @@
 <script lang="ts">
-	import { nodes, type FlowId, type Flow } from '../models/node';
+	import { nodes } from '$lib/models/store';
+	import type { FlowId, Flow } from '../models/node';
 
 	export let flowId: FlowId;
 	export let selected: boolean;

@@ -2,7 +2,6 @@
 	import Button from './Button.svelte';
 	import {
 		initGuestConnection,
-		connections,
 		disconnect,
 		initHost,
 		addHostConnection,
@@ -12,7 +11,8 @@
 		type ConnectionId,
 		parseJoinLink,
 		type HostKey,
-		giveGuestHostKey
+		giveGuestHostKey,
+		requestSync
 	} from '$lib/models/sharingConnection';
 	import ConnectManual from './ConnectManual.svelte';
 	import ConnectLink from './ConnectLink.svelte';
@@ -21,6 +21,7 @@
 	import Changelog from './Changelog.svelte';
 	import Help from './Help.svelte';
 	import { onMount } from 'svelte';
+	import { connections } from '$lib/models/store';
 
 	export let closePopup = () => {};
 
@@ -148,10 +149,18 @@
 					icon="download"
 					text="sync"
 					tooltip="use if flows get out of sync"
+					disabled={$connections.connection.tag == 'guestConnected'
+						? $connections.connection.awaitingSync
+							? true
+							: false
+						: true}
+					disabledReason={$connections.connection.tag == 'guestConnected'
+						? $connections.connection.awaitingSync
+							? 'awaiting sync'
+							: undefined
+						: 'not connected'}
 					on:click={() => {
-						if ($connections.tag != 'guest') return;
-						if ($connections.connection.tag != 'guestConnected') return;
-						$connections.connection.channel.send({ tag: 'requestSync' });
+						requestSync();
 					}}
 				/>
 			{/if}

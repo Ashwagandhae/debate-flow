@@ -1,14 +1,8 @@
 import { Workbook, type Buffer } from 'exceljs';
-import {
-	newNodes,
-	type BoxId,
-	type FlowId,
-	type Nodes,
-	applyActionBundle,
-	newFlowId,
-	newBoxId
-} from './node';
+import { type BoxId, type FlowId, type Nodes, newFlowId, newBoxId, getNode } from './node';
 import type { OldBox, OldFlows } from './oldType';
+import { newNodes } from './store';
+import { applyActionBundle } from './nodeAction';
 
 const CURRENT_SAVE_VERSION: Version = 1 as const;
 
@@ -32,7 +26,6 @@ export function loadNodes(data: string): Nodes {
 	let upgraded = saved;
 	while (version < CURRENT_SAVE_VERSION) {
 		if (upgrade[version]) {
-			console.log(`upgrading save data from version ${version} to version ${version + 1}`);
 			upgraded = upgrade[version](upgraded);
 			version += 1;
 		} else {
@@ -66,18 +59,21 @@ function childToData(
 	y: number
 ) {
 	let height = 0;
-	for (const child of nodes[boxId].children) {
+	for (const child of getNode(nodes, boxId).unwrap().children) {
 		height += childToData(nodes, data, flowId, child, x + 1, y + height);
 	}
 	// acutally add it to data
 	while (!data[y]) {
 		// make list of empty strings of length flow.columns.length
-		const row: string[] = Array.from({ length: nodes[flowId].value.columns.length }, () => '');
+		const row: string[] = Array.from(
+			{ length: getNode(nodes, flowId).unwrap().value.columns.length },
+			() => ''
+		);
 		data.push(row);
 	}
 	// exclude root
 	if (x >= 0) {
-		data[y][x] = nodes[boxId].value.content;
+		data[y][x] = getNode(nodes, boxId).unwrap().value.content;
 	}
 	// return 1 height if no children
 	return Math.max(1, height);
@@ -90,14 +86,16 @@ export function downloadXlsx(nodes: Nodes) {
 
 		childToData(nodes, data, flowId, flowId, -1, 0);
 
-		let name: string = nodes[flowId].value.content;
+		let name: string = getNode(nodes, flowId).unwrap().value.content;
 		if (name.length >= 31) {
 			name = name.substring(0, 31);
 		}
 		const ws = wb.addWorksheet(name);
-		ws.columns = nodes[flowId].value.columns.map(function (column: string) {
-			return { header: column, width: 25 };
-		});
+		ws.columns = getNode(nodes, flowId)
+			.unwrap()
+			.value.columns.map(function (column: string) {
+				return { header: column, width: 25 };
+			});
 		for (let y = 0; y < data.length; y++) {
 			// make space for header with + 2
 			const row = ws.getRow(y + 2);
@@ -108,8 +106,8 @@ export function downloadXlsx(nodes: Nodes) {
 				let border = 'FFFF9999';
 
 				if (
-					(x % 2 == 0 && !nodes[flowId].value.invert) ||
-					(x % 2 == 1 && nodes[flowId].value.invert)
+					(x % 2 == 0 && !getNode(nodes, flowId).unwrap().value.invert) ||
+					(x % 2 == 1 && getNode(nodes, flowId).unwrap().value.invert)
 				) {
 					// light blue
 					fill = 'FFCCE5FF';

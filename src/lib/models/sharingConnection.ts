@@ -1,11 +1,13 @@
-// host: creatingHostKey -> createdHostKey + awaitingGuestKey -> receivedGuestKey -> connected
-
-import { writable, type Writable } from 'svelte/store';
-import type { GuestMessage, HostMessage } from './node';
+import {
+	addGuestChannelHandler,
+	addHostChannelHandler,
+	type GuestMessage,
+	type HostMessage
+} from './sharingChannel';
 import { openPopup } from './popup';
 import Message from '$lib/components/Message.svelte';
+import { connections } from './store';
 
-// guest: awaitingHostKey -> receivedHostKey + creatingGuestKey -> createdGuestKey -> connected
 const MESSAGE_CHANNEL_NAME = 'messageChannel';
 
 export class Channel<SendMessage, RecieveMessage> {
@@ -14,6 +16,12 @@ export class Channel<SendMessage, RecieveMessage> {
 	constructor(channel: RTCDataChannel) {
 		this.#channel = channel;
 		this.queuedMessages = [];
+		this.onOpen(() => {
+			for (const message of this.queuedMessages) {
+				this.send(message);
+			}
+			this.queuedMessages = [];
+		});
 	}
 	send(message: SendMessage) {
 		const payload = JSON.stringify(message);
@@ -26,10 +34,6 @@ export class Channel<SendMessage, RecieveMessage> {
 	}
 	onOpen(fn: () => void) {
 		this.#channel.addEventListener('open', fn);
-		for (const message of this.queuedMessages) {
-			this.send(message);
-		}
-		this.queuedMessages = [];
 	}
 	onClose(fn: () => void) {
 		this.#channel.addEventListener('close', fn);
@@ -109,6 +113,7 @@ export type GuestConnected = {
 	pc: RTCPeerConnection;
 	channel: Channel<GuestMessage, HostMessage>;
 	name: string | null;
+	awaitingSync: boolean;
 };
 
 export type Guest = GuestAwaitingHostKey | GuestCreatingKey | GuestAwaitingChannel | GuestConnected;
@@ -136,10 +141,6 @@ export type Connections =
 			connection: Guest;
 	  };
 
-export const connections: Writable<Connections> = writable({
-	tag: 'empty'
-});
-
 function generateGuestName(holder: ConnectionHolder<Host>) {
 	const names = new Set<string>();
 	for (const id of Object.keys(holder)) {
@@ -156,23 +157,6 @@ function generateGuestName(holder: ConnectionHolder<Host>) {
 	}
 	return name;
 }
-
-export const pendingConnection: Writable<ConnectionId | null> = writable(null);
-
-export function setAddHostChannelHandler(
-	handler: (channel: Channel<HostMessage, GuestMessage>, id: ConnectionId) => void
-) {
-	addHostChannelHandler = handler;
-}
-
-export function setAddGuestChannelHandler(
-	handler: (channel: Channel<GuestMessage, HostMessage>) => void
-) {
-	addGuestChannelHandler = handler;
-}
-
-let addHostChannelHandler: (channel: Channel<HostMessage, GuestMessage>, id: ConnectionId) => void;
-let addGuestChannelHandler: (channel: Channel<GuestMessage, HostMessage>) => void;
 
 export function initHost() {
 	connections.update(function (oldConnections) {
@@ -412,7 +396,8 @@ export function giveGuestHostKey(key: HostKey) {
 					tag: 'guestConnected',
 					pc: connection.pc,
 					channel,
-					name: null
+					name: null,
+					awaitingSync: true
 				};
 				addConnectionStateUpdater(connection.pc, 'host', function () {
 					connections.update(function (connections) {
@@ -505,4 +490,20 @@ export function parseConfirmLink(): GuestKey | null {
 	const raw = readLinkParam('confirm');
 	if (raw == null) return null;
 	return JSON.parse(raw);
+}
+
+export function requestSync() {
+	connections.update(function (connections) {
+		if (
+			connections.tag == 'guest' &&
+			connections.connection.tag == 'guestConnected' &&
+			!connections.connection.awaitingSync
+		) {
+			connections.connection.channel.send({
+				tag: 'requestSync'
+			});
+			connections.connection.awaitingSync = true;
+		}
+		return connections;
+	});
 }

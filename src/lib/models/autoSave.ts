@@ -1,8 +1,9 @@
-import { subscribeFlowsChange } from '$lib/models/store';
+import { nodes, subscribeFlowsChange } from '$lib/models/store';
 import type { Writable } from 'svelte/store';
 import { writable, derived } from 'svelte/store';
 import { getJson, loadNodes, downloadString } from './file';
-import { nodes, type Nodes } from './node';
+import { getNode, isNodesWorthSaving, type Nodes } from './node';
+import { replaceNodes } from './nodeDecorateAction';
 
 let flowKey: NodeKey | null = null;
 const savedNodesDatasMut: Writable<SavedNodesDatas> = writable(getSavedNodesDatas());
@@ -29,8 +30,8 @@ function newNodeKey(): NodeKey {
 }
 
 let $nodes: Nodes;
-nodes.subscribe((value) => {
-	$nodes = value;
+nodes.subscribe((nodes) => {
+	$nodes = nodes;
 });
 
 let $savedNodesDatasMut: SavedNodesDatas;
@@ -41,25 +42,7 @@ savedNodesDatasMut.subscribe((value) => {
 
 let lastSaveTime: number = Date.now();
 export function maybeSaveNodes() {
-	if ($nodes.root.children.length == 0) return;
-	// check if empty
-	outer: {
-		if (
-			$nodes.root.children.length == 1
-			// check if that flow has no title
-		) {
-			const flow = $nodes[$nodes.root.children[0]];
-			// make sure flow has no title
-			if (flow.value.content != '') break outer;
-			// if it has no children, return
-			if (flow.children.length == 0) return;
-
-			// if it has exactly one child, make sure that child has no content and children and return
-			if (flow.children.length > 1) break outer;
-			const firstNode = $nodes[flow.children[0]];
-			if (firstNode.value.content == '' && firstNode.children.length == 0) return;
-		}
-	}
+	if (!isNodesWorthSaving($nodes)) return;
 	const now = Date.now();
 	if (now - lastSaveTime < 5000) return;
 	lastSaveTime = now;
@@ -86,7 +69,7 @@ export function loadSavedNodes(key: NodeKey, modifyOriginal = false) {
 	const raw = localStorage.getItem(key);
 	if (raw === null) return [];
 	const newNodes: Nodes = loadNodes(raw);
-	nodes.set(newNodes);
+	replaceNodes(newNodes);
 	if (modifyOriginal) {
 		flowKey = key;
 	}
@@ -117,8 +100,8 @@ export function saveNodes(nodes: Nodes) {
 		modified: new Date().toISOString(),
 		flowInfos: nodes.root.children.map((flowId) => {
 			return {
-				content: nodes[flowId].value.content,
-				invert: nodes[flowId].value.invert
+				content: getNode(nodes, flowId).unwrap().value.content,
+				invert: getNode(nodes, flowId).unwrap().value.invert
 			};
 		})
 	};

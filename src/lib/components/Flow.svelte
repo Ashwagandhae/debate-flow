@@ -1,10 +1,12 @@
 <script lang="ts">
 	import Box from './Box.svelte';
 	import Header from './Header.svelte';
-	import { nodes, type FlowId, addNewEmpty, type Node, type Flow } from '../models/node';
+	import type { FlowId, Node, Flow } from '../models/node';
 
 	import { setContext } from 'svelte';
 	import { focusId } from '$lib/models/focus';
+	import { nodes } from '$lib/models/store';
+	import { addNewEmpty } from '$lib/models/nodeDecorateAction';
 
 	export let flowId: FlowId;
 	let node: Node<Flow>;
@@ -24,8 +26,7 @@
 	});
 
 	function addEmpty(column: number) {
-		let id = addNewEmpty($nodes, flowId, column);
-		$nodes = $nodes;
+		let id = addNewEmpty(flowId, column);
 		$focusId = id;
 	}
 </script>

@@ -23,3 +23,11 @@ export function openPopup<P extends object>(
 ) {
 	popups.update((popups) => [...popups, { component, props, title }]);
 }
+
+export function openTopPopup<P extends object>(
+	component: ComponentType<SvelteComponent<P>>,
+	title: string,
+	props?: P
+) {
+	popups.update((popups) => [{ component, props, title }, ...popups]);
+}

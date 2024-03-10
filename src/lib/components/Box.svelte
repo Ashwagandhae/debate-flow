@@ -2,40 +2,42 @@
 	import Text from './Text.svelte';
 	import Icon from './Icon.svelte';
 	import { getContext, onMount, tick } from 'svelte';
-	import { createEventDispatcher } from 'svelte';
-	import { activeMouse } from '$lib/models/store';
+	import { activeMouse, nodes, pendingAction } from '$lib/models/store';
 	import {
 		type BoxId,
 		type FlowId,
-		nodes,
-		updateBox,
 		type Box,
-		addNewBox,
-		deleteBox,
-		getAdjacentBox,
-		checkIdBox,
 		type Node,
 		type Flow,
 		getParentFlowId,
-		addPendingAction,
-		updateWithoutResolve
+		checkIdBox,
+		getAdjacentBox,
+		getNode
 	} from '$lib/models/node';
 	import { createKeyDownHandler, type KeyComboOptionsIndex } from '$lib/models/key';
 
 	import { boxIn, boxOut, boxButtonIn, brIn, brOut } from '../models/transition';
 	import { history } from '$lib/models/history';
 	import { focusId } from '$lib/models/focus';
+	import {
+		addNewBox,
+		deleteBox,
+		newUpdateAction,
+		toggleBoxCross
+	} from '$lib/models/nodeDecorateAction';
 
 	export let id: BoxId | FlowId;
 	export let parentIsEmpty = false;
 
 	let node: Node<Box | Flow>;
 	let box: Box | null;
+	// TODO make updates more percise, don't update all boxes when one changes (do the same for focusId, basically ban stores from box)
 	$: $nodes, updateNodeData();
 	function updateNodeData() {
 		// hold onto box and index value when it's deleted
-		if ($nodes[id] != null) {
-			node = $nodes[id];
+		let newNode = $nodes[id];
+		if (newNode != null) {
+			node = newNode;
 			if (node.value.tag == 'flow') {
 				box = null;
 			} else {
@@ -46,8 +48,9 @@
 
 	let lastValidIndex: number;
 	function index() {
-		if ($nodes[node.parent] == null) return lastValidIndex;
-		lastValidIndex = (<BoxId[]>$nodes[node.parent].children).indexOf(<BoxId>id);
+		let parentNode = $nodes[node.parent];
+		if (parentNode == null) return lastValidIndex;
+		lastValidIndex = (<BoxId[]>parentNode.children).indexOf(<BoxId>id);
 		return lastValidIndex;
 	}
 
@@ -78,7 +81,6 @@
 			childFocusIndex = -1;
 		}
 	}
-	let hasSentEdit: boolean = false;
 
 	let lastFocus = $focusId;
 	function focusChange() {
@@ -168,7 +170,6 @@
 					history.setPrevAfterFocus($focusId);
 				},
 				// only delete if content is empty and there are no children
-				// TODO: make this work with resolveAllPending
 				// TODO add cool sharing animations
 				require: () => (content?.length ?? 1) == 0 && node.children.length == 0
 			},
@@ -218,18 +219,18 @@
 	let handleKeydown = createKeyDownHandler(keyComboOptionsIndex);
 
 	async function crossSelf() {
-		let value = <Box>structuredClone(box);
-		value.crossed = !value.crossed;
-		updateBox($nodes, <BoxId>id, value);
-		node = node;
+		const boxId = checkIdBox($nodes, id);
+		if (boxId == null) return;
+		toggleBoxCross(boxId);
+		updateNodeData();
 	}
 
 	function addChild(childIndex: number, direction: number): boolean {
 		let newChildIndex = childIndex + direction;
 		// if not at end of column
 		if (node.level < columnCount) {
-			addNewBox($nodes, id, newChildIndex);
-			node = node;
+			addNewBox(id, newChildIndex);
+			// node = node;
 			return true;
 		} else {
 			// stay focused
@@ -254,8 +255,8 @@
 			}
 			await tick();
 
-			deleteBox($nodes, deleteId);
-			node = node;
+			deleteBox(deleteId);
+			// node = node;
 			// focus on previous child of deleted
 			if (node.children[childIndex - 1]) {
 				focusChild(childIndex - 1, 0);
@@ -283,6 +284,7 @@
 		if (newChildIndex >= node.children.length) {
 			// if has grandchild
 			let lastChild = $nodes[node.children[node.children.length - 1]];
+			if (lastChild == null) return;
 			if (lastChild.children.length > 0) {
 				// focus on first grandchild that isn't empty
 				let grandChildId = lastChild.children[0];
@@ -293,14 +295,16 @@
 			}
 		} else {
 			// if is empty, skip
-			if ($nodes[node.children[newChildIndex]].value.empty && direction != 0) {
+			let child = $nodes[node.children[newChildIndex]];
+			if (child == null) return;
+			if (child.value.empty && direction != 0) {
 				focusChild(newChildIndex, direction);
 			} else {
 				// focus on child
 				$focusId = node.children[newChildIndex];
 			}
 		}
-		node = node;
+		// node = node;
 	}
 	// only focus direct child
 	function focusChildStrict(childIndex: number, direction: number): boolean {
@@ -309,12 +313,14 @@
 			return false;
 		}
 		// if is empty, skip
-		if ($nodes[node.children[newChildIndex]].value.empty && direction != 0) {
+		let child = $nodes[node.children[newChildIndex]];
+		if (child == null) return false;
+		if (child.value.empty && direction != 0) {
 			return focusChildStrict(newChildIndex, direction);
 		} else {
 			// focus on child
 			$focusId = node.children[newChildIndex];
-			node = node;
+			// node = node;
 			return true;
 		}
 	}
@@ -325,7 +331,7 @@
 		while (true) {
 			let adjacentBox = getAdjacentBox($nodes, boxId, direction);
 			if (adjacentBox == null) return false;
-			if ($nodes[adjacentBox].value.empty) {
+			if (getNode($nodes, adjacentBox).unwrap().value.empty) {
 				// skip if empty
 				boxId = adjacentBox;
 				continue;
@@ -372,25 +378,27 @@
 		}
 	}
 
+	let editAlreadyPending: boolean = false;
 	function handleBeforeInput() {
-		if (hasSentEdit) return;
-		hasSentEdit = true;
-		addPendingAction(function (nodes) {
-			if (box == null) return;
-			let value = { ...box, content };
-			let boxId = checkIdBox(nodes, id);
-			if (boxId == null) return;
-			history.setNextBeforeFocus(id, getParentFlowId(nodes, boxId).unwrap());
-			updateWithoutResolve(nodes, boxId, value);
-			history.setPrevAfterFocus(id, getParentFlowId(nodes, boxId).unwrap());
-			nodes = nodes;
-			hasSentEdit = false;
-		});
+		if (editAlreadyPending) return;
+		editAlreadyPending = true;
+		$pendingAction = {
+			beforeFocusId: id,
+			afterFocusId: id,
+			ownerId: getParentFlowId($nodes, id).unwrap(),
+			action: function () {
+				if (box == null) return { tag: 'identity' };
+				const boxId = checkIdBox($nodes, id);
+				if (boxId == null) return { tag: 'identity' };
+				editAlreadyPending = false;
+				return newUpdateAction(boxId, { ...box, content });
+			}
+		};
 	}
 </script>
 
 <div
-	class={`top palette-${palette}`}
+	class={`box top palette-${palette}`}
 	class:childless={node.children.length == 0}
 	class:empty={box?.empty}
 	class:focus={$focusId == id}

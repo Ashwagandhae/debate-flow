@@ -1,11 +1,11 @@
 <script lang="ts">
 	import Button from './Button.svelte';
 	import TutorialHighlight from './TutorialHighlight.svelte';
-	import { debateStyleMap, debateStyles } from '$lib/models/debateStyle';
+	import { debateStyleMap, debateStyles, type DebateStyleFlow } from '$lib/models/debateStyle';
 	import { settings } from '$lib/models/settings';
-	import { onDestroy, onMount } from 'svelte';
+	import { onDestroy } from 'svelte';
 
-	export let addFlow: (type: 'primary' | 'secondary') => void;
+	export let addFlow: (type: DebateStyleFlow) => void;
 	export let switchSpeakers: boolean;
 
 	let debateStyleIndex = settings.data['debateStyle'].value as number;
@@ -26,7 +26,7 @@
 				text={debateStyle.primary.name}
 				palette="accent"
 				icon="add"
-				on:click={() => addFlow('primary')}
+				on:click={() => addFlow(debateStyle.primary)}
 				tooltip="create new {debateStyle.primary.name} flow"
 				shortcut={['control', 'n']}
 			/>
@@ -37,7 +37,11 @@
 					text={debateStyle.secondary.name}
 					palette="accent-secondary"
 					icon="add"
-					on:click={() => addFlow('secondary')}
+					on:click={() => {
+						const style = debateStyle.secondary;
+						if (style == null) return;
+						addFlow(style);
+					}}
 					tooltip="create new {debateStyle.secondary.name} flow"
 					shortcut={['control', 'shift', 'n']}
 				/>
