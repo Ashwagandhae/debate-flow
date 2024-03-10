@@ -1,5 +1,5 @@
 import { derived } from 'svelte/store';
-import { Option, Some, None } from 'ts-results';
+import { type Option, Some, None } from 'ts-results';
 import { focusId, lastFocusIds } from './focus';
 
 import { nodes } from './store';
@@ -58,6 +58,7 @@ export type Box = {
 	placeholder?: string;
 	empty?: boolean;
 	crossed?: boolean;
+	bold?: boolean;
 };
 
 export type Flow = {

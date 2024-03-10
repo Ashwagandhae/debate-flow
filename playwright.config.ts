@@ -6,7 +6,21 @@ const config: PlaywrightTestConfig = {
 		port: 4173
 	},
 	testDir: 'tests',
-	testMatch: /(.+\.)?(test|spec)\.[jt]s/
+	testMatch: /(.+\.)?(test|spec)\.[jt]s/,
+	projects: [
+		{
+			name: 'Chrome',
+			use: { browserName: 'chromium' }
+		},
+		{
+			name: 'Firefox',
+			use: { browserName: 'firefox' }
+		},
+		{
+			name: 'WebKit',
+			use: { browserName: 'webkit' }
+		}
+	]
 };
 
 export default config;

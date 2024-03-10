@@ -122,10 +122,14 @@ export const addNewFlow = decorate(function (
 	};
 });
 
-export const toggleBoxCross = decorate(function (nodes: Nodes, id: BoxId) {
+export const toggleBoxFormat = decorate(function (
+	nodes: Nodes,
+	id: BoxId,
+	format: 'bold' | 'crossed'
+) {
 	const box = getNode(nodes, id).unwrap();
 	return {
-		action: newUpdateAction(id, { ...box.value, crossed: !box.value.crossed }),
+		action: newUpdateAction(id, { ...box.value, [format]: !box.value[format] }),
 		owner: getParentFlowId(nodes, id).unwrap()
 	};
 });

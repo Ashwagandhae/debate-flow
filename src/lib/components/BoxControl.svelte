@@ -1,13 +1,13 @@
 <script lang="ts">
 	import ButtonBar from './ButtonBar.svelte';
 	import { afterUpdate, onDestroy, tick, type ComponentProps } from 'svelte';
-	import { type FlowId, type BoxId, checkIdBox } from '../models/node';
+	import { type FlowId, type BoxId, checkIdBox, type Box, type Node } from '../models/node';
 	import type Button from './Button.svelte';
 	import { settings } from '$lib/models/settings';
 	import { history } from '$lib/models/history';
 	import { focusId, lastFocusIds, selectedFlowId } from '$lib/models/focus';
 	import { nodes, pendingAction } from '$lib/models/store';
-	import { addNewBox, deleteBox, toggleBoxCross } from '$lib/models/nodeDecorateAction';
+	import { addNewBox, deleteBox, toggleBoxFormat } from '$lib/models/nodeDecorateAction';
 
 	export let flowId: FlowId;
 
@@ -17,11 +17,22 @@
 	async function setValidTargetId() {
 		// wait until its actually done updating
 		await tick();
+		if ($focusId == null) {
+			targetId = null;
+			return;
+		}
 		targetId = checkIdBox($nodes, $lastFocusIds[flowId]);
 	}
 	afterUpdate(function () {
 		setValidTargetId();
 	});
+
+	function targetBox(): Node<Box> | null {
+		if (targetId == null) return null;
+		let target = $nodes[targetId];
+		if (target == null) return null;
+		return target;
+	}
 
 	async function deleteBoxAndFocus() {
 		if (targetId == null) return;
@@ -79,9 +90,9 @@
 		let newBoxIndex = targetIndex + direction;
 		addNewBox(target.parent, newBoxIndex);
 	}
-	function toggleCrossed() {
+	function toggleFormat(format: Parameters<typeof toggleBoxFormat>[1]) {
 		if (targetId == null) return;
-		toggleBoxCross(targetId);
+		toggleBoxFormat(targetId, format);
 	}
 	function preventBlur(e: Event) {
 		e.preventDefault();
@@ -149,10 +160,20 @@
 			showBoxFormatButtons: [
 				{
 					icon: 'cross',
-					onclick: toggleCrossed,
+					onclick: () => toggleFormat('crossed'),
 					disabled: targetId == null,
 					tooltip: 'toggle crossed out',
-					shortcut: ['commandControl', 'x'],
+					shortcut: ['commandControl', 'shift', 'x'],
+					toggled: targetBox()?.value?.crossed,
+					disabledReason
+				},
+				{
+					icon: 'letterB',
+					onclick: () => toggleFormat('bold'),
+					disabled: targetId == null,
+					tooltip: 'toggle bold',
+					shortcut: ['commandControl', 'b'],
+					toggled: targetBox()?.value?.bold,
 					disabledReason
 				}
 			]

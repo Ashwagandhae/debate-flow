@@ -3,6 +3,7 @@
 	import Tooltip from './Tooltip.svelte';
 	import TutorialHighlight from './TutorialHighlight.svelte';
 	import Link from './Link.svelte';
+	// TODO: add grouping
 
 	export let icon: string;
 	export let text: string | null = null;
@@ -18,6 +19,7 @@
 	export let onclick: () => void = () => {};
 
 	export let notification: boolean = false;
+	export let toggled: boolean = false;
 
 	export let inline: boolean = false;
 
@@ -40,6 +42,7 @@
 			<button
 				class={`top ${palette ? 'palette-' + palette : ''}`}
 				class:notification
+				class:toggled
 				class:disabled
 				on:click
 				on:click={onclick}
@@ -52,7 +55,7 @@
 				{/if}
 				<Icon name={icon} size="var(--button-size)" />
 				{#if text != null}
-					<p>{text}</p>
+					{text}
 				{/if}
 			</button>
 		</Link>
@@ -90,9 +93,7 @@
 	.top.disabled {
 		color: var(--this-text-weak);
 	}
-	p {
-		display: block;
-	}
+
 	.top:hover,
 	.top.notification {
 		background-color: var(--this-background-indent);
@@ -101,7 +102,8 @@
 	.top.disabled:active {
 		background: none;
 	}
-	.top:active {
+	.top:active,
+	.top.toggled {
 		transition: none;
 		background-color: var(--this-background-active);
 	}

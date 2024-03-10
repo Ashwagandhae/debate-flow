@@ -200,6 +200,13 @@
 			svg: `
 <path d="M54.3301 24.5L80.3109 69.5C82.2354 72.8333 79.8298 77 75.9808 77H24.0192C20.1702 77 17.7646 72.8333 19.6891 69.5L45.6699 24.5C47.5944 21.1667 52.4056 21.1667 54.3301 24.5Z" stroke="currentColor" stroke-width="10"/>
 			`
+		},
+		{
+			name: 'letterB',
+			svg: `
+			<path d="M58 10H32C29.7909 10 28 11.7909 28 14V45C28 47.7614 30.2386 50 33 50H58C69.0457 50 78 41.0457 78 30C78 18.9543 69.0457 10 58 10Z" stroke="currentColor" stroke-width="10"/>
+<path d="M58 50H28V85C28 87.7614 30.2386 90 33 90H58C69.0457 90 78 81.0457 78 70C78 58.9543 69.0457 50 58 50Z" stroke="currentColor" stroke-width="10"/>
+			`
 		}
 	];
 	let displayIcon: { name: string; svg: string } | null;

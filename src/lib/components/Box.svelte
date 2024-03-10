@@ -23,7 +23,7 @@
 		addNewBox,
 		deleteBox,
 		newUpdateAction,
-		toggleBoxCross
+		toggleBoxFormat
 	} from '$lib/models/nodeDecorateAction';
 
 	export let id: BoxId | FlowId;
@@ -42,6 +42,8 @@
 				box = null;
 			} else {
 				box = node.value;
+				// update text height in case it changes, for example due to bold
+				updateTextHeight && updateTextHeight();
 			}
 		}
 	}
@@ -111,7 +113,7 @@
 	const keyComboOptionsIndex: KeyComboOptionsIndex = {
 		'commandControl shift': {
 			x: {
-				handle: () => crossSelf()
+				handle: () => formatSelf('crossed')
 			}
 		},
 		commandControl: {
@@ -121,6 +123,9 @@
 					deleteSelf(index());
 					history.setPrevAfterFocus($focusId);
 				}
+			},
+			b: {
+				handle: () => formatSelf('bold')
 			}
 		},
 		alt: {
@@ -218,10 +223,10 @@
 	};
 	let handleKeydown = createKeyDownHandler(keyComboOptionsIndex);
 
-	async function crossSelf() {
+	function formatSelf(format: Parameters<typeof toggleBoxFormat>[1]) {
 		const boxId = checkIdBox($nodes, id);
 		if (boxId == null) return;
-		toggleBoxCross(boxId);
+		toggleBoxFormat(boxId, format);
 		updateNodeData();
 	}
 
@@ -395,6 +400,8 @@
 			}
 		};
 	}
+
+	let updateTextHeight: (() => void) | undefined = undefined;
 </script>
 
 <div
@@ -439,7 +446,7 @@
 					role="separator"
 				/>
 
-				<div class="text" class:crossed={box?.crossed}>
+				<div class="text" class:crossed={box?.crossed} class:bold={box?.bold}>
 					{#if box != null}
 						<Text
 							on:keydown={handleKeydown}
@@ -448,6 +455,7 @@
 							bind:value={content}
 							bind:this={textarea}
 							on:beforeinput={handleBeforeInput}
+							bind:autoHeight={updateTextHeight}
 							placeholder={box.placeholder ?? (node.level == 1 && index() == 0 ? 'type here' : '')}
 						/>
 					{/if}
@@ -539,6 +547,9 @@
 	.text.crossed {
 		text-decoration: line-through;
 		color: var(--this-text-weak);
+	}
+	.text.bold {
+		font-weight: var(--font-weight-bold);
 	}
 
 	.childFocus > .content,
