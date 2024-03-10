@@ -5,6 +5,7 @@
 	import Button from './Button.svelte';
 	import Help from './Help.svelte';
 	import Share from './Share.svelte';
+	import Shortcut from './Shortcut.svelte';
 
 	export let closePopup: () => void;
 
@@ -13,6 +14,20 @@
 
 <div class="top palette-plain">
 	<div class="scroll">
+		<section>
+			<div class="above">
+				<h2>v1.1.2</h2>
+			</div>
+			<ul>
+				<li>
+					added text bolding. click <Button icon="letterB" inline /> or press <Shortcut
+						keys={['commandControl', 'b']}
+						inline
+					/> to toggle bold.
+				</li>
+				<li>the formatting of selected cells now shows in the toolbar.</li>
+			</ul>
+		</section>
 		<section>
 			<div class="above">
 				<h2>v1.1.1</h2>
