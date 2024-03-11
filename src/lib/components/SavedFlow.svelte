@@ -56,8 +56,10 @@
 			</div>
 		</div>
 		<div class="flowButtons">
+			<!-- TODO: add undo/redo for deleteing whole tabs -->
+			<!-- TODO: drag to resize sidebar-->
 			<Button
-				icon="upload"
+				icon="open"
 				text="open"
 				on:click={() => {
 					loadSavedNodes(key, true);

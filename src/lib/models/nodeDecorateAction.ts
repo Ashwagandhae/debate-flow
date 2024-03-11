@@ -29,8 +29,6 @@ nodes.subscribe((nodes) => {
 	$nodes = nodes;
 });
 
-// TODO prevent loading new file while sharing
-// TODO Uncaught Error: Worksheet name AC: Calzones have bread cannot include any of the following characters: * ? : \ / [ ]
 // TODO deal with addTab button height bug when replacing flow
 
 function decorate<

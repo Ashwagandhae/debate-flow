@@ -6,6 +6,8 @@
 	import ConvertScene from '$lib/components/scenes/ConvertScene.svelte';
 	import KeyboardScene from '$lib/components/scenes/KeyboardScene.svelte';
 	import SettingsScene from '$lib/components/scenes/SettingsScene.svelte';
+	import SharingScene from '$lib/components/scenes/SharingScene.svelte';
+
 	import Flower from '$lib/components/scenes/Flower.svelte';
 
 	let hover = false;
@@ -38,7 +40,7 @@
 		<section class="benefits">
 			<Benefit
 				title="Super Spacing"
-				detail="Stop guessing how many responses your opponent will make - arguments will automatically move out of the way."
+				detail="Stop guessing how many responses your opponent will make—arguments will automatically move out of the way."
 				component={SpacingScene}
 			/>
 			<Benefit
@@ -48,6 +50,11 @@
 			/>
 			<Benefit
 				title="Simple Sharing"
+				detail="Work with as many people as you want on the same flow, in real time, with no sign-in required."
+				component={SharingScene}
+			/>
+			<Benefit
+				title="Fabulous Files"
 				detail="Convert your flow to a Excel file with the click of a button, or save it as JSON file to edit later."
 				component={ConvertScene}
 			/>

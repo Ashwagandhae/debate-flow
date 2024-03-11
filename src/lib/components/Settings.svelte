@@ -17,6 +17,7 @@
 	function scrollToSettingElement(groupIndex: number, index: number) {
 		settingComponents[groupIndex][index].scrollToSelf();
 	}
+	// TODO make setting headers (e.g. general) clickable
 </script>
 
 <div class="top palette-plain">

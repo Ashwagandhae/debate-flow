@@ -259,6 +259,7 @@
 	let switchSpeakers = false;
 
 	// TODO:
+	// add custom background color
 	// add command K
 	// add command f
 	// add capitalization

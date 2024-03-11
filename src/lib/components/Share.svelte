@@ -104,7 +104,7 @@
 					{:else if connectionMode == 'link' && joinLinkHostKey != null}
 						<Button
 							palette="accent-secondary"
-							icon="link"
+							icon="redo"
 							text="join room from join link"
 							on:click={() => {
 								if (joinLinkHostKey == null) return;
@@ -172,7 +172,7 @@
 	{/if}
 	<div class="controls">
 		<Button
-			icon="gear"
+			icon={connectionMode == 'manual' ? 'angleBrackets' : 'link'}
 			text={connectionMode == 'manual' ? 'using manual connect' : 'using link connect (default)'}
 			tooltip={connectionMode == 'manual' ? 'switch to link connect' : 'switch to manual connect'}
 			on:click={() => {

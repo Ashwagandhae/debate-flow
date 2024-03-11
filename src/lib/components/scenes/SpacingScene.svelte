@@ -92,4 +92,7 @@
 		justify-content: space-around;
 		width: calc(var(--column-width) * 2);
 	}
+	.addedResponse {
+		transform-origin: 50% 0%;
+	}
 </style>

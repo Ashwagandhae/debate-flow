@@ -207,6 +207,21 @@
 			<path d="M58 10H32C29.7909 10 28 11.7909 28 14V45C28 47.7614 30.2386 50 33 50H58C69.0457 50 78 41.0457 78 30C78 18.9543 69.0457 10 58 10Z" stroke="currentColor" stroke-width="10"/>
 <path d="M58 50H28V85C28 87.7614 30.2386 90 33 90H58C69.0457 90 78 81.0457 78 70C78 58.9543 69.0457 50 58 50Z" stroke="currentColor" stroke-width="10"/>
 			`
+		},
+		{
+			name: 'open',
+			svg: `
+					<path d="M62 10.8492L90.2843 9.43503L88.8701 37.7193" stroke="currentColor" stroke-width="10" stroke-linecap="round" stroke-linejoin="round"/>
+					<path d="M89.7696 10L53 46.7696" stroke="currentColor" stroke-width="10" stroke-linecap="round"/>
+					<path d="M90 61V80C90 85.5228 85.5228 90 80 90H20C14.4772 90 10 85.5228 10 80V20C10 14.4772 14.4772 10 20 10H39" stroke="currentColor" stroke-width="10" stroke-linecap="round"/>
+					`
+		},
+		{
+			name: 'addPerson',
+			svg: `<path d="M17 35V65" stroke="currentColor" stroke-width="10" stroke-linecap="round"/>
+			<path d="M2 50H32" stroke="currentColor" stroke-width="10" stroke-linecap="round"/>
+			<circle cx="21" cy="21" r="21" transform="matrix(-1 0 0 1 88 16)" stroke="currentColor" stroke-width="10"/>
+			<path d="M100 83C100 49.6667 36 49.6667 36 83" stroke="currentColor" stroke-width="10" stroke-linecap="round"/>`
 		}
 	];
 	let displayIcon: { name: string; svg: string } | null;

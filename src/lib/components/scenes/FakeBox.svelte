@@ -2,9 +2,10 @@
 	import Text from '$lib/components/Text.svelte';
 	export let text: string;
 	export let below = false;
+	export let childFocus = false;
 </script>
 
-<div class="content" class:left={false} class:right={false}>
+<div class="content" class:childFocus class:left={false} class:right={false}>
 	<div class="barcontainer">
 		<div class="line above" class:left={false} class:right={false} role="separator" />
 
@@ -86,5 +87,13 @@
 		line-height: 1.5em;
 		font-size: inherit;
 		color: inherit;
+	}
+
+	.childFocus.content {
+		background: var(--this-background-indent);
+	}
+	.childFocus .line {
+		z-index: 2;
+		background-color: var(--this-color-fade);
 	}
 </style>

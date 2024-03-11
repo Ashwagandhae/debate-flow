@@ -79,6 +79,15 @@ function childToData(
 	return Math.max(1, height);
 }
 
+// TODO add extend arrows when content : empty : content cell
+function fixXlsxWorkbookName(name: string) {
+	for (const char of ['*', '?', ':', '\\', '/', '[', ']']) {
+		name = name.replaceAll(char, '');
+	}
+	name = name.substring(0, 31);
+	return name;
+}
+
 export function downloadXlsx(nodes: Nodes) {
 	const wb: Workbook = new Workbook();
 	for (const flowId of nodes.root.children) {
@@ -87,9 +96,7 @@ export function downloadXlsx(nodes: Nodes) {
 		childToData(nodes, data, flowId, flowId, -1, 0);
 
 		let name: string = getNode(nodes, flowId).unwrap().value.content;
-		if (name.length >= 31) {
-			name = name.substring(0, 31);
-		}
+		name = fixXlsxWorkbookName(name);
 		const ws = wb.addWorksheet(name);
 		ws.columns = getNode(nodes, flowId)
 			.unwrap()
