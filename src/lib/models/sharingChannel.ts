@@ -1,5 +1,4 @@
-import { focusId } from './focus';
-import { isNodesWorthSaving, type BoxId, type FlowId, type Nodes } from './node';
+import { isNodesWorthSaving, type Nodes } from './node';
 import {
 	applyActionBundleAndSyncUi,
 	applyActionBundleBatchAndSyncUi,
@@ -17,11 +16,6 @@ connections.subscribe((connections) => {
 let $nodes: Nodes;
 nodes.subscribe((nodes) => {
 	$nodes = nodes;
-});
-
-let $focusId: FlowId | BoxId | null;
-focusId.subscribe((focusId) => {
-	$focusId = focusId;
 });
 
 export type ActionId = string & { readonly ActionId: unique symbol };
@@ -129,14 +123,8 @@ export function addHostChannelHandler(
 			case 'action': {
 				if ($connections.tag != 'host') return;
 
-				// unfocus before action, refocus after action
-				const oldFocusId = $focusId;
-				focusId.set(null);
-
 				resolvePendingAction($nodes);
 				applyActionBundleAndSyncUi(message.action.actionBundle);
-
-				focusId.set(oldFocusId);
 
 				for (const otherId of Object.keys($connections.holder)) {
 					if (id == otherId) continue;
@@ -182,22 +170,15 @@ export function addGuestChannelHandler(channel: Channel<GuestMessage, HostMessag
 				});
 				break;
 			case 'action': {
-				// unfocus before action, refocus after action
-				const oldFocusId = $focusId;
-				focusId.set(null);
 				resolvePendingAction($nodes);
 				prediction.confirmed.push(structuredClone(message.action.actionBundle));
 				const actionInverse = applyActionBundleAndSyncUi(message.action.actionBundle);
 				prediction.predictedInverse.push(actionInverse);
-				focusId.set(oldFocusId);
 				break;
 			}
 			case 'actionRecieved': {
 				prediction.confirmed.push(prediction.actionsAwaitingConfirmation[message.actionId]);
 				delete prediction.actionsAwaitingConfirmation[message.actionId];
-				// unfocus before action, refocus after action
-				const oldFocusId = $focusId;
-				focusId.set(null);
 				// check if it's possible that all awaiting actions have been confirmed
 				if (Object.keys(prediction.actionsAwaitingConfirmation).length != 0) return;
 				// if there are no actions awaiting confirmation, resolve all pending actions, which might create new actions awaiting confirmation
@@ -215,7 +196,6 @@ export function addGuestChannelHandler(channel: Channel<GuestMessage, HostMessag
 				prediction.predictedInverse = [];
 				prediction.confirmed = [];
 
-				focusId.set(oldFocusId);
 				break;
 			}
 		}
