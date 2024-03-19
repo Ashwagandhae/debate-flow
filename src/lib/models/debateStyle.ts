@@ -430,7 +430,7 @@ export const debateStyles: {
 			{
 				name: '1OC',
 				time: 8 * 60 * 1000,
-				secondary: false
+				secondary: true
 			},
 			{
 				name: '2PC',
@@ -440,12 +440,12 @@ export const debateStyles: {
 			{
 				name: '2OC',
 				time: 8 * 60 * 1000,
-				secondary: false
+				secondary: true
 			},
 			{
 				name: 'OR',
 				time: 4 * 60 * 1000,
-				secondary: false
+				secondary: true
 			},
 			{
 				name: 'PR',
