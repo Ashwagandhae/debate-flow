@@ -8,7 +8,8 @@ export const debateStyleMap = [
 	'congress',
 	'worldSchools',
 	'bigQuestions',
-	'nofSpar'
+	'nofSpar',
+	'parli'
 ] as const;
 
 export type DebateStyleKey = (typeof debateStyleMap)[number];
@@ -406,6 +407,50 @@ export const debateStyles: {
 				name: 'CR',
 				time: 2 * 60 * 1000,
 				secondary: true
+			}
+		]
+	},
+	parli: {
+		primary: {
+			name: 'pro',
+			columns: ['1PC', '1OC', '2PC', '2OC/OR', 'PR'],
+			invert: false
+		},
+		secondary: {
+			name: 'opp',
+			columns: ['1OC', '2PC', '2OC/OR', 'PR'],
+			invert: true
+		},
+		timerSpeeches: [
+			{
+				name: '1PC',
+				time: 7 * 60 * 1000,
+				secondary: false
+			},
+			{
+				name: '1OC',
+				time: 8 * 60 * 1000,
+				secondary: false
+			},
+			{
+				name: '2PC',
+				time: 8 * 60 * 1000,
+				secondary: false
+			},
+			{
+				name: '2OC',
+				time: 8 * 60 * 1000,
+				secondary: false
+			},
+			{
+				name: 'OR',
+				time: 4 * 60 * 1000,
+				secondary: false
+			},
+			{
+				name: 'PR',
+				time: 5 * 60 * 1000,
+				secondary: false
 			}
 		]
 	}
