@@ -2,7 +2,7 @@ import { writable, type Writable } from 'svelte/store';
 
 export type Version = `${number}.${number}.${number}`;
 
-export const CURRENT_VERSION: Version = '1.1.2' as const;
+export const CURRENT_VERSION: Version = '1.1.3' as const;
 
 export function getLastChangelogVersion(): Version {
 	const version = localStorage.getItem('lastUsedVersion') ?? '1.0.0';

@@ -16,6 +16,14 @@
 	<div class="scroll">
 		<section>
 			<div class="above">
+				<h2>v1.1.3</h2>
+			</div>
+			<ul>
+				<li>added classic debate format.</li>
+			</ul>
+		</section>
+		<section>
+			<div class="above">
 				<h2>v1.1.2</h2>
 			</div>
 			<ul>

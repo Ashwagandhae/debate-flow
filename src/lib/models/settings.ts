@@ -132,7 +132,8 @@ export const settings: Settings = new Settings({
 				'World Schools',
 				'Big Questions',
 				'NOF SPAR',
-				'Parli'
+				'Parli',
+				'Classic'
 			]
 		},
 		info: "Already created flows won't be affected by this setting"

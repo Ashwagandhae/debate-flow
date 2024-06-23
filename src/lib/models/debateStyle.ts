@@ -9,7 +9,8 @@ export const debateStyleMap = [
 	'worldSchools',
 	'bigQuestions',
 	'nofSpar',
-	'parli'
+	'parli',
+	'classic'
 ] as const;
 
 export type DebateStyleKey = (typeof debateStyleMap)[number];
@@ -450,6 +451,105 @@ export const debateStyles: {
 			{
 				name: 'PR',
 				time: 5 * 60 * 1000,
+				secondary: false
+			}
+		]
+	},
+	classic: {
+		primary: {
+			name: 'aff',
+			columns: ['AC', 'NC/1NR', '1AR', '2NR', '2AR', 'NS', 'AS'],
+			invert: false
+		},
+		secondary: {
+			name: 'neg',
+			columns: ['NC/1NR', '1AR', '2NR', '2AR', 'AS', 'NS'],
+			invert: true
+		},
+		timerSpeeches: [
+			{
+				name: 'AC',
+				time: 6 * 60 * 1000,
+				secondary: false
+			},
+			{
+				name: 'CX',
+				time: 3 * 60 * 1000,
+				secondary: true
+			},
+			{
+				name: 'NC',
+				time: 6 * 60 * 1000,
+				secondary: true
+			},
+			{
+				name: 'CX',
+				time: 3 * 60 * 1000,
+				secondary: false
+			},
+			{
+				name: '1NR',
+				time: 5 * 60 * 1000,
+				secondary: true
+			},
+			{
+				name: 'CX',
+				time: 3 * 60 * 1000,
+				secondary: false
+			},
+			{
+				name: 'prep',
+				time: 2 * 60 * 1000,
+				secondary: false
+			},
+			{
+				name: '1AR',
+				time: 7 * 60 * 1000,
+				secondary: false
+			},
+			{
+				name: 'CX',
+				time: 3 * 60 * 1000,
+				secondary: true
+			},
+			{
+				name: 'prep',
+				time: 2 * 60 * 1000,
+				secondary: true
+			},
+			{
+				name: '2NR',
+				time: 6 * 60 * 1000,
+				secondary: true
+			},
+			{
+				name: 'prep',
+				time: 2 * 60 * 1000,
+				secondary: false
+			},
+			{
+				name: '2AR',
+				time: 4 * 60 * 1000,
+				secondary: false
+			},
+			{
+				name: 'prep',
+				time: 2 * 60 * 1000,
+				secondary: true
+			},
+			{
+				name: 'NS',
+				time: 3 * 60 * 1000,
+				secondary: true
+			},
+			{
+				name: 'prep',
+				time: 2 * 60 * 1000,
+				secondary: false
+			},
+			{
+				name: 'AS',
+				time: 3 * 60 * 1000,
 				secondary: false
 			}
 		]
