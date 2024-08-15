@@ -22,7 +22,7 @@
 			<Button
 				icon="angleBrackets"
 				text="code"
-				link="https://github.com/Ashwagandhae/debate-flow"
+				link="https://github.com/gmitch215/FlowX"
 				target="_blank"
 			/>
 			<Button

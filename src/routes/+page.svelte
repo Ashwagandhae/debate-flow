@@ -17,8 +17,9 @@
 	<article>
 		<section class="title">
 			<div class="words">
-				<h1>Flower</h1>
-				<p>An easier way to flow.</p>
+				<h1>FlowX</h1>
+				<p>A fork of <a href="https://github.com/Ashwagandhae/debate-flow">Flower</a> with some QOL improvements.</p>
+                <p>An easier way to flow.</p>
 				<p>A better way to debate.</p>
 			</div>
 			<a href="./app" class="flowerholder">
@@ -77,7 +78,7 @@
 			</section>
 		</a>
 		<section class="footer">
-			<a href="https://github.com/Ashwagandhae/debate-flow" target="_blank">Source Code on Github</a
+			<a href="https://github.com/gmitch215/FlowX" target="_blank">Source Code on Github</a
 			>
 		</section>
 	</article>
