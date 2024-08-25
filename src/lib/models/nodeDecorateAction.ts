@@ -123,7 +123,7 @@ export const addNewFlow = decorate(function (
 export const toggleBoxFormat = decorate(function (
 	nodes: Nodes,
 	id: BoxId,
-	format: 'bold' | 'crossed'
+	format: 'bold' | 'crossed' | 'underline'
 ) {
 	const box = getNode(nodes, id).unwrap();
 	return {

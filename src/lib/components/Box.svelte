@@ -126,7 +126,10 @@
 			},
 			b: {
 				handle: () => formatSelf('bold')
-			}
+			},
+            u: {
+                handle: () => formatSelf('underline')
+            }
 		},
 		alt: {
 			Enter: {
@@ -446,7 +449,7 @@
 					role="separator"
 				/>
 
-				<div class="text" class:crossed={box?.crossed} class:bold={box?.bold}>
+				<div class="text" class:crossed={box?.crossed} class:bold={box?.bold} class:underline={box?.underline}>
 					{#if box != null}
 						<Text
 							on:keydown={handleKeydown}
@@ -551,6 +554,12 @@
 	.text.bold {
 		font-weight: var(--font-weight-bold);
 	}
+    .text.underline {
+        text-decoration: underline;
+    }
+    .text.italic {
+        font-style: italic;
+    }
 
 	.childFocus > .content,
 	.activeMouse .content:hover {

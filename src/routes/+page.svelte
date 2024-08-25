@@ -18,9 +18,8 @@
 		<section class="title">
 			<div class="words">
 				<h1>FlowX</h1>
-				<p>A fork of <a href="https://github.com/Ashwagandhae/debate-flow">Flower</a> with some QOL improvements.</p>
-                <p>An easier way to flow.</p>
-				<p>A better way to debate.</p>
+				<p>An even easier way to flow.</p>
+				<p>An even better way to debate.</p>
 			</div>
 			<a href="./app" class="flowerholder">
 				<Flower {hover} />
