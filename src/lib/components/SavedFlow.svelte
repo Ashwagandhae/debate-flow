@@ -95,7 +95,8 @@
 						text={'delete'}
 						tooltip={'delete flow data'}
 						on:click={() => {
-							deleteNodes(key);
+                            if (confirm("Make sure you want to delete these flows permanetly!"))
+							    deleteNodes(key);
 						}}
 					/>
 				</div>
