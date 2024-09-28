@@ -327,7 +327,10 @@
 			{#if $selectedFlowId != null && $nodes[$selectedFlowId]}
 				{#key $selectedFlowId}
 					<div class="title">
-						<Title flowId={$selectedFlowId} deleteSelf={() => deleteFlowAndFocus()} />
+						<Title flowId={$selectedFlowId} deleteSelf={() => {
+                            if (confirm("Are you sure? Make sure your flow is saved!"))
+                                deleteFlowAndFocus()
+                        }}/>
 					</div>
 					<div class="box-control">
 						<BoxControl flowId={$selectedFlowId} />

@@ -8,6 +8,7 @@
 	import { history } from '$lib/models/history';
 	import { nodes, pendingAction } from '$lib/models/store';
 	import { newUpdateAction } from '$lib/models/nodeDecorateAction';
+	import { settings } from '$lib/models/settings';
 
 	export let flowId: FlowId;
 	export let deleteSelf: () => void = () => {};
@@ -115,8 +116,11 @@
 			/>
 		</div>
 		<div class="button">
-			<Button on:click={deleteSelf} icon="trash" tooltip="delete flow" />
+            <Button on:click={settings.saveToLocalStorage} icon="download" tooltip="save to local storage" />
 		</div>
+        <div class="button">
+			<Button on:click={deleteSelf} icon="trash" tooltip="delete flow" />
+        </div>
 	</div>
 </div>
 
