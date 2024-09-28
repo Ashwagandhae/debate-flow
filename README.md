@@ -7,20 +7,20 @@ This is a fork of [Flower](https://github.com/Ashwagandhae/debate-flow) with som
 ## Usage
 
 ```bash
-git clone https://github.com/gmitch215/flowx.git
+git clone https://github.com/gmitch215/FlowX.git
 cd debate-flow
-npm install
+bun install
 ```
 
 ## Development
 
 ```bash
-npm run dev
+bun run dev
 ```
 
 ## Production
 
 ```bash
-npm run build
-npm run preview
+bun run build
+bun run preview
 ```
