@@ -58,8 +58,8 @@
 		{#if setting.type == 'toggle'}
 			<Toggle bind:value auto={setting.auto} />
 		{/if}
-		{#if setting.info}
-			<p>{setting.info}</p>
+		{#if setting.info && setting.type != 'toggle'}
+			<p class="info">{setting.info}</p>
 		{/if}
 	</span>
 	{#if setting.type == 'radio'}
@@ -73,6 +73,9 @@
 	{/if}
 	{#if setting.type == 'slider'}
 		<Slider bind:value auto={setting.auto} detail={setting.detail} />
+	{/if}
+	{#if setting.info && setting.type == 'toggle'}
+		<p class="info">{setting.info}</p>
 	{/if}
 </div>
 
@@ -107,13 +110,13 @@
 		align-items: center;
 		gap: 1em;
 	}
-	.above > p {
+	p.info {
 		color: var(--this-text-weak);
 		opacity: 0;
 		transition: opacity var(--transition-speed);
 		margin: 0;
 	}
-	.top:hover .above > p {
+	.top:hover p.info {
 		opacity: 1;
 	}
 	.hidden {

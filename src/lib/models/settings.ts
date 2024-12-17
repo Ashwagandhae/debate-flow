@@ -346,6 +346,13 @@ export const settings: Settings = new Settings({
 			max: 1000,
 			step: 1
 		}
+	},
+	consistentEnterBehaviour: {
+		name: 'Pressing enter always creates new cell',
+		value: false,
+		auto: false,
+		type: 'toggle',
+		info: 'Reload for these changes to take effect'
 	}
 });
 
@@ -388,5 +395,6 @@ export const settingsGroups: SettingsGroup[] = [
 	{
 		name: 'Toolbar',
 		settings: ['showUndoRedoButtons', 'showBoxCreationButtons', 'showBoxFormatButtons']
-	}
+	},
+	{ name: 'Controls', settings: ['consistentEnterBehaviour'] }
 ];

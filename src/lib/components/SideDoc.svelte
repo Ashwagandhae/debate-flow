@@ -1,5 +1,9 @@
+<script lang="ts">
+	import { sideDocText } from '$lib/models/store';
+</script>
+
 <div class="document">
-	<textarea class="text" placeholder="type notes here" />
+	<textarea class="text" placeholder="type notes here" bind:value={$sideDocText} />
 </div>
 
 <style>

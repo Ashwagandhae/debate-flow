@@ -8,6 +8,7 @@
 	import { focusId, lastFocusIds, selectedFlowId } from '$lib/models/focus';
 	import { nodes, pendingAction } from '$lib/models/store';
 	import { addNewBox, deleteBox, toggleBoxFormat } from '$lib/models/nodeDecorateAction';
+	import { folded } from '$lib/models/fold';
 
 	export let flowId: FlowId;
 
@@ -94,6 +95,15 @@
 		if (targetId == null) return;
 		toggleBoxFormat(targetId, format);
 	}
+	function toggleFold() {
+		if (targetId == null) return;
+		if ($folded.get(targetId)) {
+			$folded.delete(targetId);
+		} else {
+			$folded.set(targetId, true);
+		}
+		$folded = $folded;
+	}
 	function preventBlur(e: Event) {
 		e.preventDefault();
 	}
@@ -175,6 +185,16 @@
 					shortcut: ['commandControl', 'b'],
 					toggled: targetBox()?.value?.bold,
 					disabledReason
+				},
+				{
+					icon: 'foldArrows',
+					onclick: () => toggleFold(),
+					disabled: targetId == null || targetBox()?.children?.length === 0,
+					tooltip: 'toggle folded',
+					shortcut: ['control', 'l'],
+					toggled: targetId != null && $folded.get(targetId),
+					disabledReason:
+						targetBox()?.children?.length === 0 ? 'no children to fold' : disabledReason
 				}
 			]
 		};
@@ -182,7 +202,7 @@
 	function updateButtonGroups() {
 		buttonGroups = getButtonGroups();
 	}
-	$: targetId, $nodes, $pendingAction, updateButtonGroups();
+	$: targetId, $nodes, $pendingAction, $folded, updateButtonGroups();
 
 	let buttonGroupsShow: { [key: string]: boolean } = {};
 	for (let key of Object.keys(buttonGroups)) {

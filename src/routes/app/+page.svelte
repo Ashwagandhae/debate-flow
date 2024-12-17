@@ -335,12 +335,12 @@
 					<div class="flow">
 						<Flow on:focusFlow={focusFlow} flowId={$selectedFlowId} />
 					</div>
-					{#if showSideDoc}
-						<div class="side-doc">
-							<SideDoc />
-						</div>
-					{/if}
 				{/key}
+			{/if}
+			{#if showSideDoc}
+				<div class="side-doc">
+					<SideDoc />
+				</div>
 			{/if}
 		{:else}
 			<div class="prelude">

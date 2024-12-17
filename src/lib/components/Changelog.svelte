@@ -16,6 +16,25 @@
 	<div class="scroll">
 		<section>
 			<div class="above">
+				<h2>v1.1.5</h2>
+			</div>
+			<ul>
+				<li>
+					added cell folding. click <Button icon="foldArrows" inline /> or press <Shortcut
+						keys={['control', 'L']}
+						inline
+					/> to fold and unfold cells. Folding a cell hides any responses so you can minimize unimportant
+					parts of the debate.
+				</li>
+				<li>
+					added setting that makes pressing enter always create a new a cell instead of sometimes
+					moving focus.
+				</li>
+				<li>fixed bug where notes doc would clear on tab switch.</li>
+			</ul>
+		</section>
+		<section>
+			<div class="above">
 				<h2>v1.1.4</h2>
 			</div>
 			<ul>

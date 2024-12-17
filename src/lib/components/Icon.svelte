@@ -222,6 +222,16 @@
 			<path d="M2 50H32" stroke="currentColor" stroke-width="10" stroke-linecap="round"/>
 			<circle cx="21" cy="21" r="21" transform="matrix(-1 0 0 1 88 16)" stroke="currentColor" stroke-width="10"/>
 			<path d="M100 83C100 49.6667 36 49.6667 36 83" stroke="currentColor" stroke-width="10" stroke-linecap="round"/>`
+		},
+		{
+			name: 'unfoldArrows',
+			svg: `<path d="M30 29L49 8L68 29" stroke="currentColor" stroke-width="10" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M68 71L49 92L30 71" stroke="currentColor" stroke-width="10" stroke-linecap="round" stroke-linejoin="round"/>`
+		},
+		{
+			name: 'foldArrows',
+			svg: `<path d="M68 8L49 29L30 8" stroke="currentColor" stroke-width="10" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M30 92L49 71L68 92" stroke="currentColor" stroke-width="10" stroke-linecap="round" stroke-linejoin="round"/>`
 		}
 	];
 	let displayIcon: { name: string; svg: string } | null;

@@ -25,9 +25,16 @@
 		newUpdateAction,
 		toggleBoxFormat
 	} from '$lib/models/nodeDecorateAction';
+	import { settings } from '$lib/models/settings';
+	import { folded } from '$lib/models/fold';
+	import Tooltip from './Tooltip.svelte';
+	import Fold from './Fold.svelte';
 
 	export let id: BoxId | FlowId;
 	export let parentIsEmpty = false;
+
+	let consistentEnterBehaviour: boolean = settings.data['consistentEnterBehaviour']
+		.value as boolean;
 
 	let node: Node<Box | Flow>;
 	let box: Box | null;
@@ -78,6 +85,7 @@
 		if (isFocused) {
 			childFocus = true;
 			childFocusIndex = childIndex;
+			unfold();
 		} else if (childIndex == childFocusIndex) {
 			childFocus = false;
 			childFocusIndex = -1;
@@ -131,11 +139,18 @@
 		alt: {
 			Enter: {
 				handle: () => {
-					blurSelf();
-					if (focusSiblingStrict(index(), -1)) return;
-					if (addSibling(index(), 0)) {
-						focusSibling(index(), 0);
-						history.setPrevAfterFocus($focusId);
+					if (consistentEnterBehaviour) {
+						if (addSibling(index(), 0)) {
+							focusSibling(index(), 0);
+							history.setPrevAfterFocus($focusId);
+						}
+					} else {
+						blurSelf();
+						if (focusSiblingStrict(index(), -1)) return;
+						if (addSibling(index(), 0)) {
+							focusSibling(index(), 0);
+							history.setPrevAfterFocus($focusId);
+						}
 					}
 				}
 			}
@@ -160,11 +175,18 @@
 		none: {
 			Enter: {
 				handle: () => {
-					blurSelf();
-					if (focusSiblingStrict(index(), 1)) return;
-					if (addSibling(index(), 1)) {
-						focusSibling(index(), 1);
-						history.setPrevAfterFocus($focusId);
+					if (consistentEnterBehaviour) {
+						if (addSibling(index(), 1)) {
+							focusSibling(index(), 1);
+							history.setPrevAfterFocus($focusId);
+						}
+					} else {
+						blurSelf();
+						if (focusSiblingStrict(index(), 1)) return;
+						if (addSibling(index(), 1)) {
+							focusSibling(index(), 1);
+							history.setPrevAfterFocus($focusId);
+						}
 					}
 				}
 			},
@@ -175,7 +197,6 @@
 					history.setPrevAfterFocus($focusId);
 				},
 				// only delete if content is empty and there are no children
-				// TODO add cool sharing animations
 				require: () => (content?.length ?? 1) == 0 && node.children.length == 0
 			},
 
@@ -217,6 +238,16 @@
 					} else {
 						focusSelf();
 					}
+				}
+			}
+		},
+		control: {
+			l: {
+				handle: () => {
+					if (!isFolded && node.children.length == 0) {
+						return;
+					}
+					toggleFold();
 				}
 			}
 		}
@@ -401,6 +432,29 @@
 		};
 	}
 
+	function getIsFolded(folded: Map<BoxId, boolean>): boolean {
+		let boxId = checkIdBox($nodes, id);
+		if (boxId == null) return false;
+		return folded.get(boxId) ?? false;
+	}
+
+	$: isFolded = getIsFolded($folded);
+
+	function toggleFold() {
+		let boxId = checkIdBox($nodes, id);
+		if (boxId == null) return;
+		let foldState = $folded.get(boxId) ?? false;
+		$folded.set(boxId, !foldState);
+		$folded = $folded;
+	}
+
+	function unfold() {
+		let boxId = checkIdBox($nodes, id);
+		if (boxId == null) return;
+		$folded.delete(boxId);
+		$folded = $folded;
+	}
+
 	let updateTextHeight: (() => void) | undefined = undefined;
 </script>
 
@@ -478,7 +532,7 @@
 					role="separator"
 				/>
 			</div>
-			{#if node.children.length == 0 && node.level < columnCount}
+			{#if !isFolded && node.children.length == 0 && node.level < columnCount}
 				<button
 					class={`add palette-${outsidePalette}`}
 					on:click={() => {
@@ -491,10 +545,19 @@
 					<Icon name="add" />
 				</button>
 			{/if}
+			{#if isFolded}
+				<button
+					class={`unfoldButton foldParent palette-${outsidePalette}`}
+					on:click={unfold}
+					on:mousedown={preventBlur}
+				>
+					<Fold />
+				</button>
+			{/if}
 		</div>
 	{/if}
 
-	<ul class="children">
+	<ul class="children" class:isFolded>
 		{#each node.children as childId, _ (childId)}
 			<svelte:self
 				id={childId}
@@ -630,7 +693,12 @@
 		padding: 0;
 		margin: 0;
 	}
-	.add {
+	.children.isFolded {
+		height: 0;
+		overflow: hidden;
+	}
+	.add,
+	.unfoldButton {
 		opacity: 0;
 		transition: background var(--transition-speed);
 		border: none;
@@ -646,15 +714,34 @@
 		height: calc(1em + var(--padding) * 2);
 		color: var(--this-text);
 	}
+
+	.unfoldButton {
+		opacity: 1;
+		width: calc(var(--button-size) + var(--padding) * 2);
+		height: calc(100% - var(--padding));
+		margin: 0;
+		margin-top: var(--padding-small);
+		padding: 0 var(--padding);
+		border-radius: 0 var(--border-radius) var(--border-radius) 0;
+		display: flex;
+		flex-direction: column;
+		justify-content: flex-start;
+	}
 	.focus > .content > .add,
-	.activeMouse .add:hover {
+	.focus > .content > .unfoldButton,
+	.activeMouse .add:hover,
+	.activeMouse .unfoldButton:hover {
 		opacity: 1;
 	}
-	.activeMouse .add:hover {
+
+	.activeMouse .add:hover,
+	.activeMouse .unfoldButton:hover {
 		background-color: var(--this-background-indent);
 	}
 	.add:active,
-	.activeMouse .add:active {
+	.activeMouse .add:active,
+	.unfoldButton:active,
+	.activeMouse .unfoldButton:active {
 		background-color: var(--this-background-active);
 	}
 </style>

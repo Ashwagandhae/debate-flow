@@ -39,6 +39,8 @@ export function flowsChange() {
 	flowsChangeCallbacks.forEach((callback) => callback());
 }
 
+export const sideDocText = writable('');
+
 export const frozen = derived(connections, (connections) => {
 	return (
 		connections.tag == 'guest' &&
