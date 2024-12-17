@@ -14,7 +14,7 @@ test('share', async ({ context }) => {
 	await hostPage.getByPlaceholder('type here').press('Shift+Enter');
 	await hostPage.getByRole('textbox').nth(2).fill('test 3');
 	await hostPage.getByRole('textbox').nth(2).press('ArrowLeft');
-	await hostPage.locator('div:nth-child(4) > .top').first().click();
+	await hostPage.locator('.sidebar .header .buttons div:nth-child(4) > .top').first().click();
 	await hostPage.getByRole('button', { name: 'host new room' }).click();
 	await hostPage.getByRole('button', { name: 'add guest' }).click();
 	const joinLink = await hostPage.locator('.copyBox > .text').first().textContent();
@@ -50,6 +50,7 @@ test('share', async ({ context }) => {
 		expect(await page.getByRole('button', { name: 'test 2' }).isVisible());
 		// first tab
 		await page.getByRole('button', { name: 'test', exact: true }).click();
+		await page.waitForTimeout(2000);
 		expect(await page.getByPlaceholder('type here').inputValue()).toBe('test');
 		// second tab
 		await page.getByRole('button', { name: 'test 2' }).click();
@@ -64,8 +65,8 @@ test('share', async ({ context }) => {
 	]) {
 		// add tab on page
 		await page.getByRole('button', { name: 'aff' }).click();
-		await page.getByPlaceholder('type name here').fill(`share test ${i}`);
-		await page.getByPlaceholder('type name here').press('Enter');
+		await page.getByPlaceholder('type name here').first().fill(`share test ${i}`);
+		await page.getByPlaceholder('type name here').first().press('Enter');
 		// check if otherPage has the new tab
 		expect(await otherPage.getByRole('button', { name: `share test ${i}` }).isVisible());
 		i += 1;

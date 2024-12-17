@@ -16,6 +16,14 @@
 	<div class="scroll">
 		<section>
 			<div class="above">
+				<h2>v1.1.4</h2>
+			</div>
+			<ul>
+				<li>made settings headers clickable.</li>
+			</ul>
+		</section>
+		<section>
+			<div class="above">
 				<h2>v1.1.3</h2>
 			</div>
 			<ul>

@@ -11,13 +11,16 @@
 	});
 
 	let settingComponents: Setting[][] = [];
+	let groupHeaderElements: HTMLElement[] = [];
 	for (let i = 0; i < settingsGroups.length; i++) {
 		settingComponents.push([]);
 	}
 	function scrollToSettingElement(groupIndex: number, index: number) {
 		settingComponents[groupIndex][index].scrollToSelf();
 	}
-	// TODO make setting headers (e.g. general) clickable
+	function scrollToGroupHeader(groupIndex: number) {
+		groupHeaderElements[groupIndex].scrollIntoView();
+	}
 </script>
 
 <div class="top palette-plain">
@@ -26,7 +29,13 @@
 			<ul>
 				{#each settingsGroups as group, groupIndex}
 					<li class="title">
-						{group.name}
+						<button
+							on:click={(e) => {
+								scrollToGroupHeader(groupIndex);
+							}}
+						>
+							{group.name}
+						</button>
 					</li>
 					{#each group.settings as key, index}
 						<li>
@@ -59,7 +68,7 @@
 					<Setting {key} setting={settings.data[key]} bind:this={settingComponents[index]} />
 				{/each} -->
 				{#each settingsGroups as group, groupIndex}
-					<li class="title">
+					<li class="title" bind:this={groupHeaderElements[groupIndex]}>
 						<h1>
 							{group.name}
 						</h1>
@@ -86,7 +95,6 @@
 	}
 	.outline {
 		width: 100%;
-		padding: var(--padding-big);
 		padding-top: calc(var(--button-size) + var(--padding) * 2);
 		box-sizing: border-box;
 		display: flex;
@@ -99,14 +107,12 @@
 	.outlineScroll {
 		overflow: auto;
 		height: 100%;
+		padding: 0 var(--padding);
 	}
 	.outlineScroll ul {
 		padding-bottom: 50vh;
 	}
-	.outlineScroll .title {
-		font-weight: var(--font-weight-bold);
-		padding: var(--padding-big) 0 var(--padding) 0;
-	}
+
 	.settings .title {
 		width: 100%;
 		max-width: 30rem;
@@ -120,7 +126,7 @@
 		border: none;
 		background: none;
 		display: block;
-		width: 100%;
+		width: calc(100% - var(--padding));
 		text-align: left;
 		border-radius: var(--border-radius);
 		color: var(--this-text);
@@ -128,6 +134,7 @@
 		overflow-wrap: break-word;
 		transition: background var(--transition-speed);
 		font-weight: var(--font-weight);
+		margin-left: var(--padding);
 	}
 	.outline button:hover {
 		background-color: var(--this-background-indent);
@@ -135,6 +142,14 @@
 	.outline button:active {
 		transition: none;
 		background-color: var(--this-background-active);
+	}
+
+	.outline .title button {
+		font-weight: var(--font-weight-bold);
+		margin-top: var(--padding);
+		padding: var(--padding);
+		margin-left: 0;
+		width: 100%;
 	}
 
 	.content {
