@@ -38,9 +38,15 @@
 		settings.subscribe(['colorTheme'], function () {
 			if (settings.data.colorTheme.value == 1) {
 				document.body.classList.remove('dark');
+				document.body.classList.remove('custom');
 			} else if (settings.data.colorTheme.value == 2) {
 				document.body.classList.add('dark');
+				document.body.classList.remove('custom');
+			} else if (settings.data.colorTheme.value == 3) {
+				document.body.classList.remove('dark');
+				document.body.classList.add('custom');
 			} else {
+				document.body.classList.remove('custom');
 				updateColorTheme();
 			}
 		})
@@ -102,6 +108,122 @@
 		customScrollbarWidth: {
 			name:'custom-scrollbar-width',
 			unit: 'px'
+		},
+		customBackgroundBack: {
+			name:'custom-background-back',
+			unit: ''
+		},
+		customBackground: {
+			name:'custom-background',
+			unit: ''
+		},
+		customBackgroundIndent: {
+			name:'custom-background-indent',
+			unit: ''
+		},
+		customBackgroundActive: {
+			name:'custom-background-active',
+			unit: ''
+		},
+		customBackgroundSecondary: {
+			name:'custom-background-secondary',
+			unit: ''
+		},
+		customBackgroundSecondaryIndent: {
+			name:'custom-background-secondary-indent',
+			unit: ''
+		},
+		customBackgroundSecondaryActive: {
+			name:'custom-background-secondary-active',
+			unit: ''
+		},
+		customBackgroundAccentIndent: {
+			name:'custom-background-accent-indent',
+			unit: ''
+		},
+		customBackgroundAccentActive: {
+			name:'custom-background-accent-active',
+			unit: ''
+		},
+		customBackgroundAccentSecondaryIndent: {
+			name:'custom-background-accent-secondary-indent',
+			unit: ''
+		},
+		customBackgroundAccentSecondaryActive: {
+			name:'custom-background-accent-secondary-active',
+			unit: ''
+		},
+		customText: {
+			name:'custom-text',
+			unit: ''
+		},
+		customTextSelect: {
+			name:'custom-text-select',
+			unit: ''
+		},
+		customTextWeak: {
+			name:'custom-text-weak',
+			unit: ''
+		},
+		customTextAccent: {
+			name:'custom-text-accent',
+			unit: ''
+		},
+		customTextAccentSelect: {
+			name:'custom-text-accent-select',
+			unit: ''
+		},
+		customTextAccentWeak: {
+			name:'custom-background-weak',
+			unit: ''
+		},
+		customTextAccentSecondary: {
+			name:'custom-text-accent-secondary',
+			unit: ''
+		},
+		customTextAccentSecondarySelect: {
+			name:'custom-text-accent-secondary-select',
+			unit: ''
+		},
+		customTextAccentSecondaryWeak: {
+			name:'custom-text-accent-secondary-weak',
+			unit: ''
+		},
+		customColor: {
+			name:'custom-color',
+			unit: ''
+		},
+		customColorFade: {
+			name:'custom-color-fade',
+			unit: ''
+		},
+		customColorAccent: {
+			name:'custom-color-accent',
+			unit: ''
+		},
+		customColorAccentFade: {
+			name:'custom-color-accent-fade',
+			unit: ''
+		},
+		customColorAccentSecondary: {
+			name:'custom-color-accent-secondary',
+			unit: ''
+		},
+		customColorAccentSecondaryFade: {
+			name:'custom-color-accent-secondary-fade',
+			unit: ''
+		},
+		customScrollbarThumb: {
+			name:'custom-scrollbar-thumb',
+			unit: ''
+		},
+		customScrollbarThumbHover: {
+			name:'custom-scrollbar-thumb-hover',
+			unit: ''
+		},
+		customScrollbarBackground: {
+			name:'custom-scrollbar-background',
+			unit: ''
 		}
 	};
 	onDestroy(

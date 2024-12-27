@@ -6,6 +6,8 @@
 	import { settings, type Setting } from '$lib/models/settings';
 	import { tweened } from 'svelte/motion';
 	import { onDestroy } from 'svelte';
+	import { settingIn, settingOut } from '$lib/models/transition';
+	import ColorSelector from './ColorSelector.svelte';
 	export let setting: Setting;
 	export let key: string;
 
@@ -41,7 +43,9 @@
 	}
 </script>
 
-<div class="top" bind:this={element} style={`--spotlight:${$spotlight}`}>
+<div class="top" bind:this={element} in:settingIn={{skip: false}} out:settingOut={{skip: false}}>
+	<div class="spotlight" style={`--spotlight:${$spotlight}`}>
+	</div>
 	<span class="above">
 		<div class="titleReset">
 			<h2>{setting.name}</h2>
@@ -58,7 +62,10 @@
 		{#if setting.type == 'toggle'}
 			<Toggle bind:value auto={setting.auto} />
 		{/if}
-		{#if setting.info && setting.type != 'toggle'}
+		{#if setting.type == 'color'}
+			<ColorSelector bind:value />
+		{/if}
+		{#if setting.info && setting.type != 'toggle' && setting.type != 'color'}
 			<p class="info">{setting.info}</p>
 		{/if}
 	</span>
@@ -74,7 +81,7 @@
 	{#if setting.type == 'slider'}
 		<Slider bind:value auto={setting.auto} detail={setting.detail} />
 	{/if}
-	{#if setting.info && setting.type == 'toggle'}
+	{#if setting.info && (setting.type == 'toggle' || setting.type == 'color')}
 		<p class="info">{setting.info}</p>
 	{/if}
 </div>
@@ -89,16 +96,24 @@
 		width: 100%;
 		box-sizing: border-box;
 	}
-
+	.spotlight {
+		background-color: var(--this-background-indent);
+		opacity: var(--spotlight);
+		border-radius: var(--border-radius);
+		position: absolute;
+		height: 100%;
+		width: 100%;
+		top: calc(-1 * var(--padding)/2);
+		left: calc(-1 * var(--padding)/2);
+	}
 	.above {
 		position: relative;
 		display: flex;
 		flex-direction: row;
 		gap: 1em;
-		height: var(--button-size);
 		align-items: center;
 		padding-bottom: var(--padding);
-		height: 100%;
+		height: auto;
 	}
 	.above h2 {
 		width: max-content;

@@ -4,6 +4,8 @@
 	import ButtonBar from './ButtonBar.svelte';
 	import { settingsGroups, settings } from '$lib/models/settings';
 	import { onDestroy } from 'svelte';
+	import { settingScrollerIn, settingScrollerOut, settingTitleInOut } from '$lib/models/transition';
+	import { downloadSettingsJson } from '$lib/models/file';
 
 	export const closePopup: () => void = () => {};
 	onDestroy(() => {
@@ -21,6 +23,34 @@
 	function scrollToGroupHeader(groupIndex: number) {
 		groupHeaderElements[groupIndex].scrollIntoView();
 	}
+	let groupVisibilities: boolean[];
+	let settingVisibilities: boolean[][];
+	function updateVisibilities() {
+		settingVisibilities = settingsGroups.map((group, _groupIndex) => {
+			return group.settings.map((key, _index) => {
+				if (!settings.data[key]) {
+					console.log(`Key: ${key} does not exist in settings.`)
+					return false;
+				}
+				if (!settings.data[key].visibilityCondition || settings.data[key].visibilityCondition && settings.data[key].visibilityCondition()) {
+					return true;
+				}
+				return false;
+			});
+		});
+		groupVisibilities = settingVisibilities.map((group, _groupIndex) => {
+			return group.some(vis => vis);
+		});
+	}
+	updateVisibilities();
+	onDestroy(settings.subscribe(["any"], () => {
+		updateVisibilities();
+	}));
+
+	function openUploadDialog() {
+		(document.getElementById('uploadId') as HTMLElement).click();
+		closePopup();
+	}
 </script>
 
 <div class="top palette-plain">
@@ -28,23 +58,27 @@
 		<div class="outlineScroll" class:customScrollbar={settings.data.customScrollbar.value}>
 			<ul>
 				{#each settingsGroups as group, groupIndex}
-					<li class="title">
-						<button
-							on:click={(e) => {
-								scrollToGroupHeader(groupIndex);
-							}}
-						>
-							{group.name}
-						</button>
-					</li>
-					{#each group.settings as key, index}
-						<li>
-							<button on:click={() => scrollToSettingElement(groupIndex, index)}>
-								{settings.data[key].name}
+					{#if groupVisibilities[groupIndex]}
+						<li class="title" in:settingTitleInOut={{skip:false}} out:settingTitleInOut={{skip:false}}>
+							<button
+								on:click={(e) => {
+									scrollToGroupHeader(groupIndex);
+								}}
+							>
+								{group.name}
 							</button>
 						</li>
+					{/if}
+					{#each group.settings as key, index}
+						{#if settingVisibilities[groupIndex][index]}
+							<li in:settingScrollerIn={{skip:false}} out:settingScrollerOut={{skip:false}}>
+								<button on:click={() => scrollToSettingElement(groupIndex, index)}>
+									{settings.data[key].name}
+								</button>
+							</li>
+						{/if}
 					{/each}
-				{/each}
+			{/each}
 			</ul>
 		</div>
 	</div>
@@ -62,23 +96,41 @@
 				on:click={() => settings.randomize()}
 			/>
 		</section>
+		<section class="controls">
+			<Button
+				icon="dots"
+				text="import settings"
+				tooltip="import settings from file"
+				on:click={() => openUploadDialog()}
+			/>
+			<Button
+				icon="dots"
+				text="export settings"
+				tooltip="export settings to file"
+				on:click={() => downloadSettingsJson()}
+			/>
+		</section>
 		<section class="settings">
 			<ul>
 				<!-- {#each Object.keys(settings.data) as key, index}
 					<Setting {key} setting={settings.data[key]} bind:this={settingComponents[index]} />
 				{/each} -->
 				{#each settingsGroups as group, groupIndex}
-					<li class="title" bind:this={groupHeaderElements[groupIndex]}>
-						<h1>
-							{group.name}
-						</h1>
-					</li>
+					{#if groupVisibilities[groupIndex]}
+						<li class="title" bind:this={groupHeaderElements[groupIndex]} in:settingTitleInOut={{skip:false}} out:settingTitleInOut={{skip:false}}>
+							<h1>
+								{group.name}
+							</h1>
+						</li>
+					{/if}
 					{#each group.settings as key, index}
-						<Setting
-							{key}
-							setting={settings.data[key]}
-							bind:this={settingComponents[groupIndex][index]}
-						/>
+						{#if settingVisibilities[groupIndex][index]}
+							<Setting
+								{key}
+								setting={settings.data[key]}
+								bind:this={settingComponents[groupIndex][index]}
+							/>
+						{/if}
 					{/each}
 				{/each}
 			</ul>

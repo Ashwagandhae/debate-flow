@@ -164,6 +164,56 @@ body.dark {
 	--scrollbar-thumb: hsl(0 0% 50%);
 	--scrollbar-thumb-hover: hsl(0 0% 55%);
 }
+body.custom {
+	--background-back: var(--custom-background-back);
+
+	--background: var(--custom-background);
+	--background-indent: var(--custom-background-indent);
+	--background-active: var(--custom-background-active);
+
+	--background-secondary: var(--custom-background-secondary);
+	--background-secondary-indent: var(--custom-background-secondary-indent);
+	--background-secondary-active: var(--custom-background-secondary-active);
+
+	--background-accent-indent: var(--custom-background-accent-indent);
+	--background-accent-active: var(--custom-background-accent-active);
+
+	--background-accent-secondary-indent: var(--custom-background-accent-secondary-indent);
+	--background-accent-secondary-active: var(--custom-background-accent-secondary-active);
+
+	--text: var(--custom-text);
+	--text-select: var(--custom-text-select);
+	--text-weak: var(--custom-text-weak);
+	--text-error: hsl(0, 100%, 70%);
+
+	--text-accent: var(--custom-text-accent);
+	--text-accent-select: var(--custom-text-accent-select);
+	--text-accent-weak: var(--custom-text-accent-weak);
+
+	--text-accent-secondary: var(--custom-text-accent-secondary);
+	--text-accent-secondary-select: var(--custom-text-accent-secondary-select);
+	--text-accent-secondary-weak: var(--custom-text-accent-secondary-weak);
+
+	--color: var(--custom-color);
+	--color-fade: var(--custom-color-fade);
+
+	--color-accent: var(--custom-color-accent);
+	--color-accent-fade: var(--custom-color-accent-fade);
+
+	--color-accent-secondary: var(--custom-color-accent-secondary);
+	--color-accent-secondary-fade: var(--custom-color-accent-secondary-fade);
+
+	--slider-lightness: 24%;
+	--slider-lightness-hover: 30%;
+	--slider-saturation: 20%;
+	--slider-switch-lightness: 42%;
+
+	--color-screen: hsl(0 0% 0%/ 0.4);
+
+	--scrollbar-background: var(--custom-scrollbar-background);
+	--scrollbar-thumb: var(--custom-scrollbar-thumb);
+	--scrollbar-thumb-hover: var(--custom-scrollbar-thumb-hover);
+}
 .palette-plain {
 	--this-background: var(--background);
 	--this-background-indent: var(--background-indent);

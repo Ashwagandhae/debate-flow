@@ -302,3 +302,122 @@ export function instructionOut(node: HTMLElement, { reverse }: { reverse: boolea
 		}
 	};
 }
+
+export function settingIn(node: HTMLElement, { skip }: { skip: boolean }) {
+	if (skip || settings.data.transitionSpeed.value as number === 0) {
+		return {
+			duration: 0,
+			css: () => ''
+		};
+	}
+	const h = node.clientHeight;
+
+	return {
+		duration: settings.data.transitionSpeed.value as number,
+		css: (t: number) => {
+			const eased = quadOut(t);
+
+			return `
+        height: calc(${eased * h}px);
+        overflow: visible;
+        clip-path: inset(${(1 - eased) * h - 2}px 0 -${h}px 0);
+        transform: translateY(calc(${(1 - eased) * -h}px));
+		padding-bottom: calc(var(--padding) * ${eased});
+		padding-top: calc(var(--padding) * ${eased});
+        `;
+		}
+	};
+}
+
+export function settingOut(node: HTMLElement, { skip }: { skip: boolean }) {
+	// don't do transition if skip
+	if (skip || settings.data.transitionSpeed.value as number === 0) {
+		return {
+			duration: 0,
+			css: () => ''
+		};
+	}
+	const h = node.clientHeight;
+	return {
+		duration: settings.data.transitionSpeed.value as number,
+		css: (t: number) => {
+			const eased = quadOut(t);
+			return `
+        height: ${eased * h}px;
+        overflow: visible;
+        clip-path: inset(${(1 - eased) * h - 2}px 0 -${h}px 0);
+        transform: translateY(calc(${(1 - eased) * -h}px));
+		padding-bottom: calc(var(--padding) * ${eased});
+		padding-top: calc(var(--padding) * ${eased});
+        `;
+		}
+	};
+}
+
+export function settingScrollerIn(node: HTMLElement, { skip }: { skip: boolean }) {
+	// don't do transition if skip
+	if (skip || settings.data.transitionSpeed.value as number === 0) {
+		return {
+			duration: 0,
+			css: () => ''
+		};
+	}
+	const h = node.clientHeight;
+	return {
+		duration: settings.data.transitionSpeed.value as number,
+		css: (t: number) => {
+			const eased = quadOut(t);
+			return `
+        height: ${eased * h}px;
+        overflow: visible;
+        clip-path: inset(${(1 - eased) * h - 2}px 0 -${h}px 0);
+        transform: translateY(calc(${(1 - eased) * -h}px));
+        `;
+		}
+	};
+}
+
+export function settingScrollerOut(node: HTMLElement, { skip }: { skip: boolean }) {
+	// don't do transition if skip
+	if (skip || settings.data.transitionSpeed.value as number === 0) {
+		return {
+			duration: 0,
+			css: () => ''
+		};
+	}
+	const h = node.clientHeight;
+	return {
+		duration: settings.data.transitionSpeed.value as number,
+		css: (t: number) => {
+			const eased = quadOut(t);
+			return `
+        height: ${eased * h}px;
+        overflow: visible;
+        clip-path: inset(${(1 - eased) * h - 2}px 0 -${h}px 0);
+        transform: translateY(calc(${(1 - eased) * -h}px));
+        `;
+		}
+	};
+}
+
+export function settingTitleInOut(node: HTMLElement, { skip }: { skip: boolean }) {
+	if (skip || settings.data.transitionSpeed.value as number === 0) {
+		return {
+			duration: 0,
+			css: () => ''
+		};
+	}
+	const h = node.clientHeight;
+	return {
+		duration: settings.data.transitionSpeed.value as number,
+		css: (t: number) => {
+			const eased = quadOut(t);
+			return `
+        height: ${eased * h}px;
+        overflow: visible;
+        clip-path: inset(${(1 - eased) * h - 2}px 0 -${h}px 0);
+        transform: translateY(calc(${(1 - eased) * -h}px));
+        `;
+		}
+	};
+}

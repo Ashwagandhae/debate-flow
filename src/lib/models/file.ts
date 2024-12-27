@@ -3,6 +3,7 @@ import { type BoxId, type FlowId, type Nodes, newFlowId, newBoxId, getNode } fro
 import type { OldBox, OldFlows } from './oldType';
 import { newNodes } from './store';
 import { applyActionBundle } from './nodeAction';
+import { settings, SETTINGS_VERSION, type SaveableSettings } from './settings';
 
 const CURRENT_SAVE_VERSION: Version = 1 as const;
 
@@ -20,10 +21,9 @@ export function getJson(nodes: Nodes): string {
 	return JSON.stringify(saveable);
 }
 
-export function loadNodes(data: string): Nodes {
-	const saved = JSON.parse(data);
-	let version: Version = saved?.version ?? 0;
-	let upgraded = saved;
+export function loadNodes(data: {[key: string]: any}): Nodes {
+	let version: Version = data?.version ?? 0;
+	let upgraded = data;
 	while (version < CURRENT_SAVE_VERSION) {
 		if (upgrade[version]) {
 			upgraded = upgrade[version](upgraded);
@@ -32,13 +32,35 @@ export function loadNodes(data: string): Nodes {
 			throw new Error('Cannot upgrade save data');
 		}
 	}
-	const ret: SaveableNodes = upgraded;
+	const ret: SaveableNodes = upgraded as SaveableNodes;
 	return ret.nodes;
 }
 
 export function downloadJson(nodes: Nodes) {
 	const data: string = getJson(nodes);
 	downloadString(data, 'flow.json');
+}
+
+export function downloadSettingsJson() {
+	let data = settings.convertSettingsToJson(true);
+	downloadString(data, 'settings.json');
+}
+
+export function importSettingsJson(data: {[key: string]: any}) {
+	if (!data["isSettings"]) {
+		return;
+	}
+
+	if (data["version"] != SETTINGS_VERSION) {
+		return; // Handle upgrading settings here if needed in the future
+	}
+
+	try {
+		settings.parseJsonToSettings(data);
+	}
+	catch (e) {
+		return;
+	}
 }
 
 export function downloadString(data: string, filename: string) {
@@ -179,12 +201,12 @@ export function downloadXlsx(nodes: Nodes) {
 }
 
 const upgrade: {
-	[key: number]: (saved: unknown) => unknown;
+	[key: number]: (saved: {[key: string]: any}) => SaveableNodes;
 } = {
 	0: upgrade_0_1
 };
 
-function upgrade_0_1(saved: unknown): unknown {
+function upgrade_0_1(saved: {[key: string]: any}): SaveableNodes {
 	const flows = saved as OldFlows;
 	const nodes: Nodes = newNodes();
 	for (let i = 0; i < flows.length; i++) {

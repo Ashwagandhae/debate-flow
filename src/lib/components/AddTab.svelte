@@ -1,62 +1,93 @@
 <script lang="ts">
 	import Button from './Button.svelte';
 	import TutorialHighlight from './TutorialHighlight.svelte';
-	import { debateStyleMap, debateStyles, type DebateStyleFlow } from '$lib/models/debateStyle';
+	import { getDebateStyleFlow, getAllDebateStyleFlows, type DebateStyleFlow} from '$lib/models/debateStyle';
 	import { settings } from '$lib/models/settings';
 	import { onDestroy } from 'svelte';
 
 	export let addFlow: (type: DebateStyleFlow) => void;
 	export let switchSpeakers: boolean;
 
-	let debateStyleIndex = settings.data['debateStyle'].value as number;
+	let primaryFlow: DebateStyleFlow | null;
+	let secondaryFlow: DebateStyleFlow | null;
+	let templates: DebateStyleFlow[];
+	let hasSwitch: boolean;
+
 	onDestroy(
-		settings.subscribe(['debateStyle'], (key: string) => {
-			debateStyleIndex = settings.data[key].value as number;
+		settings.subscribe(['any'], (key: string) => { // This could be a specific subscribe, but it doesn't hurt performance much to subscribe to all and is easier
+			templates = getAllDebateStyleFlows();
+			primaryFlow = getDebateStyleFlow("primary");
+			secondaryFlow = getDebateStyleFlow("secondary");
+			if (primaryFlow != null) {
+				hasSwitch = primaryFlow.columnsSwitch != null;
+			}
 		})
 	);
-	$: debateStyle = debateStyles[debateStyleMap[debateStyleIndex]];
 
-	$: hasSwitch = debateStyle.primary.columnsSwitch != null;
+	function flipPairs(arr: DebateStyleFlow[]) {
+		// produce new array where [0,1,2,3] => [1,0,3,2]
+		const result = [];
+		for (let i = 0; i < arr.length; i += 2) {
+			if (arr[i + 1]) {
+				result.push(arr[i + 1]);
+				result.push(arr[i]);
+			} else {
+				result.push(arr[i]);
+			}
+		}
+		return result;
+	}
+
+	$: flippedTemplates = flipPairs(templates);
+
+	$: currentStyleTemplates = (hasSwitch && switchSpeakers)
+    ? flippedTemplates
+    : templates;
+
 </script>
 
 <div class="addTab" class:hasSwitch class:switch={switchSpeakers}>
 	<div class="buttons">
-		<TutorialHighlight step={5}>
-			<Button
-				text={debateStyle.primary.name}
-				palette="accent"
-				icon="add"
-				on:click={() => addFlow(debateStyle.primary)}
-				tooltip="create new {debateStyle.primary.name} flow"
-				shortcut={['control', 'n']}
-			/>
-		</TutorialHighlight>
-		{#if debateStyle.secondary != null}
-			<TutorialHighlight step={6}>
+		{#each currentStyleTemplates as flow, index}
+			{#if index === 0 || index === 1}
+				<TutorialHighlight step={5 + index}> <!-- 5 is a magic number. It is the starting step when the add tab is shown  -->
+					<!-- index % 2 === (switchSpeakers ? 1 : 0) can be used instead of !flow.invert for mandatory flip-flop colors -->
+					<Button
+						text={flow.name}
+						palette={!flow.invert ? "accent" : "accent-secondary"}
+						icon="add"
+						on:click={() => addFlow(flow)}
+						tooltip={`create new ${flow.name} flow`}
+						shortcut={
+							index === 0
+								? ['control', 'n']
+								: index === 1
+									? ['control', 'shift', 'n']
+									: null
+						}
+					/>
+				</TutorialHighlight>
+			{/if}
+			{#if index > 1} <!-- Only use the first two buttons in the tutorial -->
 				<Button
-					text={debateStyle.secondary.name}
-					palette="accent-secondary"
+					text={flow.name}
+					palette={!flow.invert ? "accent" : "accent-secondary"}
 					icon="add"
-					on:click={() => {
-						const style = debateStyle.secondary;
-						if (style == null) return;
-						addFlow(style);
-					}}
-					tooltip="create new {debateStyle.secondary.name} flow"
-					shortcut={['control', 'shift', 'n']}
+					on:click={() => addFlow(flow)}
+					tooltip={`create new ${flow.name} flow`}
 				/>
-			</TutorialHighlight>
-		{/if}
+			{/if}
+		{/each}
 	</div>
-	{#if debateStyle.secondary != null && hasSwitch}
+	{#if primaryFlow != null && secondaryFlow != null && hasSwitch}
 		<div class="switch">
 			<Button
 				text={'first'}
 				icon="arrowLeft"
 				palette={switchSpeakers ? 'accent-secondary' : 'accent'}
 				tooltip={switchSpeakers
-					? `set ${debateStyle.primary.name} to first speaker`
-					: `set ${debateStyle.secondary.name} to first speaker`}
+					? `set ${primaryFlow.name} to first speaker`
+					: `set ${secondaryFlow.name} to first speaker`}
 				on:click={() => (switchSpeakers = !switchSpeakers)}
 			/>
 		</div>
@@ -72,12 +103,8 @@
 		flex-direction: row;
 		gap: var(--padding);
 	}
-
 	.hasSwitch .buttons {
 		flex-direction: column;
-	}
-	.hasSwitch.switch .buttons {
-		flex-direction: column-reverse;
 	}
 	.addTab.hasSwitch {
 		display: flex;

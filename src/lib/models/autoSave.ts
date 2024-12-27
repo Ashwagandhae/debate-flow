@@ -67,8 +67,10 @@ export function getSavedNodesDatas(): SavedNodesDatas {
 
 export function loadSavedNodes(key: NodeKey, modifyOriginal = false) {
 	const raw = localStorage.getItem(key);
+	if (!raw) return;
+	const nodesObj = JSON.parse(raw);
 	if (raw === null) return [];
-	const newNodes: Nodes = loadNodes(raw);
+	const newNodes: Nodes = loadNodes(nodesObj);
 	replaceNodes(newNodes);
 	if (modifyOriginal) {
 		flowKey = key;
