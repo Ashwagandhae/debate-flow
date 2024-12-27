@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { afterUpdate, onDestroy, onMount } from 'svelte';
+	import { afterUpdate, onDestroy } from 'svelte';
 	import { settings } from '$lib/models/settings';
 
 	export let value: string;
@@ -36,8 +36,7 @@
 <textarea
 	bind:value
 	bind:this={textarea}
-	on:load={autoHeight}
-	on:input={autoHeight}
+	on:load
 	on:input
 	on:beforeinput
 	on:keydown

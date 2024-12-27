@@ -49,8 +49,14 @@
 				box = null;
 			} else {
 				box = node.value;
-				// update text height in case it changes, for example due to bold
-				updateTextHeight && updateTextHeight();
+				// update text height in case it changes, for example due to bold 
+
+				if ($focusId == id) {
+					// The below line causes >100ms extra computation when adding new cells on a large doc 
+					// Updating only when focused (this is when it may experience text style changes) will likely allow for major improvement
+					updateTextHeight && updateTextHeight(); // This doesn't run on spawn b/c updateTextHeight is undefined
+				}
+				
 			}
 		}
 	}
@@ -92,11 +98,12 @@
 		}
 	}
 
+	let mounted = false;
 	let lastFocus = $focusId;
 	function focusChange() {
 		if ($focusId == id) {
 			dispatchSelfFocus(index(), true);
-			if (node.level >= 1) {
+			if (node.level >= 1 && mounted) { // Only change focus if the element is mounted to avoid double call (one call made pre-mount) lag
 				textarea && textarea.focus();
 			}
 		} else if (lastFocus == id) {
@@ -104,7 +111,10 @@
 		}
 		lastFocus = $focusId;
 	}
-	onMount(focusChange);
+	onMount(() => {
+		mounted = true;
+		focusChange();
+	});
 	$: $focusId, focusChange();
 
 	function handleBlur() {
