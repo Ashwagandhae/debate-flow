@@ -7,6 +7,7 @@
 	import { focusId } from '$lib/models/focus';
 	import { nodes } from '$lib/models/store';
 	import { addNewEmpty } from '$lib/models/nodeDecorateAction';
+	import { settings } from '$lib/models/settings';
 
 	export let flowId: FlowId;
 	let node: Node<Flow>;
@@ -33,7 +34,7 @@
 
 <div class="top" class:invert={flow.invert} style={`--column-count: ${flow.columns.length};`}>
 	<div class="viewer">
-		<div class="content">
+		<div class="content" class:customScrollbar={settings.data.customScrollbar.value}>
 			<Box id={flowId} />
 		</div>
 		<div class="headers">
@@ -119,7 +120,8 @@
 		padding-top: calc(2.4em + var(--padding));
 		width: calc(var(--column-width) * var(--column-count));
 		height: var(--view-height);
-		overflow: auto;
+		overflow-x: clip;
+		overflow-y: auto;
 		box-sizing: border-box;
 	}
 </style>

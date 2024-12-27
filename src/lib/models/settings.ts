@@ -279,6 +279,25 @@ export const settings: Settings = new Settings({
 			step: 1
 		}
 	},
+	customScrollbar: {
+		name: 'Custom scrollbars',
+		type: 'toggle',
+		value: true,
+		auto: true,
+		info: 'Reload for these changes to take effect'
+	},
+	scrollbarWidth: {
+		name: 'Scrollbar Width',
+		value: 6,
+		auto: 6,
+		type: 'slider',
+		detail: {
+			min: 1,
+			max: 26,
+			step: 1
+		},
+		info: 'Does not work on Firefox'
+	},
 	padding: {
 		name: 'Padding',
 		value: 8,
@@ -387,6 +406,10 @@ export const settingsGroups: SettingsGroup[] = [
 	{
 		name: 'Borders',
 		settings: ['lineWidth', 'borderRadius']
+	},
+	{
+		name: 'Scrollbars',
+		settings: ['scrollbarWidth', 'customScrollbar']
 	},
 	{
 		name: 'Animations',
