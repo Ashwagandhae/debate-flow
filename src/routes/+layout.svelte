@@ -103,8 +103,8 @@
 			name: 'side-doc-width',
 			unit: 'px'
 		},
-		scrollbarWidth: {
-			name:'scrollbar-width',
+		customScrollbarWidth: {
+			name:'custom-scrollbar-width',
 			unit: 'px'
 		}
 	};
