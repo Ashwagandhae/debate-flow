@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { MAX_SAVED_FLOWS, type SavedNodesDatas } from '$lib/models/autoSave';
+	import { settings } from '$lib/models/settings';
 	import Button from './Button.svelte';
 	import SavedFlow from './SavedFlow.svelte';
 
@@ -26,7 +27,7 @@
 			up to {MAX_SAVED_FLOWS} flows saved in your browser but lost when you clear cookies
 		</p>
 	</div>
-	<div class="view">
+	<div class="view" class:customScrollbar={settings.data.customScrollbar.value}>
 		<div class="flows">
 			{#each sortedSavedFlowsDatas as [key, flowData] (key)}
 				<SavedFlow {flowData} {key} />

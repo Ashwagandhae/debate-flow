@@ -1,9 +1,10 @@
 <script lang="ts">
+	import { settings } from '$lib/models/settings';
 	import { sideDocText } from '$lib/models/store';
 </script>
 
 <div class="document">
-	<textarea class="text" placeholder="type notes here" bind:value={$sideDocText} />
+	<textarea class="text" placeholder="type notes here" bind:value={$sideDocText} class:customScrollbar={settings.data.customScrollbar.value}/>
 </div>
 
 <style>

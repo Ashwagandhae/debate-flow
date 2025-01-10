@@ -109,6 +109,10 @@ body {
 	--slider-switch-lightness: 60%;
 
 	--color-screen: hsl(0 0% 0%/ 0.3);
+
+	--scrollbar-background: var(--background-back);
+	--scrollbar-thumb: hsl(0 0% 70%);
+	--scrollbar-thumb-hover: hsl(0 0% 75%);
 }
 body.dark {
 	--background-back: hsl(0 0% 10%);
@@ -155,6 +159,10 @@ body.dark {
 	--slider-switch-lightness: 42%;
 
 	--color-screen: hsl(0 0% 0%/ 0.4);
+
+	--scrollbar-background: var(--background-back);
+	--scrollbar-thumb: hsl(0 0% 50%);
+	--scrollbar-thumb-hover: hsl(0 0% 55%);
 }
 .palette-plain {
 	--this-background: var(--background);
@@ -207,4 +215,26 @@ a:visited {
 a:hover,
 a:active {
 	color: var(--text-accent-select);
+}
+.customScrollbar::-webkit-scrollbar {
+	width: var(--custom-scrollbar-width); 
+	height: var(--custom-scrollbar-width);
+}
+.customScrollbar::-webkit-scrollbar-thumb {
+	background: var(--scrollbar-thumb); 
+	border: 2px solid var(--scrollbar-background);
+}
+.customScrollbar::-webkit-scrollbar-thumb:hover {
+	background: var(--scrollbar-thumb-hover); 
+}
+.customScrollbar::-webkit-scrollbar-track {
+	background: var(--scrollbar-background); 
+}
+
+/* Firefox-specific styles */
+@supports (-moz-appearance: none) {
+	.customScrollbar {
+		scrollbar-width: thin;
+		scrollbar-color: var(--scrollbar-thumb) var(--scrollbar-background);
+	}
 }

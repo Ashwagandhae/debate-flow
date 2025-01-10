@@ -7,6 +7,7 @@
 		downloadSavedNodes
 	} from '$lib/models/autoSave';
 	import { hiddenButtons, savedFlow } from '$lib/models/transition';
+	import { settings } from '$lib/models/settings';
 
 	function prettyDate(date: string) {
 		const today = new Date();
@@ -36,7 +37,7 @@
 </script>
 
 <div class="flow" transition:savedFlow>
-	<div class="infoView">
+	<div class="infoView" class:customScrollbar={settings.data.customScrollbar.value}>
 		<div class="infos">
 			{#each flowData.flowInfos as info}
 				<div
