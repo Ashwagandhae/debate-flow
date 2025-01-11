@@ -1,11 +1,12 @@
 <script lang="ts">
-	import { afterUpdate, onDestroy } from 'svelte';
+	import { afterUpdate, onDestroy, onMount } from 'svelte';
 	import { settings } from '$lib/models/settings';
 
 	export let value: string;
 	export let placeholder: string = '';
 	export let nowrap: boolean = false;
 	export let strikethrough: boolean = false;
+	export let bold: boolean | undefined = undefined;
 	let whiteSpaceCss: string;
 	$: {
 		if (nowrap) {
@@ -16,17 +17,20 @@
 	}
 	let textarea: HTMLTextAreaElement;
 
-	export function autoHeight() {
-		if (textarea) {
+	let lastValue: string | undefined;
+	let lastBold: boolean | undefined;
+	export function autoHeight(force?: boolean) {
+		if (textarea && (lastValue !== value || lastBold !== bold || force)) {
 			textarea.value = textarea.value.replace(/\r?\n|\r/g, '');
 			textarea.style.height = '0px';
 			textarea.style.height = textarea.scrollHeight + 'px';
+
+			lastValue = value;
+			lastBold = bold;
 		}
 	}
-	afterUpdate(function () {
-		autoHeight();
-	});
-	onDestroy(settings.subscribe(['fontSize'], autoHeight));
+	onDestroy(settings.subscribe(['fontSize'], () => autoHeight(true)));
+	onMount(() => {requestAnimationFrame(() => autoHeight())});
 	export const focus = () => {
 		// only focus if not already focused
 		textarea.focus();
@@ -37,7 +41,7 @@
 	bind:value
 	bind:this={textarea}
 	on:load
-	on:input
+	on:input={() => requestAnimationFrame(() => autoHeight())}
 	on:beforeinput
 	on:keydown
 	on:focus

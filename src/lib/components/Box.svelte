@@ -49,14 +49,9 @@
 				box = null;
 			} else {
 				box = node.value;
-				// update text height in case it changes, for example due to bold 
-
-				if ($focusId == id) {
-					// The below line causes >100ms extra computation when adding new cells on a large doc 
-					// Updating only when focused (this is when it may experience text style changes) will likely allow for major improvement
-					updateTextHeight && updateTextHeight(); // This doesn't run on spawn b/c updateTextHeight is undefined
-				}
-				
+				requestAnimationFrame(() => (updateTextHeight && updateTextHeight())); 
+				// It's likely a good idea to wait until right before the next repaint to call autoheight
+				// Also it creates more parity with dev
 			}
 		}
 	}
@@ -517,6 +512,7 @@
 							on:blur={handleBlur}
 							on:focus={handleFocus}
 							bind:value={content}
+							bold={box.bold ? true : false}
 							bind:this={textarea}
 							on:beforeinput={handleBeforeInput}
 							bind:autoHeight={updateTextHeight}
