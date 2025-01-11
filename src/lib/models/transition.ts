@@ -4,7 +4,7 @@ import { settings } from '../models/settings';
 
 export function boxIn(node: HTMLElement, { skip }: { skip: boolean }) {
 	// don't do transition if skip
-	if (skip) {
+	if (skip || settings.data.transitionSpeed.value as number === 0) {
 		return {
 			duration: 0,
 			css: () => ''
@@ -28,7 +28,7 @@ export function boxIn(node: HTMLElement, { skip }: { skip: boolean }) {
 }
 export function boxOut(node: HTMLElement, { skip }: { skip: boolean }) {
 	// don't do transition if skip
-	if (skip) {
+	if (skip || settings.data.transitionSpeed.value as number === 0) {
 		return {
 			duration: 0,
 			css: () => ''

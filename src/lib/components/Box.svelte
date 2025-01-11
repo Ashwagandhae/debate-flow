@@ -49,8 +49,9 @@
 				box = null;
 			} else {
 				box = node.value;
-				// update text height in case it changes, for example due to bold
-				updateTextHeight && updateTextHeight();
+				requestAnimationFrame(() => (updateTextHeight && updateTextHeight())); 
+				// It's likely a good idea to wait until right before the next repaint to call autoheight
+				// Also it creates more parity with dev
 			}
 		}
 	}
@@ -92,11 +93,12 @@
 		}
 	}
 
+	let mounted = false;
 	let lastFocus = $focusId;
 	function focusChange() {
 		if ($focusId == id) {
 			dispatchSelfFocus(index(), true);
-			if (node.level >= 1) {
+			if (node.level >= 1 && mounted) { // Only change focus if the element is mounted to avoid double call (one call made pre-mount) lag
 				textarea && textarea.focus();
 			}
 		} else if (lastFocus == id) {
@@ -104,7 +106,10 @@
 		}
 		lastFocus = $focusId;
 	}
-	onMount(focusChange);
+	onMount(() => {
+		mounted = true;
+		focusChange();
+	});
 	$: $focusId, focusChange();
 
 	function handleBlur() {
@@ -507,6 +512,7 @@
 							on:blur={handleBlur}
 							on:focus={handleFocus}
 							bind:value={content}
+							bold={box.bold ? true : false}
 							bind:this={textarea}
 							on:beforeinput={handleBeforeInput}
 							bind:autoHeight={updateTextHeight}
