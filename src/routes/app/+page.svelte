@@ -258,6 +258,24 @@
 
 	let switchSpeakers = false;
 
+	// Custom scrollbar/overflow logic
+	onMount(() => { 
+		document.body.classList.add("app");
+	});
+
+	onDestroy(() => {
+		document.body.classList.remove("app");
+		document.body.classList.remove("customScrollbar");
+	});
+
+	$: {
+		if (settings.data.customScrollbar.value) {
+			document.body.classList.add("customScrollbar");
+		} else {
+			document.body.classList.remove("customScrollbar");
+		}
+	}
+
 	// TODO:
 	// add custom background color
 	// add command K
@@ -307,7 +325,7 @@
 					]}
 				/>
 			</div>
-			<div class="tabs">
+			<div class="tabs" class:customScrollbar={settings.data.customScrollbar.value}>
 				<div class="tabScroll">
 					<SortableList list={$nodes.root.children} on:sort={handleSort} let:index>
 						<Tab
@@ -332,7 +350,7 @@
 					<div class="box-control">
 						<BoxControl flowId={$selectedFlowId} />
 					</div>
-					<div class="flow">
+					<div class="flow" class:customScrollbar={settings.data.customScrollbar.value}>
 						<Flow on:focusFlow={focusFlow} flowId={$selectedFlowId} />
 					</div>
 				{/key}
@@ -351,6 +369,10 @@
 </main>
 
 <style>
+	:global(body.app) {
+		overflow-x: auto;
+		overflow-y: clip;
+	}
 	.grid {
 		display: grid;
 		gap: var(--gap);
@@ -419,6 +441,7 @@
 	.flow {
 		width: 100%;
 		overflow-x: auto;
+		overflow-y: clip;
 		background: var(--background);
 		z-index: 0;
 		border-radius: var(--border-radius);

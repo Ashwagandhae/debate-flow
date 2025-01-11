@@ -25,7 +25,7 @@
 
 <div class="top palette-plain">
 	<div class="outline">
-		<div class="outlineScroll">
+		<div class="outlineScroll" class:customScrollbar={settings.data.customScrollbar.value}>
 			<ul>
 				{#each settingsGroups as group, groupIndex}
 					<li class="title">
@@ -48,7 +48,7 @@
 			</ul>
 		</div>
 	</div>
-	<div class="content">
+	<div class="content" class:customScrollbar={settings.data.customScrollbar.value}>
 		<section class="controls">
 			<Button
 				icon="arrowRoundLeft"

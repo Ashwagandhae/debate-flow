@@ -102,6 +102,10 @@
 		sideDocWidth: {
 			name: 'side-doc-width',
 			unit: 'px'
+		},
+		customScrollbarWidth: {
+			name:'custom-scrollbar-width',
+			unit: 'px'
 		}
 	};
 	onDestroy(
