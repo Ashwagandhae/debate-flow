@@ -48,7 +48,8 @@ export function newBoxAction(
 	parent: FlowId | BoxId,
 	parentFlowId: FlowId,
 	index: number,
-	placeholder?: string
+	placeholder?: string,
+	isExtension?: boolean
 ): AddAction<Box> {
 	const addAction: AddAction<Box> = {
 		tag: 'add',
@@ -59,7 +60,8 @@ export function newBoxAction(
 			tag: 'box',
 			content: '',
 			placeholder: placeholder,
-			flowId: parentFlowId
+			flowId: parentFlowId,
+			isExtension: isExtension
 		}
 	};
 
@@ -70,11 +72,12 @@ export const addNewBox = decorate(function (
 	nodes: Nodes,
 	parent: FlowId | BoxId,
 	index: number,
-	placeholder?: string
+	placeholder?: string,
+	isExtension?: boolean
 ) {
 	const flowId = getParentFlowId(nodes, parent).unwrap();
 	return {
-		action: newBoxAction(parent, flowId, index, placeholder),
+		action: newBoxAction(parent, flowId, index, placeholder, isExtension),
 		owner: flowId
 	};
 });
