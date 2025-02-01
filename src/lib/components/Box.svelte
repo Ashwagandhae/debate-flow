@@ -49,7 +49,7 @@
 				box = null;
 			} else {
 				box = node.value;
-				requestAnimationFrame(() => (updateTextHeight && updateTextHeight())); 
+				requestAnimationFrame(() => updateTextHeight && updateTextHeight());
 				// It's likely a good idea to wait until right before the next repaint to call autoheight
 				// Also it creates more parity with dev
 			}
@@ -79,7 +79,6 @@
 
 	let textarea: any = undefined;
 
-	let backgroundColor: string;
 	let childFocus: boolean = false;
 	let childFocusIndex: number = -1;
 	function onChildFocus(childIndex: number, isFocused: boolean) {
@@ -98,7 +97,8 @@
 	function focusChange() {
 		if ($focusId == id) {
 			dispatchSelfFocus(index(), true);
-			if (node.level >= 1 && mounted) { // Only change focus if the element is mounted to avoid double call (one call made pre-mount) lag
+			if (node.level >= 1 && mounted) {
+				// Only change focus if the element is mounted to avoid double call (one call made pre-mount) lag
 				textarea && textarea.focus();
 			}
 		} else if (lastFocus == id) {
@@ -480,7 +480,7 @@
 		<div
 			class="content"
 			class:root={box == null}
-			style={`--this-background: ${backgroundColor}`}
+			style={`--this-background: none`}
 			class:left={node.children.length > 0}
 			class:right={index() == 0 && node.level > 1 && !parentIsEmpty}
 		>
