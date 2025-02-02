@@ -21,6 +21,7 @@
 	import { focusId } from '$lib/models/focus';
 	import {
 		addNewBox,
+		addNewExtension,
 		deleteBox,
 		newUpdateAction,
 		toggleBoxFormat
@@ -33,8 +34,6 @@
 	export let id: BoxId | FlowId;
 	export let parentIsEmpty = false;
 
-	const EXTENSION_CONTENT = "⇨";
-
 	let consistentEnterBehaviour: boolean = settings.data['consistentEnterBehaviour']
 		.value as boolean;
 	let tabReturnsToParent: boolean = settings.data['tabReturnsToParent']
@@ -42,6 +41,7 @@
 
 	let node: Node<Box | Flow>;
 	let box: Box | null;
+	let extensionIconSize = 10;
 	// TODO make updates more percise, don't update all boxes when one changes (do the same for focusId, basically ban stores from box)
 	$: $nodes, updateNodeData();
 	function updateNodeData() {
@@ -53,10 +53,6 @@
 				box = null;
 			} else {
 				box = node.value;
-
-				if (box.isExtension && box.content !== EXTENSION_CONTENT) {
-					box.content = EXTENSION_CONTENT;
-				}
 
 				requestAnimationFrame(() => updateTextHeight && updateTextHeight());
 				// It's likely a good idea to wait until right before the next repaint to call autoheight
@@ -135,7 +131,10 @@
 	const keyComboOptionsIndex: KeyComboOptionsIndex = {
 		'commandControl shift': {
 			x: {
-				handle: () => formatSelf('crossed')
+				handle: () => { 
+					if (!box?.isExtension)
+						formatSelf('crossed');
+				}
 			}
 		},
 		commandControl: {
@@ -147,7 +146,10 @@
 				}
 			},
 			b: {
-				handle: () => formatSelf('bold')
+				handle: () => {
+					if (!box?.isExtension)
+						formatSelf('bold');
+				}
 			},
 			e: {
 				handle: () => {
@@ -309,8 +311,7 @@
 		}
 		// if not at end of column
 		if (node.level < columnCount - 1) {
-			addNewBox(id, 0, '', true);
-			addNewBox(node.children[0], 0);
+			addNewExtension(id);
 			return true;
 		} else {
 			// stay focused
@@ -466,9 +467,7 @@
 	let outsidePalette: string;
 	$: {
 		let isEvenLevel = node.level % 2 == 0;
-		let invertColor = isEvenLevel !== invert; 
-
-		if (box?.isExtension) invertColor = !invertColor;
+		let invertColor = isEvenLevel !== invert;
 
 		palette = invertColor ? 'accent-secondary' : 'accent';
 		outsidePalette = invertColor ? 'accent' : 'accent-secondary';
@@ -586,12 +585,20 @@
 							bind:this={textarea}
 							on:beforeinput={handleBeforeInput}
 							bind:autoHeight={updateTextHeight}
+							bind:textHeight={extensionIconSize}
 							placeholder={box.placeholder ?? (node.level == 1 && index() == 0 ? 'type here' : '')}
 							readonly={box?.isExtension ?? false}
-							centered={box?.isExtension ?? false}
 						/>
 					{/if}
 				</div>
+				{#if box?.isExtension}
+				<div class="extensionIcon">
+					<Icon 
+						name="arrowRightThroughCircle"
+						size={extensionIconSize + "px"}
+					/>
+				</div>
+				{/if} 
 				<!-- svelte-ignore a11y-click-events-have-key-events -->
 				<!-- svelte-ignore a11y-no-noninteractive-element-interactions -->
 				<!-- we can ignore accesibility because you can use keyboard inside the cell for same function -->
@@ -684,6 +691,7 @@
 	.text {
 		padding: var(--padding);
 		position: relative;
+		z-index: 2;
 	}
 	.text.crossed {
 		text-decoration: line-through;
@@ -691,6 +699,13 @@
 	}
 	.text.bold {
 		font-weight: var(--font-weight-bold);
+	}
+
+	.extensionIcon {
+		transform: translateY(calc(-100% - var(--padding)));
+		position: absolute;
+		width: 100%;
+		z-index: 1;
 	}
 
 	.childFocus > .content,

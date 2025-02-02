@@ -7,7 +7,7 @@
 	import { history } from '$lib/models/history';
 	import { focusId, lastFocusIds, selectedFlowId } from '$lib/models/focus';
 	import { nodes, pendingAction } from '$lib/models/store';
-	import { addNewBox, deleteBox, toggleBoxFormat } from '$lib/models/nodeDecorateAction';
+	import { addNewBox, addNewExtension, deleteBox, toggleBoxFormat } from '$lib/models/nodeDecorateAction';
 	import { folded } from '$lib/models/fold';
 
 	export let flowId: FlowId;
@@ -111,8 +111,7 @@
 		}
 		// if not at end of column
 		if (target.level < currentFlow.value.columns.length - 1) {
-			addNewBox(targetId, 0, '', true);
-			addNewBox(target.children[0], 0);
+			addNewExtension(targetId);
 			const grandchildId = $nodes[target.children[0] as BoxId]?.children[0];
 			$focusId = grandchildId ? grandchildId as BoxId : targetId;
 			return;
@@ -198,7 +197,7 @@
 			],
 			showQuickExtensionButtons: [
 				{
-					icon: 'eye',
+					icon: 'arrowRightThroughCircle',
 					onclick: extendArgument,
 					disabled: targetId == null 
 						|| (targetBox()?.children[0] 
@@ -217,20 +216,22 @@
 				{
 					icon: 'cross',
 					onclick: () => toggleFormat('crossed'),
-					disabled: targetId == null,
+					disabled: targetId == null || targetBox()?.value.isExtension,
 					tooltip: 'toggle crossed out',
 					shortcut: ['commandControl', 'shift', 'x'],
 					toggled: targetBox()?.value?.crossed,
-					disabledReason
+					disabledReason: targetBox()?.value.isExtension ? "can't cross out an extension"
+						: disabledReason
 				},
 				{
 					icon: 'letterB',
 					onclick: () => toggleFormat('bold'),
-					disabled: targetId == null,
+					disabled: targetId == null || targetBox()?.value.isExtension,
 					tooltip: 'toggle bold',
 					shortcut: ['commandControl', 'b'],
 					toggled: targetBox()?.value?.bold,
-					disabledReason
+					disabledReason: targetBox()?.value.isExtension ? "can't bold an extension"
+						: disabledReason
 				},
 				{
 					icon: 'foldArrows',
