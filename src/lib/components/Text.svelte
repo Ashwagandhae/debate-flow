@@ -1,12 +1,15 @@
 <script lang="ts">
-	import { afterUpdate, onDestroy, onMount } from 'svelte';
+	import { onDestroy, onMount } from 'svelte';
 	import { settings } from '$lib/models/settings';
 
 	export let value: string;
 	export let placeholder: string = '';
 	export let nowrap: boolean = false;
 	export let strikethrough: boolean = false;
+	export let readonly: boolean = false;
 	export let bold: boolean | undefined = undefined;
+
+	export let textHeight = 0; // Should be readonly at higher levels
 	let whiteSpaceCss: string;
 	$: {
 		if (nowrap) {
@@ -23,7 +26,8 @@
 		if (textarea && (lastValue !== value || lastBold !== bold || force)) {
 			textarea.value = textarea.value.replace(/\r?\n|\r/g, '');
 			textarea.style.height = '0px';
-			textarea.style.height = textarea.scrollHeight + 'px';
+			textHeight = textarea.scrollHeight;
+			textarea.style.height = textHeight + 'px';
 
 			lastValue = value;
 			lastBold = bold;
@@ -50,6 +54,7 @@
 	{placeholder}
 	style={`--white-space:${whiteSpaceCss};`}
 	class:strikethrough
+	readonly={readonly}
 />
 
 <style>

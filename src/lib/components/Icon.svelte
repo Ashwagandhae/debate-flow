@@ -232,6 +232,13 @@
 			name: 'foldArrows',
 			svg: `<path d="M68 8L49 29L30 8" stroke="currentColor" stroke-width="10" stroke-linecap="round" stroke-linejoin="round"/>
 <path d="M30 92L49 71L68 92" stroke="currentColor" stroke-width="10" stroke-linecap="round" stroke-linejoin="round"/>`
+		},
+		{
+			name: 'arrowRightThroughCircle',
+			svg: `<line x1="5" y1="50" x2="25" y2="50" stroke="currentColor" stroke-width="10" stroke-linecap="round"/>
+<line x1="55" y1="50" x2="90" y2="50" stroke="currentColor" stroke-width="10" stroke-linecap="round"/>
+<path d="M69 73L95 50L69 27" stroke="currentColor" stroke-width="10" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M37.5 62C44.4036 62 50 56.4036 50 49.5C50 42.5964 44.4036 37 37.5 37C30.5964 37 25 42.5964 25 49.5C25 56.4036 30.5964 62 37.5 62Z" stroke="currentColor" stroke-width="10"/>`
 		}
 	];
 	let displayIcon: { name: string; svg: string } | null;

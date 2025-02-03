@@ -73,7 +73,12 @@ function childToData(
 	}
 	// exclude root
 	if (x >= 0) {
-		data[y][x] = getNode(nodes, boxId).unwrap().value.content;
+		const node = getNode(nodes, boxId).unwrap();
+		if (node.value.tag === "box" && node.value.isExtension) {
+			data[y][x] = "→ Extended →";
+		} else {
+			data[y][x] = node.value.content;
+		}
 	}
 	// return 1 height if no children
 	return Math.max(1, height);
@@ -90,12 +95,20 @@ function fixXlsxWorkbookName(name: string) {
 
 export function downloadXlsx(nodes: Nodes) {
 	const wb: Workbook = new Workbook();
+
+	let unnamedIterator = 1;
 	for (const flowId of nodes.root.children) {
 		const data: string[][] = [];
 
 		childToData(nodes, data, flowId, flowId, -1, 0);
 
 		let name: string = getNode(nodes, flowId).unwrap().value.content;
+
+		if (!name) { // Allows unnamed books to be downloaded
+			name = "Unnamed Flow " + unnamedIterator;
+			unnamedIterator += 1;
+		}
+
 		name = fixXlsxWorkbookName(name);
 		const ws = wb.addWorksheet(name);
 		ws.columns = getNode(nodes, flowId)

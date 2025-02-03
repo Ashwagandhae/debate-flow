@@ -16,6 +16,20 @@
 	<div class="scroll">
 		<section>
 			<div class="above">
+				<h2>v1.1.6</h2>
+			</div>
+			<ul>
+				<li>
+					added quick extensions. Click <Button icon="arrowRightThroughCircle" inline /> or press <Shortcut
+						keys={['commandControl', 'E']}
+						inline
+					/> while highlighting a cell to extend that cell to the next speech. Thanks to
+					<a href="https://github.com/JadenTepper">JadenTepper</a> for implementing!
+				</li>
+			</ul>
+		</section>
+		<section>
+			<div class="above">
 				<h2>v1.1.5</h2>
 			</div>
 			<ul>

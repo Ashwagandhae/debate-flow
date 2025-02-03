@@ -7,7 +7,7 @@
 	import { history } from '$lib/models/history';
 	import { focusId, lastFocusIds, selectedFlowId } from '$lib/models/focus';
 	import { nodes, pendingAction } from '$lib/models/store';
-	import { addNewBox, deleteBox, toggleBoxFormat } from '$lib/models/nodeDecorateAction';
+	import { addNewBox, addNewExtension, deleteBox, toggleBoxFormat } from '$lib/models/nodeDecorateAction';
 	import { folded } from '$lib/models/fold';
 
 	export let flowId: FlowId;
@@ -75,8 +75,13 @@
 		let currentFlow = $nodes[$selectedFlowId];
 		if (currentFlow == null) return;
 		// if not at end of column
+
+		let addIndex = 0;
+		if (target.children[0] && $nodes[target.children[0] as BoxId]?.value.isExtension) {
+			addIndex = 1; // Add new box at pos 1 if there is an extension in pos 0
+		}
 		if (target.level < currentFlow.value.columns.length) {
-			addNewBox(targetId, 0);
+			addNewBox(targetId, addIndex);
 		}
 	}
 
@@ -91,6 +96,28 @@
 		let newBoxIndex = targetIndex + direction;
 		addNewBox(target.parent, newBoxIndex);
 	}
+
+	function extendArgument() {
+		if (targetId == null) return;
+		if ($selectedFlowId == null) return;
+		let target = $nodes[targetId];
+		if (target == null) return;
+		let currentFlow = $nodes[$selectedFlowId];
+		if (currentFlow == null) return;
+
+		// Dont add extension if there already is one
+		if (target.children.length >= 1 && $nodes[target.children[0]]?.value.isExtension) {
+			return;
+		}
+		// if not at end of column
+		if (target.level < currentFlow.value.columns.length - 1) {
+			addNewExtension(targetId);
+			const grandchildId = $nodes[target.children[0] as BoxId]?.children[0];
+			$focusId = grandchildId ? grandchildId as BoxId : targetId;
+			return;
+		}
+	}
+
 	function toggleFormat(format: Parameters<typeof toggleBoxFormat>[1]) {
 		if (targetId == null) return;
 		toggleBoxFormat(targetId, format);
@@ -145,10 +172,11 @@
 				{
 					icon: 'addUp',
 					onclick: () => addSibling(0),
-					disabled: targetId == null,
+					disabled: targetId == null || targetBox()?.value.isExtension,
 					tooltip: 'add argument above',
 					shortcut: ['option', 'return'],
-					disabledReason
+					disabledReason:
+						targetBox()?.value.isExtension ? "can't add responses above extensions" : disabledReason
 				},
 				{
 					icon: 'addDown',
@@ -167,24 +195,43 @@
 					disabledReason
 				}
 			],
+			showQuickExtensionButtons: [
+				{
+					icon: 'arrowRightThroughCircle',
+					onclick: extendArgument,
+					disabled: targetId == null 
+						|| (targetBox()?.children[0] 
+							&& $nodes[targetBox()?.children[0] as BoxId]?.value.isExtension)
+					 	|| targetBox()?.value.isExtension,
+					tooltip: 'extend selected',
+					shortcut: ['commandControl', 'e'],
+					disabledReason: 
+						(targetBox()?.children[0] && 
+						$nodes[targetBox()?.children[0] as BoxId]?.value.isExtension) ? "can't extend an extended argument" 
+						: targetBox()?.value.isExtension ? "can't extend an extension"
+						: disabledReason
+				}
+			],
 			showBoxFormatButtons: [
 				{
 					icon: 'cross',
 					onclick: () => toggleFormat('crossed'),
-					disabled: targetId == null,
+					disabled: targetId == null || targetBox()?.value.isExtension,
 					tooltip: 'toggle crossed out',
 					shortcut: ['commandControl', 'shift', 'x'],
 					toggled: targetBox()?.value?.crossed,
-					disabledReason
+					disabledReason: targetBox()?.value.isExtension ? "can't cross out an extension"
+						: disabledReason
 				},
 				{
 					icon: 'letterB',
 					onclick: () => toggleFormat('bold'),
-					disabled: targetId == null,
+					disabled: targetId == null || targetBox()?.value.isExtension,
 					tooltip: 'toggle bold',
 					shortcut: ['commandControl', 'b'],
 					toggled: targetBox()?.value?.bold,
-					disabledReason
+					disabledReason: targetBox()?.value.isExtension ? "can't bold an extension"
+						: disabledReason
 				},
 				{
 					icon: 'foldArrows',
