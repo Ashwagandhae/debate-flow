@@ -71,10 +71,6 @@
 			name: 'padding',
 			unit: 'px'
 		},
-		fontSize: {
-			name: 'font-size',
-			unit: 'rem'
-		},
 		fontWeight: {
 			name: 'font-weight',
 			unit: ''
@@ -129,6 +125,18 @@
 			}
 		})
 	);
+	onDestroy(
+		settings.subscribe(['fontSize'], function (_key: string) {
+			const remFontSize = settings.data.fontSize.value as number;
+
+			const rootFontSize = parseFloat(getComputedStyle(document.documentElement).fontSize);
+			const pixelValue = remFontSize * rootFontSize;
+			const roundedPixelValue = Math.round(pixelValue); // Round to nearest px
+			const roundedRemFontSize = roundedPixelValue / rootFontSize;
+
+			document.body.style.setProperty('--font-size', roundedRemFontSize + "rem");
+		})
+	)
 	onDestroy(
 		settings.subscribe(Object.keys(cssVarIndex), function (key: string) {
 			const name = cssVarIndex[key].name;
