@@ -324,6 +324,12 @@ export const settings: Settings = new Settings({
 		auto: true,
 		type: 'toggle'
 	},
+	showQuickExtensionButtons: {
+		name: 'Quick extension button',
+		value: true,
+		auto: true,
+		type: 'toggle'
+	},
 	showBoxFormatButtons: {
 		name: 'Cell format buttons',
 		value: true,
@@ -372,6 +378,13 @@ export const settings: Settings = new Settings({
 		auto: false,
 		type: 'toggle',
 		info: 'Reload for these changes to take effect'
+	},
+	tabReturnsToParent: {
+		name: 'Pressing tab returns to parent on overrun',
+		value: false,
+		auto: false,
+		type: 'toggle',
+		info: 'Reload for these changes to take effect'
 	}
 });
 
@@ -413,11 +426,11 @@ export const settingsGroups: SettingsGroup[] = [
 	},
 	{
 		name: 'Toolbar',
-		settings: ['showUndoRedoButtons', 'showBoxCreationButtons', 'showBoxFormatButtons']
+		settings: ['showUndoRedoButtons', 'showBoxCreationButtons', 'showQuickExtensionButtons', 'showBoxFormatButtons']
 	},
 	{
 		name: 'Scrollbars',
 		settings: ['customScrollbar', 'customScrollbarWidth']
 	},
-	{ name: 'Controls', settings: ['consistentEnterBehaviour'] }
+	{ name: 'Controls', settings: ['consistentEnterBehaviour', 'tabReturnsToParent'] }
 ];

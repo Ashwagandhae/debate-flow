@@ -66,6 +66,28 @@ export function newBoxAction(
 	return addAction;
 }
 
+// we need access to an extension's id to create a child, so id is an input
+export function newExtensionAction(
+	parent: FlowId | BoxId,
+	parentFlowId: FlowId,
+	selfId: BoxId
+): AddAction<Box> {
+	const addAction: AddAction<Box> = {
+		tag: 'add',
+		parent,
+		id: selfId,
+		index: 0, // Extensions are always at position 0
+		value: {
+			tag: 'box',
+			content: '',
+			flowId: parentFlowId,
+			isExtension: true
+		}
+	};
+
+	return addAction;
+}
+
 export const addNewBox = decorate(function (
 	nodes: Nodes,
 	parent: FlowId | BoxId,
@@ -77,6 +99,18 @@ export const addNewBox = decorate(function (
 		action: newBoxAction(parent, flowId, index, placeholder),
 		owner: flowId
 	};
+});
+
+export const addNewExtension = decorate(function (
+	nodes: Nodes,
+	parent: FlowId | BoxId
+) {
+	const flowId = getParentFlowId(nodes, parent).unwrap();
+	const extensionId = newBoxId();
+	return {
+		action: [newExtensionAction(parent, flowId, extensionId), newBoxAction(extensionId, flowId, 0)],
+		owner: flowId
+	}
 });
 
 export const addNewFlow = decorate(function (

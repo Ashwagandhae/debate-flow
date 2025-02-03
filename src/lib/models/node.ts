@@ -59,6 +59,7 @@ export type Box = {
 	empty?: boolean;
 	crossed?: boolean;
 	bold?: boolean;
+	isExtension?: boolean;
 };
 
 export type Flow = {
