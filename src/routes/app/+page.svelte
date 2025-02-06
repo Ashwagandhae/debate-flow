@@ -276,6 +276,13 @@
 		}
 	}
 
+	function fixScroll(event: Event) {
+		const el = event.currentTarget as HTMLDivElement;
+		if (el.scrollTop !== 0) {
+			el.scrollTop = 0;
+		}
+	}
+
 	// TODO:
 	// add custom background color
 	// add command K
@@ -350,7 +357,7 @@
 					<div class="box-control">
 						<BoxControl flowId={$selectedFlowId} />
 					</div>
-					<div class="flow" class:customScrollbar={settings.data.customScrollbar.value}>
+					<div class="flow" class:customScrollbar={settings.data.customScrollbar.value} on:scroll={fixScroll}>
 						<Flow on:focusFlow={focusFlow} flowId={$selectedFlowId} />
 					</div>
 				{/key}
