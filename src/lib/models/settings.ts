@@ -202,8 +202,8 @@ export const settings: Settings = new Settings({
 	customBackgroundBack: {
 		name: 'Back background',
 		type: 'color',
-		value: "#01020e",
-		auto: "#01020e",
+		value: "#1a1a1a",
+		auto: "#1a1a1a",
 		visibilityCondition: () => {
 			return settings.data.colorTheme.value == 3;
 		}
@@ -211,8 +211,8 @@ export const settings: Settings = new Settings({
 	customBackground: {
 		name: 'Background',
 		type: 'color',
-		value: "#010318",
-		auto: "#010318",
+		value: "#292929",
+		auto: "#292929",
 		visibilityCondition: () => {
 			return settings.data.colorTheme.value == 3;
 		}
@@ -220,8 +220,8 @@ export const settings: Settings = new Settings({
 	customBackgroundIndent: {
 		name: 'Highlighted background',
 		type: 'color',
-		value: "#020531",
-		auto: "#020531",
+		value: "#3d3d3d",
+		auto: "#3d3d3d",
 		visibilityCondition: () => {
 			return settings.data.colorTheme.value == 3;
 		}
@@ -229,8 +229,8 @@ export const settings: Settings = new Settings({
 	customBackgroundActive: {
 		name: 'Clicked background',
 		type: 'color',
-		value: "#050848",
-		auto: "#050848",
+		value: "#4d4d4d",
+		auto: "#4d4d4d",
 		visibilityCondition: () => {
 			return settings.data.colorTheme.value == 3;
 		}
@@ -238,8 +238,8 @@ export const settings: Settings = new Settings({
 	customBackgroundSecondary: {
 		name: 'Background',
 		type: 'color',
-		value: "#020527",
-		auto: "#020527",
+		value: "#2e2e2e",
+		auto: "#2e2e2e",
 		visibilityCondition: () => {
 			return settings.data.colorTheme.value == 3;
 		}
@@ -247,8 +247,8 @@ export const settings: Settings = new Settings({
 	customBackgroundSecondaryIndent: {
 		name: 'Highlighted background',
 		type: 'color',
-		value: "#050748",
-		auto: "#050748",
+		value: "#474747",
+		auto: "#474747",
 		visibilityCondition: () => {
 			return settings.data.colorTheme.value == 3;
 		}
@@ -256,8 +256,8 @@ export const settings: Settings = new Settings({
 	customBackgroundSecondaryActive: {
 		name: 'Clicked background',
 		type: 'color',
-		value: "#080c6d",
-		auto: "#080c6d",
+		value: "#374143",
+		auto: "#374143",
 		visibilityCondition: () => {
 			return settings.data.colorTheme.value == 3;
 		}
@@ -265,8 +265,8 @@ export const settings: Settings = new Settings({
 	customBackgroundAccentIndent: {
 		name: 'Accent',
 		type: 'color',
-		value: "#030531",
-		auto: "#030531",
+		value: "#3d565c",
+		auto: "#3d565c",
 		visibilityCondition: () => {
 			return settings.data.colorTheme.value == 3;
 		}
@@ -274,8 +274,8 @@ export const settings: Settings = new Settings({
 	customBackgroundAccentActive: {
 		name: 'Clicked accent',
 		type: 'color',
-		value: "#050848",
-		auto: "#050848",
+		value: "#3d565c",
+		auto: "#3d565c",
 		visibilityCondition: () => {
 			return settings.data.colorTheme.value == 3;
 		}
@@ -283,8 +283,8 @@ export const settings: Settings = new Settings({
 	customBackgroundAccentSecondaryIndent: {
 		name: 'Accent',
 		type: 'color',
-		value: "#050748",
-		auto: "#050748",
+		value: "#373737",
+		auto: "#373737",
 		visibilityCondition: () => {
 			return settings.data.colorTheme.value == 3;
 		}
@@ -292,8 +292,8 @@ export const settings: Settings = new Settings({
 	customBackgroundAccentSecondaryActive: {
 		name: 'Clicked accent',
 		type: 'color',
-		value: "#080c6d",
-		auto: "#080c6d",
+		value: "#3d3d3d",
+		auto: "#3d3d3d",
 		visibilityCondition: () => {
 			return settings.data.colorTheme.value == 3;
 		}
@@ -301,8 +301,8 @@ export const settings: Settings = new Settings({
 	customText: {
 		name: 'Text',
 		type: 'color',
-		value: "#ffffff",
-		auto: "#ffffff",
+		value: "#cccccc",
+		auto: "#cccccc",
 		visibilityCondition: () => {
 			return settings.data.colorTheme.value == 3;
 		}
@@ -310,8 +310,8 @@ export const settings: Settings = new Settings({
 	customTextSelect: {
 		name: 'Selection',
 		type: 'color',
-		value: "#917aff",
-		auto: "#917aff",
+		value: "#4d4d4d",
+		auto: "#4d4d4d",
 		visibilityCondition: () => {
 			return settings.data.colorTheme.value == 3;
 		}
@@ -319,8 +319,8 @@ export const settings: Settings = new Settings({
 	customTextWeak: {
 		name: 'Weak text',
 		type: 'color',
-		value: "#ffffff",
-		auto: "#ffffff",
+		value: "#808080",
+		auto: "#808080",
 		visibilityCondition: () => {
 			return settings.data.colorTheme.value == 3;
 		}
@@ -328,8 +328,8 @@ export const settings: Settings = new Settings({
 	customTextAccent: {
 		name: 'Aff text',
 		type: 'color',
-		value: "#adc7f0",
-		auto: "#adc7f0",
+		value: "#addeeb",
+		auto: "#addeeb",
 		visibilityCondition: () => {
 			return settings.data.colorTheme.value == 3;
 		}
@@ -337,8 +337,8 @@ export const settings: Settings = new Settings({
 	customTextAccentSelect: {
 		name: 'Aff selection',
 		type: 'color',
-		value: "#917aff",
-		auto: "#917aff",
+		value: "#0b4f60",
+		auto: "#0b4f60",
 		visibilityCondition: () => {
 			return settings.data.colorTheme.value == 3;
 		}
@@ -346,8 +346,8 @@ export const settings: Settings = new Settings({
 	customTextAccentWeak: {
 		name: 'Aff weak text',
 		type: 'color',
-		value: "#917aff",
-		auto: "#917aff",
+		value: "#6c8b93",
+		auto: "#6c8b93",
 		visibilityCondition: () => {
 			return settings.data.colorTheme.value == 3;
 		}
@@ -355,8 +355,8 @@ export const settings: Settings = new Settings({
 	customTextAccentSecondary: {
 		name: 'Neg text',
 		type: 'color',
-		value: "#e9d6ff",
-		auto: "#e9d6ff",
+		value: "#ebc8ad",
+		auto: "#ebc8ad",
 		visibilityCondition: () => {
 			return settings.data.colorTheme.value == 3;
 		}
@@ -364,8 +364,8 @@ export const settings: Settings = new Settings({
 	customTextAccentSecondarySelect: {
 		name: 'Neg selection',
 		type: 'color',
-		value: "#ffffff",
-		auto: "#ffffff",
+		value: "#60300b",
+		auto: "#60300b",
 		visibilityCondition: () => {
 			return settings.data.colorTheme.value == 3;
 		}
@@ -373,8 +373,8 @@ export const settings: Settings = new Settings({
 	customTextAccentSecondaryWeak: {
 		name: 'Weak neg text',
 		type: 'color',
-		value: "#ffffff",
-		auto: "#ffffff",
+		value: "#937d6c",
+		auto: "#937d6c",
 		visibilityCondition: () => {
 			return settings.data.colorTheme.value == 3;
 		}
@@ -382,8 +382,8 @@ export const settings: Settings = new Settings({
 	customColor: {
 		name: 'Selected lines',
 		type: 'color',
-		value: "#3e46ac",
-		auto: "#3e46ac",
+		value: "#6b6b6b",
+		auto: "#6b6b6b",
 		visibilityCondition: () => {
 			return settings.data.colorTheme.value == 3;
 		}
@@ -391,8 +391,8 @@ export const settings: Settings = new Settings({
 	customColorFade: {
 		name: 'Unselected Lines',
 		type: 'color',
-		value: "#150354",
-		auto: "#150354",
+		value: "#525252",
+		auto: "#525252",
 		visibilityCondition: () => {
 			return settings.data.colorTheme.value == 3;
 		}
@@ -400,8 +400,8 @@ export const settings: Settings = new Settings({
 	customColorAccent: {
 		name: 'Aff selected lines',
 		type: 'color',
-		value: "#3f46ac",
-		auto: "#3f46ac",
+		value: "#408596",
+		auto: "#408596",
 		visibilityCondition: () => {
 			return settings.data.colorTheme.value == 3;
 		}
@@ -409,8 +409,8 @@ export const settings: Settings = new Settings({
 	customColorAccentFade: {
 		name: 'Aff highlighted lines',
 		type: 'color',
-		value: "#180363",
-		auto: "#180363",
+		value: "#3d5e66",
+		auto: "#3d5e66",
 		visibilityCondition: () => {
 			return settings.data.colorTheme.value == 3;
 		}
@@ -418,8 +418,8 @@ export const settings: Settings = new Settings({
 	customColorAccentSecondary: {
 		name: 'Neg selected lines',
 		type: 'color',
-		value: "#3f46ac",
-		auto: "#3f46ac",
+		value: "#966540",
+		auto: "#966540",
 		visibilityCondition: () => {
 			return settings.data.colorTheme.value == 3;
 		}
@@ -427,8 +427,8 @@ export const settings: Settings = new Settings({
 	customColorAccentSecondaryFade: {
 		name: 'Neg highlighted lines',
 		type: 'color',
-		value: "#1e047c",
-		auto: "#1e047c",
+		value: "#664f3d",
+		auto: "#664f3d",
 		visibilityCondition: () => {
 			return settings.data.colorTheme.value == 3;
 		}
@@ -436,8 +436,8 @@ export const settings: Settings = new Settings({
 	customScrollbarThumb: {
 		name: 'Scrollbar thumb',
 		type: 'color',
-		value: "#0a093e",
-		auto: "#0a093e",
+		value: "#808080",
+		auto: "#808080",
 		visibilityCondition: () => {
 			return settings.data.colorTheme.value == 3;
 		},
@@ -446,8 +446,8 @@ export const settings: Settings = new Settings({
 	customScrollbarThumbHover: {
 		name: 'Hovered scrollbar thumb',
 		type: 'color',
-		value: "#101350",
-		auto: "#101350",
+		value: "#8c8c8c",
+		auto: "#8c8c8c",
 		visibilityCondition: () => {
 			return settings.data.colorTheme.value == 3;
 		},
@@ -456,8 +456,8 @@ export const settings: Settings = new Settings({
 	customScrollbarBackground: {
 		name: 'Scrollbar background',
 		type: 'color',
-		value: "#04031c",
-		auto: "#04031c",
+		value: "#1a1a1a",
+		auto: "#1a1a1a",
 		visibilityCondition: () => {
 			return settings.data.colorTheme.value == 3;
 		},

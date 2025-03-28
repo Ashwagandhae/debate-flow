@@ -98,13 +98,13 @@
 		</section>
 		<section class="controls">
 			<Button
-				icon="dots"
+				icon="upload"
 				text="import settings"
 				tooltip="import settings from file"
 				on:click={() => openUploadDialog()}
 			/>
 			<Button
-				icon="dots"
+				icon="download"
 				text="export settings"
 				tooltip="export settings to file"
 				on:click={() => downloadSettingsJson()}
