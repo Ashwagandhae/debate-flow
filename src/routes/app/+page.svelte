@@ -17,7 +17,7 @@
 	import { activeMouse, flowsChange, nodes, pendingAction } from '$lib/models/store';
 	import { createKeyDownHandler } from '$lib/models/key';
 	import Prelude from '$lib/components/Prelude.svelte';
-	import { loadNodes } from '$lib/models/file';
+	import { loadNodes, importSettingsJson } from '$lib/models/file';
 	import Timers from '$lib/components/Timers.svelte';
 	import Help from '$lib/components/Help.svelte';
 	import { settings } from '$lib/models/settings';
@@ -26,7 +26,7 @@
 	import { focusId, lastFocusIds, selectedFlowId } from '$lib/models/focus';
 	import { isChangelogVersionCurrent } from '$lib/models/version';
 	import { addNewFlow, deleteFlow, moveFlow, replaceNodes } from '$lib/models/nodeDecorateAction';
-	import { currentDebateStyle, type DebateStyleFlow } from '$lib/models/debateStyle';
+	import { getDebateStyleFlow, type DebateStyleFlow } from '$lib/models/debateStyle';
 
 	$: unsavedChanges = $nodes.root.children.length > 0;
 
@@ -124,16 +124,23 @@
 	}
 	const keyDownHandler = createKeyDownHandler({
 		control: {
-			n: { handle: () => addFlow(currentDebateStyle()['primary']) }
+			n: {
+				handle: () => {
+					const style = getDebateStyleFlow("primary");
+					if (style == null) return;
+					addFlow(style);
+				},
+				require: () => getDebateStyleFlow("primary") != null
+			}
 		},
 		'control shift': {
 			n: {
 				handle: () => {
-					const style = currentDebateStyle()['secondary'];
+					const style = getDebateStyleFlow("secondary");
 					if (style == null) return;
 					addFlow(style);
 				},
-				require: () => currentDebateStyle()['secondary'] != null
+				require: () => getDebateStyleFlow("secondary") != null
 			}
 		},
 		'commandControl shift': {
@@ -221,26 +228,35 @@
 		}
 	}
 	function readUpload() {
-		const files = (<HTMLInputElement>document.getElementById('uploadId'))?.files;
-		if (files == undefined) return;
-		let file = files[0];
+		const fileInput = document.getElementById('uploadId') as HTMLInputElement;
+		if (!fileInput?.files?.length) return;
+		const file = fileInput.files[0];
 
 		let reader: FileReader = new FileReader();
 		reader.onload = function (fileLoadedEvent) {
 			let uploadData = fileLoadedEvent.target?.result;
 			if (uploadData == undefined) return;
 			handleUpload(uploadData.toString());
+
+			fileInput.value = ''; // allow for the same file to be reuploaded
 		};
 		reader.readAsText(file, 'UTF-8');
 	}
+
 	function preventDefault(e: { preventDefault: () => void }) {
 		e.preventDefault();
 	}
 
 	async function handleUpload(data: string) {
+		let dataObj = JSON.parse(data);
+		if (dataObj["isSettings"]) {
+			importSettingsJson(dataObj);
+			return;
+		}
+
 		let newNodes: Nodes | null = null;
 		try {
-			newNodes = loadNodes(data);
+			newNodes = loadNodes(dataObj);
 		} catch (e) {
 			openPopup(Message, 'File Message', {
 				message: 'Invalid file',

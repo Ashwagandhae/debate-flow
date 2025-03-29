@@ -1,9 +1,12 @@
+export const SETTINGS_VERSION = 1;
+
 type SettingBasic<T> = {
 	name: string;
 	value: T;
 	auto: T;
 	type: string;
 	info?: string;
+	visibilityCondition?: () => boolean;
 };
 type ToggleSetting = SettingBasic<boolean> & {
 	type: 'toggle';
@@ -25,7 +28,16 @@ type SliderSetting = SettingBasic<number> & {
 		hue?: boolean;
 	};
 };
-export type Setting = ToggleSetting | RadioSetting | SliderSetting;
+export type Hexcode = `#${string}`;
+type ColorSetting = SettingBasic<Hexcode> & {
+	type: 'color';
+}
+export type SaveableSettings = {
+	settings: { [key: string]: number | boolean | string | Hexcode },
+	isSettings: boolean,
+	version: number
+}
+export type Setting = ToggleSetting | RadioSetting | SliderSetting | ColorSetting;
 class Settings {
 	data: { [key: string]: Setting };
 	callbacks: { [key: string]: ((key: string) => void)[] } = { any: [] };
@@ -35,7 +47,7 @@ class Settings {
 	init() {
 		this.loadFromLocalStorage();
 	}
-	setValue(key: string, value: boolean | number): void {
+	setValue(key: string, value: boolean | number | Hexcode): void {
 		this.data[key].value = value;
 		if (this.callbacks[key]) {
 			for (const callback of this.callbacks[key]) {
@@ -60,40 +72,63 @@ class Settings {
 			}
 		};
 	}
-	saveToLocalStorage() {
-		const jsonData: { [key: string]: number | boolean | string } = {};
+	convertSettingsToJson(includeDefaults?: boolean): string {
+		const jsonSettingsData: { [key: string]: number | boolean | string | Hexcode } = {};
 		for (const key of Object.keys(this.data)) {
-			if (this.data[key].value != this.data[key].auto) {
-				jsonData[key] = this.data[key].value;
+			if (this.data[key].value != this.data[key].auto || includeDefaults) {
+				jsonSettingsData[key] = this.data[key].value;
 				if (this.data[key].type == 'radio') {
 					const setting = this.data[key] as RadioSetting;
 					if (setting.detail.customOptionValue) {
-						jsonData[key + 'Custom'] = setting.detail.customOptionValue;
+						jsonSettingsData[key + 'Custom'] = setting.detail.customOptionValue;
 					}
 				}
 			}
 		}
-		localStorage.setItem('settings', JSON.stringify(jsonData));
+
+		let jsonData: SaveableSettings = {
+			settings: jsonSettingsData,
+			isSettings: true,
+			version: SETTINGS_VERSION
+		};
+
+		return JSON.stringify(jsonData);
+	}
+	parseJsonToSettings(jsonData: {[key: string]: any}) {
+		if (!jsonData["isSettings"]) {
+			return;
+		}
+
+		const settingsData = jsonData as SaveableSettings;
+
+		try {
+			for (const key in settingsData.settings) {
+				if (this.data[key] == null) {
+					continue;
+				};
+				if (this.data[key].type == 'radio') {
+					const setting = this.data[key] as RadioSetting;
+					if (settingsData["settings"][key + 'Custom']) {
+						setting.detail.customOptionValue = settingsData["settings"][key + 'Custom'] as string;
+					}
+				}
+				this.setValue(key, settingsData["settings"][key] as number | boolean | Hexcode);
+			}
+		} catch (e) {
+			localStorage.setItem('settings', JSON.stringify({}));
+			this.resetToAuto();
+			return;
+		}
+	}
+	saveToLocalStorage() {
+		const jsonData = this.convertSettingsToJson();
+		localStorage.setItem('settings', jsonData);
 	}
 	loadFromLocalStorage() {
-		const settingsObj = localStorage.getItem('settings');
-		if (settingsObj) {
-			const jsonData = JSON.parse(settingsObj);
-			try {
-				for (const key in jsonData) {
-					if (this.data[key] == null) return;
-					if (this.data[key].type == 'radio') {
-						const setting = this.data[key] as RadioSetting;
-						if (jsonData[key + 'Custom']) {
-							setting.detail.customOptionValue = jsonData[key + 'Custom'];
-						}
-					}
-					this.setValue(key, jsonData[key]);
-				}
-			} catch (e) {
-				localStorage.setItem('settings', JSON.stringify({}));
-				this.resetToAuto();
-			}
+		const settingsData = localStorage.getItem('settings');
+		if (settingsData) {
+			const settingsObj = JSON.parse(settingsData);
+			this.parseJsonToSettings(settingsObj);
 		}
 	}
 	resetToAuto() {
@@ -113,6 +148,11 @@ class Settings {
 				this.setValue(key, Math.floor(Math.random() * setting.detail.options.length));
 			} else if (setting.type == 'toggle') {
 				this.setValue(key, Math.random() < 0.5);
+			} else if (setting.type == 'color') {
+				const r = Math.floor(Math.random() * 256).toString(16);
+				const g = Math.floor(Math.random() * 256).toString(16);
+				const b = Math.floor(Math.random() * 256).toString(16);
+				this.setValue(key, ("#" + r + g + b) as Hexcode);
 			}
 		}
 	}
@@ -138,14 +178,290 @@ export const settings: Settings = new Settings({
 		},
 		info: "Already created flows won't be affected by this setting"
 	},
+	LDSubstyle: {
+		name: 'Debate substyle',
+		value: 0,
+		auto: 0,
+		type: 'radio',
+		detail: {
+			options: ['Classical', 'TOC Circuit']
+		},
+		visibilityCondition: () => {
+			return settings.data.debateStyle.value == 2;
+		}
+	},
 	colorTheme: {
 		name: 'Color theme',
 		type: 'radio',
 		value: 0,
 		auto: 0,
 		detail: {
-			options: ['System default', 'Light theme', 'Dark theme']
+			options: ['System default', 'Light theme', 'Dark theme', 'Custom theme']
 		}
+	},
+	customBackgroundBack: {
+		name: 'Back background',
+		type: 'color',
+		value: "#1a1a1a",
+		auto: "#1a1a1a",
+		visibilityCondition: () => {
+			return settings.data.colorTheme.value == 3;
+		}
+	},
+	customBackground: {
+		name: 'Background',
+		type: 'color',
+		value: "#292929",
+		auto: "#292929",
+		visibilityCondition: () => {
+			return settings.data.colorTheme.value == 3;
+		}
+	},
+	customBackgroundIndent: {
+		name: 'Highlighted background',
+		type: 'color',
+		value: "#3d3d3d",
+		auto: "#3d3d3d",
+		visibilityCondition: () => {
+			return settings.data.colorTheme.value == 3;
+		}
+	},
+	customBackgroundActive: {
+		name: 'Clicked background',
+		type: 'color',
+		value: "#4d4d4d",
+		auto: "#4d4d4d",
+		visibilityCondition: () => {
+			return settings.data.colorTheme.value == 3;
+		}
+	},
+	customBackgroundSecondary: {
+		name: 'Background',
+		type: 'color',
+		value: "#2e2e2e",
+		auto: "#2e2e2e",
+		visibilityCondition: () => {
+			return settings.data.colorTheme.value == 3;
+		}
+	},
+	customBackgroundSecondaryIndent: {
+		name: 'Highlighted background',
+		type: 'color',
+		value: "#474747",
+		auto: "#474747",
+		visibilityCondition: () => {
+			return settings.data.colorTheme.value == 3;
+		}
+	},
+	customBackgroundSecondaryActive: {
+		name: 'Clicked background',
+		type: 'color',
+		value: "#374143",
+		auto: "#374143",
+		visibilityCondition: () => {
+			return settings.data.colorTheme.value == 3;
+		}
+	},
+	customBackgroundAccentIndent: {
+		name: 'Accent',
+		type: 'color',
+		value: "#3d565c",
+		auto: "#3d565c",
+		visibilityCondition: () => {
+			return settings.data.colorTheme.value == 3;
+		}
+	},
+	customBackgroundAccentActive: {
+		name: 'Clicked accent',
+		type: 'color',
+		value: "#3d565c",
+		auto: "#3d565c",
+		visibilityCondition: () => {
+			return settings.data.colorTheme.value == 3;
+		}
+	},
+	customBackgroundAccentSecondaryIndent: {
+		name: 'Accent',
+		type: 'color',
+		value: "#373737",
+		auto: "#373737",
+		visibilityCondition: () => {
+			return settings.data.colorTheme.value == 3;
+		}
+	},
+	customBackgroundAccentSecondaryActive: {
+		name: 'Clicked accent',
+		type: 'color',
+		value: "#3d3d3d",
+		auto: "#3d3d3d",
+		visibilityCondition: () => {
+			return settings.data.colorTheme.value == 3;
+		}
+	},
+	customText: {
+		name: 'Text',
+		type: 'color',
+		value: "#cccccc",
+		auto: "#cccccc",
+		visibilityCondition: () => {
+			return settings.data.colorTheme.value == 3;
+		}
+	},
+	customTextSelect: {
+		name: 'Selection',
+		type: 'color',
+		value: "#4d4d4d",
+		auto: "#4d4d4d",
+		visibilityCondition: () => {
+			return settings.data.colorTheme.value == 3;
+		}
+	},
+	customTextWeak: {
+		name: 'Weak text',
+		type: 'color',
+		value: "#808080",
+		auto: "#808080",
+		visibilityCondition: () => {
+			return settings.data.colorTheme.value == 3;
+		}
+	},
+	customTextAccent: {
+		name: 'Aff text',
+		type: 'color',
+		value: "#addeeb",
+		auto: "#addeeb",
+		visibilityCondition: () => {
+			return settings.data.colorTheme.value == 3;
+		}
+	},
+	customTextAccentSelect: {
+		name: 'Aff selection',
+		type: 'color',
+		value: "#0b4f60",
+		auto: "#0b4f60",
+		visibilityCondition: () => {
+			return settings.data.colorTheme.value == 3;
+		}
+	},
+	customTextAccentWeak: {
+		name: 'Aff weak text',
+		type: 'color',
+		value: "#6c8b93",
+		auto: "#6c8b93",
+		visibilityCondition: () => {
+			return settings.data.colorTheme.value == 3;
+		}
+	},
+	customTextAccentSecondary: {
+		name: 'Neg text',
+		type: 'color',
+		value: "#ebc8ad",
+		auto: "#ebc8ad",
+		visibilityCondition: () => {
+			return settings.data.colorTheme.value == 3;
+		}
+	},
+	customTextAccentSecondarySelect: {
+		name: 'Neg selection',
+		type: 'color',
+		value: "#60300b",
+		auto: "#60300b",
+		visibilityCondition: () => {
+			return settings.data.colorTheme.value == 3;
+		}
+	},
+	customTextAccentSecondaryWeak: {
+		name: 'Weak neg text',
+		type: 'color',
+		value: "#937d6c",
+		auto: "#937d6c",
+		visibilityCondition: () => {
+			return settings.data.colorTheme.value == 3;
+		}
+	},
+	customColor: {
+		name: 'Selected lines',
+		type: 'color',
+		value: "#6b6b6b",
+		auto: "#6b6b6b",
+		visibilityCondition: () => {
+			return settings.data.colorTheme.value == 3;
+		}
+	},
+	customColorFade: {
+		name: 'Unselected Lines',
+		type: 'color',
+		value: "#525252",
+		auto: "#525252",
+		visibilityCondition: () => {
+			return settings.data.colorTheme.value == 3;
+		}
+	},
+	customColorAccent: {
+		name: 'Aff selected lines',
+		type: 'color',
+		value: "#408596",
+		auto: "#408596",
+		visibilityCondition: () => {
+			return settings.data.colorTheme.value == 3;
+		}
+	},
+	customColorAccentFade: {
+		name: 'Aff highlighted lines',
+		type: 'color',
+		value: "#3d5e66",
+		auto: "#3d5e66",
+		visibilityCondition: () => {
+			return settings.data.colorTheme.value == 3;
+		}
+	},
+	customColorAccentSecondary: {
+		name: 'Neg selected lines',
+		type: 'color',
+		value: "#966540",
+		auto: "#966540",
+		visibilityCondition: () => {
+			return settings.data.colorTheme.value == 3;
+		}
+	},
+	customColorAccentSecondaryFade: {
+		name: 'Neg highlighted lines',
+		type: 'color',
+		value: "#664f3d",
+		auto: "#664f3d",
+		visibilityCondition: () => {
+			return settings.data.colorTheme.value == 3;
+		}
+	},
+	customScrollbarThumb: {
+		name: 'Scrollbar thumb',
+		type: 'color',
+		value: "#808080",
+		auto: "#808080",
+		visibilityCondition: () => {
+			return settings.data.colorTheme.value == 3;
+		},
+		info: 'Only works with custom scrollbars enabled'
+	},
+	customScrollbarThumbHover: {
+		name: 'Hovered scrollbar thumb',
+		type: 'color',
+		value: "#8c8c8c",
+		auto: "#8c8c8c",
+		visibilityCondition: () => {
+			return settings.data.colorTheme.value == 3;
+		},
+		info: 'Only works with custom scrollbars enabled'
+	},
+	customScrollbarBackground: {
+		name: 'Scrollbar background',
+		type: 'color',
+		value: "#1a1a1a",
+		auto: "#1a1a1a",
+		visibilityCondition: () => {
+			return settings.data.colorTheme.value == 3;
+		},
+		info: 'Only works with custom scrollbars enabled'
 	},
 	columnWidth: {
 		name: 'Column width',
@@ -169,7 +485,10 @@ export const settings: Settings = new Settings({
 			step: 1,
 			hue: true
 		},
-		info: 'This color will be used for aff'
+		info: 'This color will be used for aff',
+		visibilityCondition: () => {
+			return settings.data.colorTheme.value != 3;
+		}
 	},
 	accentSecondaryHue: {
 		name: 'Secondary color hue',
@@ -182,7 +501,10 @@ export const settings: Settings = new Settings({
 			step: 1,
 			hue: true
 		},
-		info: 'This color will be used for neg'
+		info: 'This color will be used for neg',
+		visibilityCondition: () => {
+			return settings.data.colorTheme.value != 3;
+		}
 	},
 	transitionSpeed: {
 		name: 'Transition duration',
@@ -397,6 +719,7 @@ export const settingsGroups: SettingsGroup[] = [
 		name: 'General',
 		settings: [
 			'debateStyle',
+			'LDSubstyle',
 			'colorTheme',
 			'columnWidth',
 			'transitionSpeed',
@@ -407,6 +730,35 @@ export const settingsGroups: SettingsGroup[] = [
 	{
 		name: 'Colors',
 		settings: ['colorTheme', 'accentHue', 'accentSecondaryHue']
+	},
+	{
+		name: 'Background Colors',
+		settings: [
+			'customBackgroundBack', 'customBackground', 'customBackgroundIndent', 'customBackgroundActive',
+			'customBackgroundAccentIndent', 'customBackgroundAccentActive'
+		]
+	},
+	{
+		name: 'Neg Background Colors',
+		settings: ['customBackgroundSecondary', 'customBackgroundSecondaryIndent', 'customBackgroundSecondaryActive',
+			'customBackgroundAccentSecondaryIndent', 'customBackgroundAccentSecondaryActive'
+		]
+	},
+	{
+		name: 'Text Colors',
+		settings: ['customText', 'customTextSelect', 'customTextWeak', 'customTextAccent', 'customTextAccentSelect',
+			'customTextAccentWeak', 'customTextAccentSecondary', 'customTextAccentSecondarySelect', 'customTextAccentSecondaryWeak',
+		]
+	},
+	{
+		name: 'Line Colors',
+		settings: ['customColor', 'customColorFade', 'customColorAccent', 'customColorAccentFade',
+			'customColorAccentSecondary', 'customColorAccentSecondaryFade'
+		]
+	},
+	{
+		name: 'Scrollbar Colors',
+		settings: ['customScrollbarThumb', 'customScrollbarThumbHover', 'customScrollbarBackground']
 	},
 	{
 		name: 'Font',
