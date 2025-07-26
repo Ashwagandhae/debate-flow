@@ -16,6 +16,19 @@
 	<div class="scroll">
 		<section>
 			<div class="above">
+				<h2>v1.1.7</h2>
+			</div>
+			<ul>
+				<li>
+					added quick response shortcut. Press <Shortcut
+						keys={['shift', 'option', 'return']}
+						inline
+					/> while responding to one argument to create a response to the next argument.
+				</li>
+			</ul>
+		</section>
+		<section>
+			<div class="above">
 				<h2>v1.1.6</h2>
 			</div>
 			<ul>

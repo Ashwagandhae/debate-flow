@@ -12,7 +12,8 @@
 		getParentFlowId,
 		checkIdBox,
 		getAdjacentBox,
-		getNode
+		getNode,
+		newBoxId
 	} from '$lib/models/node';
 	import { createKeyDownHandler, type KeyComboOptionsIndex } from '$lib/models/key';
 
@@ -36,8 +37,7 @@
 
 	let consistentEnterBehaviour: boolean = settings.data['consistentEnterBehaviour']
 		.value as boolean;
-	let tabReturnsToParent: boolean = settings.data['tabReturnsToParent']
-		.value as boolean;
+	let tabReturnsToParent: boolean = settings.data['tabReturnsToParent'].value as boolean;
 
 	let node: Node<Box | Flow>;
 	let box: Box | null;
@@ -71,7 +71,11 @@
 
 	export let addSibling: (childIndex: number, direction: number) => boolean = () => false;
 	export let deleteSelf: (childIndex: number) => void = () => {};
-	export let focusSibling: (childIndex: number, direction: number, defaultToParent?: boolean) => void = () => {};
+	export let focusSibling: (
+		childIndex: number,
+		direction: number,
+		defaultToParent?: boolean
+	) => void = () => {};
 	export let focusSiblingStrict: (childIndex: number, direction: number) => boolean = () => false;
 	export let focusParent: () => void = () => {};
 	export let dispatchSelfFocus: (childIndex: number, isFocused: boolean) => void = () => {};
@@ -129,11 +133,10 @@
 	}
 
 	const keyComboOptionsIndex: KeyComboOptionsIndex = {
-		'commandControl shift': {
+		'control shift': {
 			x: {
-				handle: () => { 
-					if (!box?.isExtension)
-						formatSelf('crossed');
+				handle: () => {
+					if (!box?.isExtension) formatSelf('crossed');
 				}
 			}
 		},
@@ -147,22 +150,48 @@
 			},
 			b: {
 				handle: () => {
-					if (!box?.isExtension)
-						formatSelf('bold');
+					if (!box?.isExtension) formatSelf('bold');
 				}
 			},
 			e: {
 				handle: () => {
-					if(!box?.isExtension && addExtentionChild())
-						focusGrandchildStrict(0, 0);
+					if (!box?.isExtension && addExtentionChild()) focusGrandchildStrict(0, 0);
+				}
+			}
+		},
+		'alt shift': {
+			Enter: {
+				handle: () => {
+					// creates a new argument as a child of the current argument's parent's adjacent sibling
+					// or in other words, create a new argument at the same level as a response to the next argument
+					let node = $nodes[id];
+					if (node == null) return;
+					let parentId = checkIdBox($nodes, node.parent);
+					if (parentId == null) return;
+
+					// let parent = $nodes[parentId];
+					// if (parent == null) return;
+					// if (parent.parent == 'root') return;
+					// let grandparent = $nodes[parent.parent];
+					// if (grandparent == null) return;
+					// let parentIndex = grandparent.children.findIndex((x) => x === parentId);
+					// if (parentIndex == null) return;
+					// let parentSiblingId = grandparent.children[parentIndex + 1];
+					let parentSiblingId = getAdjacentBox($nodes, parentId, 'down');
+					if (parentSiblingId == null) return;
+					let parentSibling = $nodes[parentSiblingId];
+					if (parentSibling == null) return;
+					addNewBox(parentSiblingId, 0);
+					let newChildId = parentSibling.children[0];
+					$focusId = newChildId;
+					history.setPrevAfterFocus($focusId);
 				}
 			}
 		},
 		alt: {
 			Enter: {
 				handle: () => {
-					if (box?.isExtension)
-						return;
+					if (box?.isExtension) return;
 					if (consistentEnterBehaviour) {
 						if (addSibling(index(), 0)) {
 							focusSibling(index(), 0);
@@ -184,8 +213,7 @@
 				handle: () => {
 					blurSelf();
 					let childIndex = 0; // Add response to position 1 if an extension is in pos 0
-					if (node.children[0] && $nodes[node.children[0]]?.value.isExtension) 
-						childIndex = 1;
+					if (node.children[0] && $nodes[node.children[0]]?.value.isExtension) childIndex = 1;
 					if (addChild(childIndex, 0)) {
 						focusChild(childIndex, 0);
 						history.setPrevAfterFocus($focusId);
@@ -223,11 +251,9 @@
 					deleteSelf(index());
 					history.setPrevAfterFocus($focusId);
 				},
-				// only delete if content is empty or is an extension and there are no children 
-				require: () => 
-						((content?.length ?? 1) == 0 
-						|| (box?.isExtension ?? false)) 
-					&& node.children.length == 0
+				// only delete if content is empty or is an extension and there are no children
+				require: () =>
+					((content?.length ?? 1) == 0 || (box?.isExtension ?? false)) && node.children.length == 0
 			},
 			ArrowUp: {
 				handle: () => {
@@ -337,12 +363,12 @@
 			}
 			await tick();
 
-			const childIsExtension = $nodes[deleteId]? $nodes[deleteId].value.isExtension : false;
+			const childIsExtension = $nodes[deleteId] ? $nodes[deleteId].value.isExtension : false;
 
 			deleteBox(deleteId);
 			// node = node;
 
-				// Focus on parent when deleting an extension
+			// Focus on parent when deleting an extension
 			if (childIsExtension) {
 				focusSelf();
 				// focus on previous child of deleted
@@ -370,7 +396,7 @@
 		}
 		// if childIndex is beyond children
 		if (newChildIndex >= node.children.length) {
-			// If we rather focus self rather than a grandchild	
+			// If we rather focus self rather than a grandchild
 			if (defaultToSelf) {
 				focusSelf();
 				return;
@@ -425,7 +451,7 @@
 		// if is empty, skip
 		let child = $nodes[node.children[childIndex]];
 		if (!child) return false;
-		
+
 		if (grandchildIndex < 0 || grandchildIndex >= child.children.length) {
 			return false;
 		}
@@ -561,7 +587,8 @@
 					in:brIn
 					out:brOut
 					on:click={() => {
-						if (box?.isExtension) { // ignore if this is an extension box
+						if (box?.isExtension) {
+							// ignore if this is an extension box
 							return;
 						}
 						let couldAdd = addSibling(index(), 0);
@@ -592,13 +619,10 @@
 					{/if}
 				</div>
 				{#if box?.isExtension}
-				<div class="extensionIcon">
-					<Icon 
-						name="arrowRightThroughCircle"
-						size={extensionIconSize + "px"}
-					/>
-				</div>
-				{/if} 
+					<div class="extensionIcon">
+						<Icon name="arrowRightThroughCircle" size={extensionIconSize + 'px'} />
+					</div>
+				{/if}
 				<!-- svelte-ignore a11y-click-events-have-key-events -->
 				<!-- svelte-ignore a11y-no-noninteractive-element-interactions -->
 				<!-- we can ignore accesibility because you can use keyboard inside the cell for same function -->
