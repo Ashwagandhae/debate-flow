@@ -1,7 +1,7 @@
 <script lang="ts">
 	import Text from './Text.svelte';
 	import Icon from './Icon.svelte';
-	import { getContext, onMount, tick } from 'svelte';
+	import { getContext, onDestroy, onMount, tick } from 'svelte';
 	import { activeMouse, nodes, pendingAction } from '$lib/models/store';
 	import {
 		type BoxId,
@@ -65,7 +65,9 @@
 	function index() {
 		let parentNode = $nodes[node.parent];
 		if (parentNode == null) return lastValidIndex;
-		lastValidIndex = (<BoxId[]>parentNode.children).indexOf(<BoxId>id);
+		let newIndex = (<BoxId[]>parentNode.children).indexOf(<BoxId>id);
+		if (newIndex == -1) return lastValidIndex;
+		lastValidIndex = newIndex;
 		return lastValidIndex;
 	}
 
@@ -78,7 +80,7 @@
 	) => void = () => {};
 	export let focusSiblingStrict: (childIndex: number, direction: number) => boolean = () => false;
 	export let focusParent: () => void = () => {};
-	export let dispatchSelfFocus: (childIndex: number, isFocused: boolean) => void = () => {};
+	export let dispatchSelfFocus: (childId: BoxId | FlowId, isFocused: boolean) => void = () => {};
 
 	const getInvert: () => boolean = getContext('invert');
 	let invert: boolean = getInvert();
@@ -89,35 +91,36 @@
 	let textarea: any = undefined;
 
 	let childFocus: boolean = false;
-	let childFocusIndex: number = -1;
-	function onChildFocus(childIndex: number, isFocused: boolean) {
-		if (isFocused) {
-			childFocus = true;
-			childFocusIndex = childIndex;
-			unfold();
-		} else if (childIndex == childFocusIndex) {
-			childFocus = false;
-			childFocusIndex = -1;
+	let childFocusIds: Set<BoxId | FlowId> = new Set();
+	function onChildFocus(childId: BoxId | FlowId, childIsFocused: boolean) {
+		if (childIsFocused) {
+			childFocusIds.add(childId);
+		} else {
+			childFocusIds.delete(childId);
 		}
+		childFocus = childFocusIds.size > 0;
 	}
 
 	let mounted = false;
 	let lastFocus = $focusId;
 	function focusChange() {
 		if ($focusId == id) {
-			dispatchSelfFocus(index(), true);
+			dispatchSelfFocus(id, true);
 			if (node.level >= 1 && mounted) {
 				// Only change focus if the element is mounted to avoid double call (one call made pre-mount) lag
 				textarea && textarea.focus();
 			}
 		} else if (lastFocus == id) {
-			dispatchSelfFocus(index(), false);
+			dispatchSelfFocus(id, false);
 		}
 		lastFocus = $focusId;
 	}
 	onMount(() => {
 		mounted = true;
 		focusChange();
+	});
+	onDestroy(() => {
+		dispatchSelfFocus(id, false);
 	});
 	$: $focusId, focusChange();
 
@@ -181,6 +184,7 @@
 					if (parentSiblingId == null) return;
 					let parentSibling = $nodes[parentSiblingId];
 					if (parentSibling == null) return;
+					blurSelf();
 					addNewBox(parentSiblingId, 0);
 					let newChildId = parentSibling.children[0];
 					$focusId = newChildId;
