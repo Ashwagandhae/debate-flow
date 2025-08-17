@@ -15,12 +15,7 @@ export const debateStyleMap = [
 
 export type DebateStyleKey = (typeof debateStyleMap)[number];
 
-export const debateTemplateMap = [
-	'primary',
-	'secondary',
-	'tertiary',
-	'quaternary'
-] as const;
+export const debateTemplateMap = ['primary', 'secondary', 'tertiary', 'quaternary'] as const;
 
 export type DebateTemplateKey = (typeof debateTemplateMap)[number];
 
@@ -29,17 +24,27 @@ export function getDebateStyle(): DebateStyle {
 }
 export function getAllDebateStyleFlows(): DebateStyleFlow[] {
 	let debateStyle = getDebateStyle();
-	if (debateStyle.alternativeFlowSelectorSettingName && debateStyle.alternativeFlowSelectorSettingName in settings.data) {
-		const subflow = debateStyle[`alternativeFlows${settings.data[debateStyle.alternativeFlowSelectorSettingName].value as number}`];
+	if (
+		debateStyle.alternativeFlowSelectorSettingName &&
+		debateStyle.alternativeFlowSelectorSettingName in settings.data
+	) {
+		const subflow =
+			debateStyle[
+				`alternativeFlows${
+					settings.data[debateStyle.alternativeFlowSelectorSettingName].value as number
+				}`
+			];
 		if (subflow) return subflow;
 	}
 	return debateStyle.flows;
 }
-export function getDebateStyleFlow(flowPostion: DebateTemplateKey | number): DebateStyleFlow | null {
+export function getDebateStyleFlow(
+	flowPostion: DebateTemplateKey | number
+): DebateStyleFlow | null {
 	let debateFlows = getAllDebateStyleFlows();
 
 	let index;
-	if (typeof flowPostion == "number") {
+	if (typeof flowPostion == 'number') {
 		index = flowPostion;
 	} else {
 		index = debateTemplateMap.indexOf(flowPostion);
@@ -219,47 +224,47 @@ export const debateStyles: {
 				secondary: true
 			}
 		],
-		prepTime: 4 * 60 * 1000
+		prepTime: 3 * 60 * 1000
 	},
 	lincolnDouglas: {
 		flows: [
 			{
 				name: 'aff',
 				columns: ['AC', 'NR', '1AR', '2NR', '2AR'],
-				starterBoxes: ["Value", "Criterion"],
+				starterBoxes: ['Value', 'Criterion'],
 				invert: false
 			},
 			{
 				name: 'neg',
 				columns: ['NC', '1AR', '2NR', '2AR'],
-				starterBoxes: ["Value", "Criterion"],
+				starterBoxes: ['Value', 'Criterion'],
 				invert: true
-			},
+			}
 		],
-		alternativeFlowSelectorSettingName: "LDSubstyle",
+		alternativeFlowSelectorSettingName: 'LDSubstyle',
 		alternativeFlows1: [
 			{
 				name: 'aff',
 				columns: ['AC', 'NR', '1AR', '2NR', '2AR'],
-				starterBoxes: ["type here"],
+				starterBoxes: ['type here'],
 				invert: false
 			},
 			{
 				name: 'neg',
 				columns: ['NC', '1AR', '2NR', '2AR'],
-				starterBoxes: ["type here"],
+				starterBoxes: ['type here'],
 				invert: true
 			},
 			{
 				name: '1ar',
 				columns: ['1AR', '2NR', '2AR'],
-				starterBoxes: ["type here"],
+				starterBoxes: ['type here'],
 				invert: false
 			},
 			{
 				name: '2nr',
 				columns: ['2NR', '2AR'],
-				starterBoxes: ["type here"],
+				starterBoxes: ['type here'],
 				invert: true
 			}
 		],
@@ -361,7 +366,7 @@ export const debateStyles: {
 					'Q/25N'
 				],
 				invert: false
-			},
+			}
 		],
 		timerSpeeches: [
 			{
@@ -382,7 +387,7 @@ export const debateStyles: {
 				name: 'opp',
 				columns: ['O1', 'P2', 'O2', 'PW', 'OW', 'OR', 'PR'],
 				invert: true
-			},
+			}
 		],
 		timerSpeeches: [
 			{
@@ -430,9 +435,9 @@ export const debateStyles: {
 	bigQuestions: {
 		flows: [
 			{
-			name: 'aff',
-			columns: ['AC', 'NC', 'ARb', 'NRb', 'A3', 'N3', 'ARt', 'NRt'],
-			invert: false
+				name: 'aff',
+				columns: ['AC', 'NC', 'ARb', 'NRb', 'A3', 'N3', 'ARt', 'NRt'],
+				invert: false
 			},
 			{
 				name: 'neg',
@@ -505,7 +510,7 @@ export const debateStyles: {
 				name: 'con',
 				columns: ['CC', 'PR', 'CR'],
 				invert: true
-			},
+			}
 		],
 		timerSpeeches: [
 			{
