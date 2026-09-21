@@ -25,9 +25,11 @@
 		addNewExtension,
 		deleteBox,
 		newUpdateAction,
-		toggleBoxFormat
+		toggleBoxFormat,
+		setBoxBoldRanges
 	} from '$lib/models/nodeDecorateAction';
 	import { settings } from '$lib/models/settings';
+	import { toggleRange, shiftRanges } from '$lib/models/boldRange';
 	import { folded } from '$lib/models/fold';
 	import Tooltip from './Tooltip.svelte';
 	import Fold from './Fold.svelte';
@@ -153,7 +155,7 @@
 			},
 			b: {
 				handle: () => {
-					if (!box?.isExtension) formatSelf('bold');
+					if (!box?.isExtension) boldSelectionOrBox();
 				}
 			},
 			e: {
@@ -318,6 +320,26 @@
 		if (boxId == null) return;
 		toggleBoxFormat(boxId, format);
 		updateNodeData();
+	}
+
+	// cmd/ctrl+b: bold the selected text if there is a selection, otherwise
+	// fall back to toggling bold on the whole box (existing behaviour)
+	function boldSelectionOrBox() {
+		const boxId = checkIdBox($nodes, id);
+		if (boxId == null || box == null) return;
+		const sel = textarea?.getSelection?.();
+		if (sel == null || sel.end <= sel.start) {
+			formatSelf('bold');
+			return;
+		}
+		const boldRanges = toggleRange(box.boldRanges ?? [], sel.start, sel.end);
+		setBoxBoldRanges(boxId, boldRanges);
+		updateNodeData();
+		// re-apply focus + selection, which the store update dropped
+		requestAnimationFrame(() => {
+			textarea?.focus?.();
+			textarea?.setSelection?.(sel.start, sel.end);
+		});
 	}
 
 	function addChild(childIndex: number, direction: number): boolean {
@@ -528,7 +550,12 @@
 				const boxId = checkIdBox($nodes, id);
 				if (boxId == null) return { tag: 'identity' };
 				editAlreadyPending = false;
-				return newUpdateAction(boxId, { ...box, content });
+				// keep inline bold spans aligned to the edited text
+				const boldRanges =
+					box.boldRanges && box.boldRanges.length > 0
+						? shiftRanges(box.content, content, box.boldRanges)
+						: box.boldRanges;
+				return newUpdateAction(boxId, { ...box, content, boldRanges });
 			}
 		};
 	}
@@ -613,6 +640,7 @@
 							on:focus={handleFocus}
 							bind:value={content}
 							bold={box.bold ? true : false}
+							boldRanges={box.boldRanges}
 							bind:this={textarea}
 							on:beforeinput={handleBeforeInput}
 							bind:autoHeight={updateTextHeight}

@@ -59,6 +59,8 @@ export type Box = {
 	empty?: boolean;
 	crossed?: boolean;
 	bold?: boolean;
+	// inline bold spans: half-open [start, end) character ranges within `content`
+	boldRanges?: [number, number][];
 	isExtension?: boolean;
 };
 
