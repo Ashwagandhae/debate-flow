@@ -1,9 +1,17 @@
-import { Workbook, type Buffer } from 'exceljs';
-import { type BoxId, type FlowId, type Nodes, newFlowId, newBoxId, getNode } from './node';
-import type { OldBox, OldFlows } from './oldType';
-import { newNodes } from './store';
-import { applyActionBundle } from './nodeAction';
-import { settings, SETTINGS_VERSION, type SaveableSettings } from './settings';
+import { Workbook, type Buffer } from "exceljs";
+import {
+	type BoxId,
+	type FlowId,
+	type Nodes,
+	newFlowId,
+	newBoxId,
+	getNode,
+} from "./node";
+import type { OldBox, OldFlows } from "./oldType";
+import { newNodes, sideDocText } from "./store";
+import { applyActionBundle } from "./nodeAction";
+import { settings, SETTINGS_VERSION, type SaveableSettings } from "./settings";
+import { get } from "svelte/store";
 
 const CURRENT_SAVE_VERSION: Version = 1 as const;
 
@@ -12,16 +20,21 @@ type Version = number;
 type SaveableNodes = {
 	nodes: Nodes;
 	version: Version;
+	sideDocText?: string;
 };
-export function getJson(nodes: Nodes): string {
+export function getJson(nodes: Nodes, sideDocText: string): string {
 	const saveable: SaveableNodes = {
 		nodes,
-		version: CURRENT_SAVE_VERSION
+		sideDocText,
+		version: CURRENT_SAVE_VERSION,
 	};
 	return JSON.stringify(saveable);
 }
 
-export function loadNodes(data: { [key: string]: any }): Nodes {
+export function loadNodes(data: { [key: string]: any }): {
+	nodes: Nodes;
+	sideDocText: string;
+} {
 	let version: Version = data?.version ?? 0;
 	let upgraded = data;
 	while (version < CURRENT_SAVE_VERSION) {
@@ -29,29 +42,29 @@ export function loadNodes(data: { [key: string]: any }): Nodes {
 			upgraded = upgrade[version](upgraded);
 			version += 1;
 		} else {
-			throw new Error('Cannot upgrade save data');
+			throw new Error("Cannot upgrade save data");
 		}
 	}
 	const ret: SaveableNodes = upgraded as SaveableNodes;
-	return ret.nodes;
+	return { nodes: ret.nodes, sideDocText: ret.sideDocText ?? "" };
 }
 
-export function downloadJson(nodes: Nodes) {
-	const data: string = getJson(nodes);
-	downloadString(data, 'flow.json');
+export function downloadJson(nodes: Nodes, sideDocText: string) {
+	const data: string = getJson(nodes, sideDocText);
+	downloadString(data, "flow.json");
 }
 
 export function downloadSettingsJson() {
 	let data = settings.convertSettingsToJson(true);
-	downloadString(data, 'settings.json');
+	downloadString(data, "settings.json");
 }
 
 export function importSettingsJson(data: { [key: string]: any }) {
-	if (!data['isSettings']) {
+	if (!data["isSettings"]) {
 		return;
 	}
 
-	if (data['version'] != SETTINGS_VERSION) {
+	if (data["version"] != SETTINGS_VERSION) {
 		return; // Handle upgrading settings here if needed in the future
 	}
 
@@ -63,9 +76,12 @@ export function importSettingsJson(data: { [key: string]: any }) {
 }
 
 export function downloadString(data: string, filename: string) {
-	const element: HTMLAnchorElement = document.createElement('a');
-	element.setAttribute('href', 'data:text/plain;charset=utf-8, ' + encodeURIComponent(data));
-	element.setAttribute('download', filename);
+	const element: HTMLAnchorElement = document.createElement("a");
+	element.setAttribute(
+		"href",
+		"data:text/plain;charset=utf-8, " + encodeURIComponent(data),
+	);
+	element.setAttribute("download", filename);
 	document.body.appendChild(element);
 	element.click();
 	document.body.removeChild(element);
@@ -77,7 +93,7 @@ function childToData(
 	flowId: FlowId,
 	boxId: BoxId | FlowId,
 	x: number,
-	y: number
+	y: number,
 ) {
 	let height = 0;
 	for (const child of getNode(nodes, boxId).unwrap().children) {
@@ -88,15 +104,15 @@ function childToData(
 		// make list of empty strings of length flow.columns.length
 		const row: string[] = Array.from(
 			{ length: getNode(nodes, flowId).unwrap().value.columns.length },
-			() => ''
+			() => "",
 		);
 		data.push(row);
 	}
 	// exclude root
 	if (x >= 0) {
 		const node = getNode(nodes, boxId).unwrap();
-		if (node.value.tag === 'box' && node.value.isExtension) {
-			data[y][x] = '→ Extended →';
+		if (node.value.tag === "box" && node.value.isExtension) {
+			data[y][x] = "→ Extended →";
 		} else {
 			data[y][x] = node.value.content;
 		}
@@ -107,14 +123,28 @@ function childToData(
 
 // TODO add extend arrows when content : empty : content cell
 function fixXlsxWorkbookName(name: string) {
-	for (const char of ['*', '?', ':', '\\', '/', '[', ']']) {
-		name = name.replaceAll(char, '');
+	for (const char of ["*", "?", ":", "\\", "/", "[", "]"]) {
+		name = name.replaceAll(char, "");
 	}
 	name = name.substring(0, 31);
 	return name;
 }
 
-export function downloadXlsx(nodes: Nodes) {
+function addSideDocToXlsxWorbook(wb: Workbook, sideDocText: string) {
+	if (sideDocText.trim().length == 0) {
+		return;
+	}
+	const ws = wb.addWorksheet("Notes");
+	const lines = sideDocText.split(/\r?\n/);
+
+	ws.addRows(lines.map((line) => [line]));
+
+	const colA = ws.getColumn(1);
+	colA.width = 120;
+	colA.alignment = { wrapText: true, vertical: "top" };
+}
+
+export function downloadXlsx(nodes: Nodes, sideDocText: string) {
 	const wb: Workbook = new Workbook();
 
 	let unnamedIterator = 1;
@@ -127,7 +157,7 @@ export function downloadXlsx(nodes: Nodes) {
 
 		if (!name) {
 			// Allows unnamed books to be downloaded
-			name = 'Unnamed Flow ' + unnamedIterator;
+			name = "Unnamed Flow " + unnamedIterator;
 			unnamedIterator += 1;
 		}
 
@@ -143,32 +173,32 @@ export function downloadXlsx(nodes: Nodes) {
 			const row = ws.getRow(y + 2);
 			for (let x = 0; x < data[y].length; x++) {
 				// light red
-				let fill = 'FFFFCCCC';
+				let fill = "FFFFCCCC";
 				// darker red
-				let border = 'FFFF9999';
+				let border = "FFFF9999";
 
 				if (
 					(x % 2 == 0 && !getNode(nodes, flowId).unwrap().value.invert) ||
 					(x % 2 == 1 && getNode(nodes, flowId).unwrap().value.invert)
 				) {
 					// light blue
-					fill = 'FFCCE5FF';
+					fill = "FFCCE5FF";
 					// darker blue
-					border = 'FF99CCFF';
+					border = "FF99CCFF";
 				}
 				const cell = row.getCell(x + 1);
 				cell.value = data[y][x];
 
 				cell.fill = {
-					type: 'pattern',
-					pattern: 'solid',
-					fgColor: { argb: fill }
+					type: "pattern",
+					pattern: "solid",
+					fgColor: { argb: fill },
 				};
 				cell.border = {
-					top: { style: 'thin', color: { argb: border } },
-					left: { style: 'thin', color: { argb: border } },
-					bottom: { style: 'thin', color: { argb: border } },
-					right: { style: 'thin', color: { argb: border } }
+					top: { style: "thin", color: { argb: border } },
+					left: { style: "thin", color: { argb: border } },
+					bottom: { style: "thin", color: { argb: border } },
+					right: { style: "thin", color: { argb: border } },
 				};
 				cell.alignment = { wrapText: true };
 			}
@@ -176,18 +206,21 @@ export function downloadXlsx(nodes: Nodes) {
 		// bold headers
 		ws.getRow(1).font = { bold: true };
 	}
+
+	addSideDocToXlsxWorbook(wb, sideDocText);
+
 	wb.xlsx
 		.writeBuffer()
 		.then(function (value: Buffer) {
 			// build anchor tag and attach file (works in chrome)
-			const a: HTMLAnchorElement = document.createElement('a');
+			const a: HTMLAnchorElement = document.createElement("a");
 			const data: Blob = new Blob([value], {
-				type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+				type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
 			});
 
 			const url: string = URL.createObjectURL(data);
 			a.href = url;
-			a.download = 'flow.xlsx';
+			a.download = "flow.xlsx";
 			document.body.appendChild(a);
 			a.click();
 			setTimeout(function () {
@@ -203,7 +236,7 @@ export function downloadXlsx(nodes: Nodes) {
 const upgrade: {
 	[key: number]: (saved: { [key: string]: any }) => SaveableNodes;
 } = {
-	0: upgrade_0_1
+	0: upgrade_0_1,
 };
 
 function upgrade_0_1(saved: { [key: string]: any }): SaveableNodes {
@@ -216,19 +249,19 @@ function upgrade_0_1(saved: { [key: string]: any }): SaveableNodes {
 			nodes,
 			[
 				{
-					tag: 'add',
-					parent: 'root',
+					tag: "add",
+					parent: "root",
 					id: flowId,
 					index: i,
 					value: {
-						tag: 'flow',
+						tag: "flow",
 						content: flow.content,
 						invert: flow.invert,
-						columns: flow.columns
-					}
-				}
+						columns: flow.columns,
+					},
+				},
 			],
-			false
+			false,
 		);
 		for (let j = 0; j < flow.children.length; j++) {
 			const box = flow.children[j];
@@ -244,29 +277,29 @@ function upgrade_0_1_addBoxesRec(
 	flowId: FlowId,
 	parentId: FlowId | BoxId,
 	box: OldBox,
-	index: number
+	index: number,
 ) {
 	const id = newBoxId();
 	applyActionBundle(
 		nodes,
 		[
 			{
-				tag: 'add',
+				tag: "add",
 				parent: parentId,
 				id,
 				index,
 				value: {
-					tag: 'box',
+					tag: "box",
 					content: box.content,
 					flowId,
 
 					placeholder: box.placeholder,
 					empty: box.empty,
-					crossed: box.crossed
-				}
-			}
+					crossed: box.crossed,
+				},
+			},
 		],
-		false
+		false,
 	);
 	for (let i = 0; i < box.children.length; i++) {
 		upgrade_0_1_addBoxesRec(nodes, flowId, id, box.children[i], i);

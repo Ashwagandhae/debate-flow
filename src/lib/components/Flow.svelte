@@ -13,8 +13,9 @@
 	let node: Node<Flow>;
 	$: {
 		// hold onto node when it's deleted
-		if ($nodes[flowId] != null) {
-			node = $nodes[flowId];
+		const deletedNode = $nodes[flowId];
+		if (deletedNode != null) {
+			node = deletedNode;
 		}
 	}
 	$: flow = node.value;

@@ -14,7 +14,7 @@
 	import { openPopup } from '$lib/models/popup';
 	import type { FlowId, Nodes } from '$lib/models/node';
 	import { onDestroy, onMount } from 'svelte';
-	import { activeMouse, flowsChange, nodes, pendingAction } from '$lib/models/store';
+	import { activeMouse, flowsChange, nodes, pendingAction, sideDocText } from '$lib/models/store';
 	import { createKeyDownHandler } from '$lib/models/key';
 	import Prelude from '$lib/components/Prelude.svelte';
 	import { loadNodes, importSettingsJson } from '$lib/models/file';
@@ -255,18 +255,19 @@
 			return;
 		}
 
-		let newNodes: Nodes | null = null;
+		let loaded: { nodes: Nodes; sideDocText: string } | null = null;
 		try {
-			newNodes = loadNodes(dataObj);
+			loaded = loadNodes(dataObj);
 		} catch (e) {
 			openPopup(Message, 'File Message', {
 				message: 'Invalid file',
 				error: true
 			});
 		}
-		if (newNodes != null) {
+		if (loaded != null) {
 			if (!unsavedChanges || confirm('Are you sure you want to overwrite your current flows?')) {
-				replaceNodes(newNodes);
+				$sideDocText = loaded.sideDocText;
+				replaceNodes(loaded.nodes);
 				$selectedFlowId = null;
 				flowsChange();
 			}

@@ -1,7 +1,7 @@
 <script lang="ts">
 	import Button from './Button.svelte';
 	import { downloadJson, downloadXlsx } from '$lib/models/file';
-	import { nodes } from '$lib/models/store';
+	import { nodes, sideDocText } from '$lib/models/store';
 	import { resolvePendingAction } from '$lib/models/nodePendingAction';
 
 	export let closePopup: () => void;
@@ -21,7 +21,7 @@
 			tooltipLayout="top"
 			on:click={() => {
 				resolvePendingAction($nodes);
-				downloadJson($nodes);
+				downloadJson($nodes, $sideDocText);
 				closePopup();
 			}}
 			disabled={$nodes.root.children.length == 0}
@@ -39,7 +39,7 @@
 			tooltipLayout="top"
 			on:click={() => {
 				resolvePendingAction($nodes);
-				downloadXlsx($nodes);
+				downloadXlsx($nodes, $sideDocText);
 				closePopup();
 			}}
 			disabled={$nodes.root.children.length == 0}

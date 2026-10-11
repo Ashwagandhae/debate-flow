@@ -1,12 +1,14 @@
-import { nodes, subscribeFlowsChange } from '$lib/models/store';
-import type { Writable } from 'svelte/store';
-import { writable, derived } from 'svelte/store';
-import { getJson, loadNodes, downloadString } from './file';
-import { getNode, isNodesWorthSaving, type Nodes } from './node';
-import { replaceNodes } from './nodeDecorateAction';
+import { nodes, sideDocText, subscribeFlowsChange } from "$lib/models/store";
+import type { Writable } from "svelte/store";
+import { writable, derived } from "svelte/store";
+import { getJson, loadNodes, downloadString } from "./file";
+import { getNode, isNodesWorthSaving, type Nodes } from "./node";
+import { replaceNodes } from "./nodeDecorateAction";
 
 let flowKey: NodeKey | null = null;
-const savedNodesDatasMut: Writable<SavedNodesDatas> = writable(getSavedNodesDatas());
+const savedNodesDatasMut: Writable<SavedNodesDatas> = writable(
+	getSavedNodesDatas(),
+);
 // export read-only version
 export const savedNodesDatas = derived(savedNodesDatasMut, (value) => value);
 
@@ -34,10 +36,15 @@ nodes.subscribe((nodes) => {
 	$nodes = nodes;
 });
 
+let $sideDocText: string;
+sideDocText.subscribe((sideDocText) => {
+	$sideDocText = sideDocText;
+});
+
 let $savedNodesDatasMut: SavedNodesDatas;
 savedNodesDatasMut.subscribe((value) => {
 	$savedNodesDatasMut = value;
-	localStorage.setItem('savedFlows', JSON.stringify(value));
+	localStorage.setItem("savedFlows", JSON.stringify(value));
 });
 
 let lastSaveTime: number = Date.now();
@@ -46,7 +53,7 @@ export function maybeSaveNodes() {
 	const now = Date.now();
 	if (now - lastSaveTime < 5000) return;
 	lastSaveTime = now;
-	saveNodes($nodes);
+	saveNodes($nodes, $sideDocText);
 }
 
 // used to indicate that a new flow was created, it's should be put in different save
@@ -57,9 +64,9 @@ export function unsetFlowKey() {
 subscribeFlowsChange(maybeSaveNodes);
 
 export function getSavedNodesDatas(): SavedNodesDatas {
-	const raw = localStorage.getItem('savedFlows');
+	const raw = localStorage.getItem("savedFlows");
 	if (raw === null) {
-		localStorage.setItem('savedFlows', JSON.stringify({}));
+		localStorage.setItem("savedFlows", JSON.stringify({}));
 		return {};
 	}
 	return JSON.parse(raw);
@@ -70,7 +77,9 @@ export function loadSavedNodes(key: NodeKey, modifyOriginal = false) {
 	if (!raw) return;
 	const nodesObj = JSON.parse(raw);
 	if (raw === null) return [];
-	const newNodes: Nodes = loadNodes(nodesObj);
+	const loaded = loadNodes(nodesObj);
+	const newNodes: Nodes = loaded.nodes;
+	sideDocText.set(loaded.sideDocText);
 	replaceNodes(newNodes);
 	if (modifyOriginal) {
 		flowKey = key;
@@ -87,10 +96,10 @@ export function deleteNodes(key: NodeKey) {
 		savedNodesDatasMut.set($savedNodesDatasMut);
 	}
 }
-export function saveNodes(nodes: Nodes) {
+export function saveNodes(nodes: Nodes, sideDocText: string) {
 	// update in case different tab
 	savedNodesDatasMut.set(getSavedNodesDatas());
-	const data: string = getJson(nodes);
+	const data: string = getJson(nodes, sideDocText);
 	if (flowKey === null) {
 		const newKey = newNodeKey();
 		flowKey = newKey;
@@ -103,9 +112,9 @@ export function saveNodes(nodes: Nodes) {
 		flowInfos: nodes.root.children.map((flowId) => {
 			return {
 				content: getNode(nodes, flowId).unwrap().value.content,
-				invert: getNode(nodes, flowId).unwrap().value.invert
+				invert: getNode(nodes, flowId).unwrap().value.invert,
 			};
-		})
+		}),
 	};
 	// delete old nodes
 	const keys = Object.keys($savedNodesDatasMut);
@@ -127,5 +136,5 @@ export function downloadSavedNodes(key: NodeKey) {
 	const raw = localStorage.getItem(key);
 	if (raw === null) return;
 	const data = JSON.parse(raw);
-	downloadString(JSON.stringify(data), 'flow.json');
+	downloadString(JSON.stringify(data), "flow.json");
 }
