@@ -16,6 +16,17 @@
 	<div class="scroll">
 		<section>
 			<div class="above">
+				<h2>v1.1.8</h2>
+			</div>
+			<ul>
+				<li>
+					added notes doc to export, so it will be saved in xlsx, json exports and in the browser's
+					localStorage.
+				</li>
+			</ul>
+		</section>
+		<section>
+			<div class="above">
 				<h2>v1.1.7</h2>
 			</div>
 			<ul>
