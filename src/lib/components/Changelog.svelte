@@ -20,8 +20,8 @@
 			</div>
 			<ul>
 				<li>
-					made notes doc part of export. It will now be saved in xlsx, json exports, and in the
-					browser's localStorage.
+					made notes doc part of export. It will now be included in the xlsx export, json export,
+					and in the browser's local saved flows.
 				</li>
 			</ul>
 		</section>
