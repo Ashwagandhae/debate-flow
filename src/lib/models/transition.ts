@@ -4,7 +4,7 @@ import { settings } from '../models/settings';
 
 export function boxIn(node: HTMLElement, { skip }: { skip: boolean }) {
 	// don't do transition if skip
-	if (skip || settings.data.transitionSpeed.value as number === 0) {
+	if (skip || (settings.data.transitionSpeed.value as number) === 0) {
 		return {
 			duration: 0,
 			css: () => ''
@@ -28,7 +28,7 @@ export function boxIn(node: HTMLElement, { skip }: { skip: boolean }) {
 }
 export function boxOut(node: HTMLElement, { skip }: { skip: boolean }) {
 	// don't do transition if skip
-	if (skip || settings.data.transitionSpeed.value as number === 0) {
+	if (skip || (settings.data.transitionSpeed.value as number) === 0) {
 		return {
 			duration: 0,
 			css: () => ''
@@ -304,7 +304,7 @@ export function instructionOut(node: HTMLElement, { reverse }: { reverse: boolea
 }
 
 export function settingIn(node: HTMLElement, { skip }: { skip: boolean }) {
-	if (skip || settings.data.transitionSpeed.value as number === 0) {
+	if (skip || (settings.data.transitionSpeed.value as number) === 0) {
 		return {
 			duration: 0,
 			css: () => ''
@@ -331,7 +331,7 @@ export function settingIn(node: HTMLElement, { skip }: { skip: boolean }) {
 
 export function settingOut(node: HTMLElement, { skip }: { skip: boolean }) {
 	// don't do transition if skip
-	if (skip || settings.data.transitionSpeed.value as number === 0) {
+	if (skip || (settings.data.transitionSpeed.value as number) === 0) {
 		return {
 			duration: 0,
 			css: () => ''
@@ -356,7 +356,7 @@ export function settingOut(node: HTMLElement, { skip }: { skip: boolean }) {
 
 export function settingScrollerIn(node: HTMLElement, { skip }: { skip: boolean }) {
 	// don't do transition if skip
-	if (skip || settings.data.transitionSpeed.value as number === 0) {
+	if (skip || (settings.data.transitionSpeed.value as number) === 0) {
 		return {
 			duration: 0,
 			css: () => ''
@@ -379,7 +379,7 @@ export function settingScrollerIn(node: HTMLElement, { skip }: { skip: boolean }
 
 export function settingScrollerOut(node: HTMLElement, { skip }: { skip: boolean }) {
 	// don't do transition if skip
-	if (skip || settings.data.transitionSpeed.value as number === 0) {
+	if (skip || (settings.data.transitionSpeed.value as number) === 0) {
 		return {
 			duration: 0,
 			css: () => ''
@@ -401,7 +401,7 @@ export function settingScrollerOut(node: HTMLElement, { skip }: { skip: boolean 
 }
 
 export function settingTitleInOut(node: HTMLElement, { skip }: { skip: boolean }) {
-	if (skip || settings.data.transitionSpeed.value as number === 0) {
+	if (skip || (settings.data.transitionSpeed.value as number) === 0) {
 		return {
 			duration: 0,
 			css: () => ''

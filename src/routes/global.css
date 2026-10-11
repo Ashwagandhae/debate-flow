@@ -267,18 +267,18 @@ a:active {
 	color: var(--text-accent-select);
 }
 .customScrollbar::-webkit-scrollbar {
-	width: var(--custom-scrollbar-width); 
+	width: var(--custom-scrollbar-width);
 	height: var(--custom-scrollbar-width);
 }
 .customScrollbar::-webkit-scrollbar-thumb {
-	background: var(--scrollbar-thumb); 
+	background: var(--scrollbar-thumb);
 	border: 2px solid var(--scrollbar-background);
 }
 .customScrollbar::-webkit-scrollbar-thumb:hover {
-	background: var(--scrollbar-thumb-hover); 
+	background: var(--scrollbar-thumb-hover);
 }
 .customScrollbar::-webkit-scrollbar-track {
-	background: var(--scrollbar-background); 
+	background: var(--scrollbar-background);
 }
 
 /* Firefox-specific styles */

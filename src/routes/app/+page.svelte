@@ -127,21 +127,21 @@
 		control: {
 			n: {
 				handle: () => {
-					const style = getDebateStyleFlow("primary");
+					const style = getDebateStyleFlow('primary');
 					if (style == null) return;
 					addFlow(style);
 				},
-				require: () => getDebateStyleFlow("primary") != null
+				require: () => getDebateStyleFlow('primary') != null
 			}
 		},
 		'control shift': {
 			n: {
 				handle: () => {
-					const style = getDebateStyleFlow("secondary");
+					const style = getDebateStyleFlow('secondary');
 					if (style == null) return;
 					addFlow(style);
 				},
-				require: () => getDebateStyleFlow("secondary") != null
+				require: () => getDebateStyleFlow('secondary') != null
 			}
 		},
 		'commandControl shift': {
@@ -250,7 +250,7 @@
 
 	async function handleUpload(data: string) {
 		let dataObj = JSON.parse(data);
-		if (dataObj["isSettings"]) {
+		if (dataObj['isSettings']) {
 			importSettingsJson(dataObj);
 			return;
 		}
@@ -276,20 +276,20 @@
 	let switchSpeakers = false;
 
 	// Custom scrollbar/overflow logic
-	onMount(() => { 
-		document.body.classList.add("app");
+	onMount(() => {
+		document.body.classList.add('app');
 	});
 
 	onDestroy(() => {
-		document.body.classList.remove("app");
-		document.body.classList.remove("customScrollbar");
+		document.body.classList.remove('app');
+		document.body.classList.remove('customScrollbar');
 	});
 
 	$: {
 		if (settings.data.customScrollbar.value) {
-			document.body.classList.add("customScrollbar");
+			document.body.classList.add('customScrollbar');
 		} else {
-			document.body.classList.remove("customScrollbar");
+			document.body.classList.remove('customScrollbar');
 		}
 	}
 
@@ -345,7 +345,7 @@
 							onclick: () => openPopup(Share, 'Share'),
 							tooltip: 'share',
 							tutorialHighlight: 4
-						},
+						}
 					]}
 				/>
 			</div>
@@ -374,7 +374,11 @@
 					<div class="box-control">
 						<BoxControl flowId={$selectedFlowId} />
 					</div>
-					<div class="flow" class:customScrollbar={settings.data.customScrollbar.value} on:scroll={fixScroll}>
+					<div
+						class="flow"
+						class:customScrollbar={settings.data.customScrollbar.value}
+						on:scroll={fixScroll}
+					>
 						<Flow on:focusFlow={focusFlow} flowId={$selectedFlowId} />
 					</div>
 				{/key}

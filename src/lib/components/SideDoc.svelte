@@ -4,7 +4,12 @@
 </script>
 
 <div class="document">
-	<textarea class="text" placeholder="type notes here" bind:value={$sideDocText} class:customScrollbar={settings.data.customScrollbar.value}/>
+	<textarea
+		class="text"
+		placeholder="type notes here"
+		bind:value={$sideDocText}
+		class:customScrollbar={settings.data.customScrollbar.value}
+	/>
 </div>
 
 <style>

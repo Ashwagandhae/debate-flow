@@ -38,8 +38,8 @@
 				notification={!$isChangelogVersionCurrent}
 			/>
 			<Button
-				icon = "keyboard"
-				text = "shortcuts"
+				icon="keyboard"
+				text="shortcuts"
 				on:click={() => {
 					closePopup();
 					openPopup(Shortcuts, 'Shortcuts');

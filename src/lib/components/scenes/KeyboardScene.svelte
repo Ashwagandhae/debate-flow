@@ -13,7 +13,6 @@
 		});
 		let children = Array.from(shortcuts.children);
 
-		
 		// hide each one by one
 		timeline.add({
 			targets: children,
@@ -27,7 +26,7 @@
 		timeline.add({
 			duration: 1000
 		});
-    // show each shortcut one by one
+		// show each shortcut one by one
 		timeline.add({
 			targets: children,
 			opacity: [0, 1],

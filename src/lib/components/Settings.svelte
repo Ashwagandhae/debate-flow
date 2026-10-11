@@ -29,23 +29,28 @@
 		settingVisibilities = settingsGroups.map((group, _groupIndex) => {
 			return group.settings.map((key, _index) => {
 				if (!settings.data[key]) {
-					console.log(`Key: ${key} does not exist in settings.`)
+					console.log(`Key: ${key} does not exist in settings.`);
 					return false;
 				}
-				if (!settings.data[key].visibilityCondition || settings.data[key].visibilityCondition && settings.data[key].visibilityCondition()) {
+				if (
+					!settings.data[key].visibilityCondition ||
+					(settings.data[key].visibilityCondition && settings.data[key].visibilityCondition())
+				) {
 					return true;
 				}
 				return false;
 			});
 		});
 		groupVisibilities = settingVisibilities.map((group, _groupIndex) => {
-			return group.some(vis => vis);
+			return group.some((vis) => vis);
 		});
 	}
 	updateVisibilities();
-	onDestroy(settings.subscribe(["any"], () => {
-		updateVisibilities();
-	}));
+	onDestroy(
+		settings.subscribe(['any'], () => {
+			updateVisibilities();
+		})
+	);
 
 	function openUploadDialog() {
 		(document.getElementById('uploadId') as HTMLElement).click();
@@ -59,7 +64,11 @@
 			<ul>
 				{#each settingsGroups as group, groupIndex}
 					{#if groupVisibilities[groupIndex]}
-						<li class="title" in:settingTitleInOut={{skip:false}} out:settingTitleInOut={{skip:false}}>
+						<li
+							class="title"
+							in:settingTitleInOut={{ skip: false }}
+							out:settingTitleInOut={{ skip: false }}
+						>
 							<button
 								on:click={(e) => {
 									scrollToGroupHeader(groupIndex);
@@ -71,14 +80,14 @@
 					{/if}
 					{#each group.settings as key, index}
 						{#if settingVisibilities[groupIndex][index]}
-							<li in:settingScrollerIn={{skip:false}} out:settingScrollerOut={{skip:false}}>
+							<li in:settingScrollerIn={{ skip: false }} out:settingScrollerOut={{ skip: false }}>
 								<button on:click={() => scrollToSettingElement(groupIndex, index)}>
 									{settings.data[key].name}
 								</button>
 							</li>
 						{/if}
 					{/each}
-			{/each}
+				{/each}
 			</ul>
 		</div>
 	</div>
@@ -117,7 +126,12 @@
 				{/each} -->
 				{#each settingsGroups as group, groupIndex}
 					{#if groupVisibilities[groupIndex]}
-						<li class="title" bind:this={groupHeaderElements[groupIndex]} in:settingTitleInOut={{skip:false}} out:settingTitleInOut={{skip:false}}>
+						<li
+							class="title"
+							bind:this={groupHeaderElements[groupIndex]}
+							in:settingTitleInOut={{ skip: false }}
+							out:settingTitleInOut={{ skip: false }}
+						>
 							<h1>
 								{group.name}
 							</h1>

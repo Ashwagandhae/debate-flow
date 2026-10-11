@@ -34,7 +34,9 @@
 		}
 	}
 	onDestroy(settings.subscribe(['fontSize'], () => autoHeight(true)));
-	onMount(() => {requestAnimationFrame(() => autoHeight())});
+	onMount(() => {
+		requestAnimationFrame(() => autoHeight());
+	});
 	export const focus = () => {
 		// only focus if not already focused
 		textarea.focus();
@@ -54,7 +56,7 @@
 	{placeholder}
 	style={`--white-space:${whiteSpaceCss};`}
 	class:strikethrough
-	readonly={readonly}
+	{readonly}
 />
 
 <style>

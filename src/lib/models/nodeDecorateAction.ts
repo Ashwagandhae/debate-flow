@@ -101,16 +101,13 @@ export const addNewBox = decorate(function (
 	};
 });
 
-export const addNewExtension = decorate(function (
-	nodes: Nodes,
-	parent: FlowId | BoxId
-) {
+export const addNewExtension = decorate(function (nodes: Nodes, parent: FlowId | BoxId) {
 	const flowId = getParentFlowId(nodes, parent).unwrap();
 	const extensionId = newBoxId();
 	return {
 		action: [newExtensionAction(parent, flowId, extensionId), newBoxAction(extensionId, flowId, 0)],
 		owner: flowId
-	}
+	};
 });
 
 export const addNewFlow = decorate(function (

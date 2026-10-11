@@ -21,7 +21,7 @@ export function getJson(nodes: Nodes): string {
 	return JSON.stringify(saveable);
 }
 
-export function loadNodes(data: {[key: string]: any}): Nodes {
+export function loadNodes(data: { [key: string]: any }): Nodes {
 	let version: Version = data?.version ?? 0;
 	let upgraded = data;
 	while (version < CURRENT_SAVE_VERSION) {
@@ -46,19 +46,18 @@ export function downloadSettingsJson() {
 	downloadString(data, 'settings.json');
 }
 
-export function importSettingsJson(data: {[key: string]: any}) {
-	if (!data["isSettings"]) {
+export function importSettingsJson(data: { [key: string]: any }) {
+	if (!data['isSettings']) {
 		return;
 	}
 
-	if (data["version"] != SETTINGS_VERSION) {
+	if (data['version'] != SETTINGS_VERSION) {
 		return; // Handle upgrading settings here if needed in the future
 	}
 
 	try {
 		settings.parseJsonToSettings(data);
-	}
-	catch (e) {
+	} catch (e) {
 		return;
 	}
 }
@@ -96,8 +95,8 @@ function childToData(
 	// exclude root
 	if (x >= 0) {
 		const node = getNode(nodes, boxId).unwrap();
-		if (node.value.tag === "box" && node.value.isExtension) {
-			data[y][x] = "→ Extended →";
+		if (node.value.tag === 'box' && node.value.isExtension) {
+			data[y][x] = '→ Extended →';
 		} else {
 			data[y][x] = node.value.content;
 		}
@@ -126,8 +125,9 @@ export function downloadXlsx(nodes: Nodes) {
 
 		let name: string = getNode(nodes, flowId).unwrap().value.content;
 
-		if (!name) { // Allows unnamed books to be downloaded
-			name = "Unnamed Flow " + unnamedIterator;
+		if (!name) {
+			// Allows unnamed books to be downloaded
+			name = 'Unnamed Flow ' + unnamedIterator;
 			unnamedIterator += 1;
 		}
 
@@ -201,12 +201,12 @@ export function downloadXlsx(nodes: Nodes) {
 }
 
 const upgrade: {
-	[key: number]: (saved: {[key: string]: any}) => SaveableNodes;
+	[key: number]: (saved: { [key: string]: any }) => SaveableNodes;
 } = {
 	0: upgrade_0_1
 };
 
-function upgrade_0_1(saved: {[key: string]: any}): SaveableNodes {
+function upgrade_0_1(saved: { [key: string]: any }): SaveableNodes {
 	const flows = saved as OldFlows;
 	const nodes: Nodes = newNodes();
 	for (let i = 0; i < flows.length; i++) {

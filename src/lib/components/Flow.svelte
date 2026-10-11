@@ -41,7 +41,11 @@
 
 <div class="top" class:invert={flow.invert} style={`--column-count: ${flow.columns.length};`}>
 	<div class="viewer">
-		<div class="content" class:customScrollbar={settings.data.customScrollbar.value} on:scroll={fixScroll}>
+		<div
+			class="content"
+			class:customScrollbar={settings.data.customScrollbar.value}
+			on:scroll={fixScroll}
+		>
 			<Box id={flowId} />
 		</div>
 		<div class="headers">
