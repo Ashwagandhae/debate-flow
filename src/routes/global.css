@@ -1,6 +1,10 @@
 @import '@fontsource/merriweather-sans/300.css';
 @import '@fontsource/merriweather-sans/700.css';
 
+:root:has(body.dark) {
+	scrollbar-color: #808080 transparent;
+}
+
 body {
 	padding: 0;
 	margin: 0;
@@ -265,6 +269,9 @@ a:visited {
 a:hover,
 a:active {
 	color: var(--text-accent-select);
+}
+.customScrollbar {
+	scrollbar-color: auto;
 }
 .customScrollbar::-webkit-scrollbar {
 	width: var(--custom-scrollbar-width);
